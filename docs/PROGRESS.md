@@ -1,8 +1,8 @@
 # PROGRESS (build memory — read this first after any restart)
 
-**Current milestone:** M7 (evaluation + docs) — starting
-**Last commit:** see `git log -1` (M6 committed)
-**Next step:** M7 capture run, then data/eval/labelled_headlines.csv (draft_agent), evaluate.py, benchmark_latency.py, docs
+**Current milestone:** M8 (DoSelect submission pack) — in progress
+**Last commit:** see `git log -1` (M7 committed)
+**Next step:** M8 commit, then docs/OVERNIGHT_REPORT.md
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -20,6 +20,7 @@ plus overrides recorded below. No pushes, no remotes, no `git reset --hard`, not
 | 2026-10-03 18:25 | M5 | 5 | 896 |
 | 2026-10-03 18:32 | M5 (health snapshot run) | 3 | 899 |
 | 2026-10-03 18:39 | M6 | 4 | 903 |
+| 2026-10-03 18:55 | M7 | 1 | 904 |
 
 ## Milestones
 
@@ -117,6 +118,23 @@ waiting (Mastodon in the M6 capture); now sleeps wait + 50 ms; regression test a
 demo run (story + REPLAY 30).
 **Known issues:** REPLAY of real data produces systemic false positives (e.g. a Cyprus investment-fund article → MARKET Macroeconomic
 8.0 → macro_rate_shock_moderate 4.24% RED); the demo story itself is unaffected (REPLAY is opt-in via `--replay`).
+
+### M7 — Evaluation + docs — DONE (self-gated)
+**Eval set:** `data/eval/labelled_headlines.csv`, n=147 real CACHED_REAL items (75 random, seed 42, stratified by source; 72
+keyword-targeted for rarer classes); gold labels drafted by the agent, every row `label_status=draft_agent`; labels never taken
+from model outputs; predictions kept separately in `data/eval/predictions.csv`.
+**`scripts/evaluate.py` (PRELIMINARY):** FinBERT sentiment acc 0.653 / macro-F1 0.648; lexicon fallback 0.68 / 0.675; rule events
+acc 0.803 / macro-F1 0.792; entity acc 0.891 (all n=147); random subset (n=75): sentiment 0.60, events 0.827, entities 0.853.
+Zero-shot (typeform/distilbert-base-uncased-mnli): rules 0.792 vs rules+zero-shot 0.770 macro-F1 → kept OFF.
+StockTwits tag agreement: not measured (n=0, blocked). Same-author-bias caveat written into docs/evaluation.md.
+**`scripts/benchmark_latency.py`:** n=200 real docs, median 204.7 ms, p95 1085.2 ms, mean 374.8 ms per document; batched 278.9 ms/doc
+(after length-sorted batching; was 532.2 before the fix); model load 5.5 s.
+**Docs:** README (full §14), docs/{architecture,methodology,slides_outline (exactly 7),demo_script (5:00 + backup),judge_qa (28 Q,
+⚠️ flagged),audit (table + harsh scores, overall 70/100),benchmark,evaluation}.md; data_sources.md re-probe (Google/Reddit/Mastodon PASS).
+**Fresh-clone check:** `git clone` → `.tmp/clone` → `tasks.ps1 setup` (exit 0: venv, pinned install, FinBERT+spaCy verified offline)
+→ `tasks.ps1 test` → 142 passed, coverage 88%; clone deleted afterwards.
+**Transient:** one `setup_models.py --zero-shot` run reported FinBERT offline-verify FAIL with empty stderr while the machine was out
+of process resources (bash fork errors at the same time); `--verify-only` re-run PASSED for all three models.
 
 ## User overrides / decisions given (2026-10-03, before overnight run)
 - Portfolio: synthetic, seed 42, labelled SYNTHETIC.
