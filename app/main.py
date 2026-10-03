@@ -12,9 +12,10 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.api import routes_demo, routes_health, routes_signals
+from app.api import routes_demo, routes_health, routes_portfolio, routes_signals
 from app.config import STRESS_DISCLAIMER, Settings, get_settings
 from app.runtime import Runtime
+from portfolio.stress_engine import attach_stress_engine
 from risk_engine.logging_setup import get_logger, setup_logging
 
 log = get_logger(__name__)
@@ -31,12 +32,11 @@ AI/NLP financial risk signals from news + social text, with downstream portfolio
 
 
 def attach_modules(rt: Runtime) -> None:
-    """Attach downstream bus subscribers (Module B stress engine) when available."""
+    """Attach downstream bus subscribers: Module B stress engine (subscribes to signal.created)."""
     try:
-        from portfolio.stress_engine import attach_stress_engine
-    except ImportError:
-        return
-    attach_stress_engine(rt)
+        attach_stress_engine(rt)
+    except Exception:  # a broken portfolio file must not take the NLP API down; /health shows portfolio=None
+        log.exception("stress engine could not be attached")
 
 
 def create_app(settings: Settings | None = None, runtime: Runtime | None = None, warm: bool = True) -> FastAPI:
@@ -63,12 +63,7 @@ def create_app(settings: Settings | None = None, runtime: Runtime | None = None,
     app.include_router(routes_health.router)
     app.include_router(routes_signals.router)
     app.include_router(routes_demo.router)
-    try:
-        from app.api import routes_portfolio
-
-        app.include_router(routes_portfolio.router)
-    except ImportError:
-        pass
+    app.include_router(routes_portfolio.router)
     return app
 
 

@@ -1,8 +1,8 @@
 # PROGRESS (build memory — read this first after any restart)
 
-**Current milestone:** M4 (portfolio + stress engine) — starting
-**Last commit:** see `git log -1` (M3 committed)
-**Next step:** M4 capture run, then generate_portfolio.py / pricers.py / scenarios.yaml / triggers.py / stress_engine.py
+**Current milestone:** M5 (Streamlit dashboard) — starting
+**Last commit:** see `git log -1` (M4 committed)
+**Next step:** M5 capture run, then app/dashboard (api_client, Home.py, pages, components)
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -16,6 +16,7 @@ plus overrides recorded below. No pushes, no remotes, no `git reset --hard`, not
 | 2026-10-03 17:22 | M1 (second run) | 53 | 779 |
 | 2026-10-03 17:38 | M2 | 40 | 819 |
 | 2026-10-03 17:55 | M3 | 36 | 855 |
+| 2026-10-03 18:16 | M4 | 36 | 891 |
 
 ## Milestones
 
@@ -61,6 +62,20 @@ SSE implemented with a plain StreamingResponse (sse-starlette removed from requi
 **Known issues:** SSE clients that subscribe after an event miss it unless they use `replay_last`; `/demo/reset` deletes all
 stress runs (incl. ones triggered by LIVE signals) — acceptable for a demo tool, documented in the endpoint summary.
 
+### M4 — Module B stress engine — DONE (self-gated)
+**Files:** `portfolio/{generate_portfolio.py,portfolio_data.csv,loader.py,pricers.py,scenarios.yaml,triggers.py,stress_engine.py}`,
+`app/api/routes_portfolio.py` (GET /portfolio, GET /portfolio/scenarios, GET+POST /portfolio/stress-test, GET /stress-runs, GET /stress-runs/{id}),
+`tests/test_stress.py`; runtime/main wiring (stress engine subscribes to `signal.created`; scorer gets portfolio exposures).
+**Portfolio:** 49 SYNTHETIC positions (seed 42), funded MV 830.0m USD; gross mix Loan 40% / Bond 35% / IRS 8% / Equity 8% / FX 5% / CDS 4%;
+3 CDS protection-bought hedges (Tata Motors, Adani, Ford); 23 held issuers (Walmart, Pfizer deliberately not held).
+**Scenario losses (loss % of funded MV, `StressEngine.run`):** geopolitical_severe 2.45% RED, geopolitical_moderate 1.32% AMBER,
+macro_rate_shock_severe 8.06% RED, macro_rate_shock_moderate 4.24% RED, systemic_credit_severe 3.65% RED,
+systemic_credit_moderate 1.90% AMBER, idiosyncratic_credit (Tata Motors) 0.41% GREEN. Sanity band 0.5–15% for severe: PASS, no recalibration.
+**E2E on real server (FinBERT):** "China blockades Taiwan …" → MARKET Geopolitical 8.8 Critical → geopolitical_severe run 2.45% RED with
+trigger_signal_id; "Moody's downgrades Adani Enterprises to junk as SEBI widens fraud probe" → Credit Event 9.0 (X .957 held) →
+idiosyncratic_credit IN-ADANIENT 0.15% GREEN (CDS hedge offsets).
+**Tests:** 139 passed, ruff clean.
+
 ## User overrides / decisions given (2026-10-03, before overnight run)
 - Portfolio: synthetic, seed 42, labelled SYNTHETIC.
 - Finnhub/Bluesky only if keys in .env at run time (none present tonight).
@@ -83,6 +98,18 @@ stress runs (incl. ones triggered by LIVE signals) — acceptable for a demo too
 - D5 (M2): manual/CLI/API text without an explicit provenance is labelled SYNTHETIC (user-supplied, not fetched).
 - D6 (M2): event tie-break order = taxonomy.yaml order (most severe first) unless zero-shot is enabled.
 - D7 (M2): rating buckets in universe.yaml are illustrative approximations, labelled as such.
+- D8 (M4): portfolio mix (~40/35/≤10) is measured on gross exposure (MV for loans/bonds/equity, notional for derivative
+  overlays); loss % is measured against funded MV (derivatives start at MV 0).
+- D9 (M4): IRS DV01 stored positive; pay_fixed ΔV = +DV01×Δbp (gains when rates rise) — corrects the spec's sign typo.
+- D10 (M4): bonds split rate and spread duration (US Treasuries have spread duration 0, so no credit-spread shock);
+  for corporates this equals the spec formula.
+- D11 (M4): loan PD multiplier per bucket = 1 + (scenario PD× − 1) × sensitivity (AAA-AA .5 … B-or-below 1.5).
+- D12 (M4): added `systemic_credit_moderate` (half of severe) because the spec table has no moderate credit scenario.
+- D13 (M4): FX shock applies only to FX forwards (direction refers to the EM currency); FX translation of INR-denominated
+  loans/bonds/equity is NOT modelled (they are carried in USD equivalent) — limitation.
+- D14 (M4): a corroborated (≥2 sources) credit event on a held issuer fires BOTH systemic and idiosyncratic triggers (spec rules
+  overlap); each is a separate audited run. Cooldown uses wall-clock processing time.
+- D15 (M4): Walmart and Pfizer are not held so the "non-held resolved" exposure path (X=0.3) is demonstrable.
 
 ## Stretch ideas
 

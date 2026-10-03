@@ -14,13 +14,14 @@ from typing import Any
 from app.config import AppMode, Settings
 from risk_engine.bus import SIGNAL_CREATED, EventBus
 from risk_engine.impact_scoring.corroboration import CorroborationTracker, Observation
+from risk_engine.impact_scoring.scorer import ImpactScorer
 from risk_engine.ingestion.base import HEALTH
 from risk_engine.ingestion.replay import run_replay
 from risk_engine.ingestion.scenario import run_scenario
 from risk_engine.ingestion.scheduler import IngestionScheduler, build_live_adapters, make_http_client
 from risk_engine.ingestion.state import apply_state, save_state
 from risk_engine.logging_setup import get_logger
-from risk_engine.pipeline import RiskPipeline
+from risk_engine.pipeline import RiskPipeline, default_exposures
 from risk_engine.preprocessing.dedup import Deduplicator
 from risk_engine.schemas import RawDocument, RiskSignal
 from risk_engine.sentiment.finbert import SentimentEngine
@@ -50,12 +51,15 @@ class Runtime:
         self._health_task: asyncio.Task | None = None
         self.demo_status: dict[str, Any] = {"running": False}
         self.stress = None  # set by attach_stress_engine (Module B)
+        self.exposures: dict[str, float] | None = None  # issuer_id -> funded exposure, set with the stress engine
 
     # ------------------------------------------------------------------ pipeline
     @property
     def pipeline(self) -> RiskPipeline:
         if self._pipeline is None:
+            scorer = ImpactScorer(exposures=self.exposures if self.exposures is not None else default_exposures())
             self._pipeline = RiskPipeline(settings=self.settings, sentiment=SentimentEngine(self.settings),
+                                          scorer=scorer,
                                           corroboration=CorroborationTracker(self.settings.corroboration_window_h))
             self.seed_corroboration()
         return self._pipeline
