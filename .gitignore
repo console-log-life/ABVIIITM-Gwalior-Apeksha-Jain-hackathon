@@ -30,3 +30,4 @@ data/cache/state.json
 data/cache/*.tmp
 data/cache/captures/*.tmp
 *.log
+.tmp/

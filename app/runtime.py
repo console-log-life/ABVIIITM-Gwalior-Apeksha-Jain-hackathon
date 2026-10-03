@@ -19,7 +19,7 @@ from risk_engine.ingestion.base import HEALTH
 from risk_engine.ingestion.replay import run_replay
 from risk_engine.ingestion.scenario import run_scenario
 from risk_engine.ingestion.scheduler import IngestionScheduler, build_live_adapters, make_http_client
-from risk_engine.ingestion.state import apply_state, save_state
+from risk_engine.ingestion.state import apply_state, last_capture_health, save_state
 from risk_engine.logging_setup import get_logger
 from risk_engine.pipeline import RiskPipeline, default_exposures
 from risk_engine.preprocessing.dedup import Deduplicator
@@ -231,7 +231,8 @@ class Runtime:
                 await asyncio.to_thread(self.store.upsert_source_health, snap)
 
     def health(self) -> dict[str, Any]:
-        sources = HEALTH.snapshot() or self.store.source_health_rows()
+        # live polling in this session > persisted DB rows > last capture_cache.py run (labelled as such)
+        sources = HEALTH.snapshot() or self.store.source_health_rows() or last_capture_health(self.settings.cache_path)
         if self._pipeline is not None:
             model = self._pipeline.sentiment.status()
         else:

@@ -1,8 +1,8 @@
 # PROGRESS (build memory — read this first after any restart)
 
-**Current milestone:** M5 (Streamlit dashboard) — starting
-**Last commit:** see `git log -1` (M4 committed)
-**Next step:** M5 capture run, then app/dashboard (api_client, Home.py, pages, components)
+**Current milestone:** M6 (demo mode, run_demo, failure drills, full suite) — starting
+**Last commit:** see `git log -1` (M5 committed)
+**Next step:** M6 capture run, then scripts/run_demo.py, offline + source-kill drills, coverage
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -17,6 +17,8 @@ plus overrides recorded below. No pushes, no remotes, no `git reset --hard`, not
 | 2026-10-03 17:38 | M2 | 40 | 819 |
 | 2026-10-03 17:55 | M3 | 36 | 855 |
 | 2026-10-03 18:16 | M4 | 36 | 891 |
+| 2026-10-03 18:25 | M5 | 5 | 896 |
+| 2026-10-03 18:32 | M5 (health snapshot run) | 3 | 899 |
 
 ## Milestones
 
@@ -76,6 +78,26 @@ trigger_signal_id; "Moody's downgrades Adani Enterprises to junk as SEBI widens 
 idiosyncratic_credit IN-ADANIENT 0.15% GREEN (CDS hedge offsets).
 **Tests:** 139 passed, ruff clean.
 
+### M5 — Dashboard — DONE (self-gated)
+**Files:** `app/dashboard/{Home.py,api_client.py}`, `app/dashboard/components/{ui.py,charts.py}`,
+`app/dashboard/pages/{1_News_Social_Feed,2_NLP_Risk_Signals,3_Portfolio,4_Stress_Test,5_Explainability,6_Source_Health}.py`,
+`.streamlit/config.toml`, `scripts/check_dashboard.py` (AppTest every page against the running API),
+`scripts/screenshot_dashboard.py` (headless Edge via DevTools), `docs/screenshots/*.png`, `data/scenarios/demo_story.json`,
+`GET /methodology` endpoint (weights/priors/thresholds for the explainability view).
+**Sections:** 1 Executive overview (Home: KPI cards, alert banner, top signals, data mix) · 2 Feed (provenance incl. capture time) ·
+3 Signals table (risk colours + text) · 4 Sentiment trend · 5 Event distribution · 6 Impact distribution + top-10 · 7 Portfolio ·
+8 Trigger banner (signal + scenario + rule) · 9 Waterfall · 10 Top-10 positions (hedges green) · 11 Sector×asset-class heatmap ·
+12 Explainability (+ "Analyse your own headline"); sidebar: mode switch, demo start/reset, auto-refresh, source health; disclaimer on stress views.
+**Verified:** `scripts/check_dashboard.py` → 7/7 pages render without errors both on an empty DB and after demo story + REPLAY(40)
+(Signals page 3 charts, Stress page 3 charts + 5 tables, Explainability 2 charts, Portfolio 4 charts). Real `streamlit run` served
+(/_stcore/health ok) and 7 screenshots captured headlessly (docs/screenshots/). API-down path shows a clear error (ApiError → st.error).
+**Demo story (SYNTHETIC) scored by the real pipeline:** (1) Nvidia GPU launch via social → 3.6 Low, no trigger; (2) Moody's/SEBI Tata Motors
+→ 8.7 Critical → idiosyncratic_credit 0.41%; (3) invasion wire → 7.0 High → geopolitical_moderate 1.32%; (4) corroborating source →
+9.1 Critical, 2 sources → geopolitical_severe 2.45%.
+**Found during verification:** REPLAY of real data turned a fund's quarterly letter ("inflation remained above the Fed's target") into
+MARKET Macroeconomic 7.1 → macro_rate_shock_moderate (4.24%). This is a real systemic false positive of the keyword rules (judge Q&A).
+**Tests:** 139 passed, ruff clean.
+
 ## User overrides / decisions given (2026-10-03, before overnight run)
 - Portfolio: synthetic, seed 42, labelled SYNTHETIC.
 - Finnhub/Bluesky only if keys in .env at run time (none present tonight).
@@ -110,6 +132,11 @@ idiosyncratic_credit IN-ADANIENT 0.15% GREEN (CDS hedge offsets).
 - D14 (M4): a corroborated (≥2 sources) credit event on a held issuer fires BOTH systemic and idiosyncratic triggers (spec rules
   overlap); each is a separate audited run. Cooldown uses wall-clock processing time.
 - D15 (M4): Walmart and Pfizer are not held so the "non-held resolved" exposure path (X=0.3) is demonstrable.
+- D16 (M5): under the spec weights a POSITIVE product-launch headline about a LARGE holding cannot score "Low" (Apple via a news
+  source = 5.3 Medium: positive sentiment still adds M×0.6, and X/R are high). Weights were NOT changed; demo step 1 uses a small
+  holding (Nvidia, X .55) seen on a social source (R .40) → 3.6 Low. The score measures materiality/attention, not downside only.
+- D17 (M5): Streamlit theme fixed to light (projector); no dark mode for the dashboard.
+- D18 (M5): source-health panel falls back to the last capture_cache.py run (labelled as such) when the API is not polling live.
 
 ## Stretch ideas
 

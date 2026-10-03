@@ -24,7 +24,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from app.config import get_settings  # noqa: E402
-from risk_engine.ingestion.base import BaseAdapter, SourceStatus  # noqa: E402
+from risk_engine.ingestion.base import HEALTH, BaseAdapter, SourceStatus  # noqa: E402
 from risk_engine.ingestion.replay import captures_dir, load_cached_documents  # noqa: E402
 from risk_engine.ingestion.scheduler import (  # noqa: E402
     CycleReport,
@@ -34,7 +34,7 @@ from risk_engine.ingestion.scheduler import (  # noqa: E402
     print_reports,
     process_result,
 )
-from risk_engine.ingestion.state import apply_state, save_state  # noqa: E402
+from risk_engine.ingestion.state import apply_state, save_health_snapshot, save_state  # noqa: E402
 from risk_engine.logging_setup import setup_logging  # noqa: E402
 from risk_engine.preprocessing.dedup import Deduplicator  # noqa: E402
 from risk_engine.schemas import Provenance, RawDocument  # noqa: E402
@@ -70,6 +70,7 @@ async def capture(
     new_docs = [d.model_copy(update={"provenance": Provenance.CACHED_REAL}) for r in reports for d in r.docs]
     path = write_capture(cache_dir, new_docs, stamp)
     save_state(cache_dir, adapters)
+    save_health_snapshot(cache_dir, HEALTH.snapshot())
     return reports, path
 
 

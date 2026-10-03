@@ -1,0 +1,32 @@
+{
+  "name": "demo_story",
+  "description": "SYNTHETIC scripted demo (spec section 10). Headlines are invented for the demo and are labelled SYNTHETIC everywhere; they imitate the style of real sources only to pick a credibility prior. Sequence: (1) low-risk positive product launch at a small held US issuer, seen on social media -> low impact, no trigger; (2) credit downgrade + regulatory probe at a held issuer -> idiosyncratic stress; (3) market-wide geopolitical shock reported by a news wire and then corroborated by a second, independent source -> systemic stress.",
+  "steps": [
+    {
+      "delay_s": 0,
+      "imitates": "mastodon",
+      "source_type": "social",
+      "title": "Nvidia unveils new GPU lineup for gamers",
+      "publisher": "SYNTHETIC demo social post",
+      "hint_ticker": "NVDA"
+    },
+    {
+      "delay_s": 10,
+      "imitates": "google_news",
+      "title": "Moody's downgrades Tata Motors to junk as SEBI opens probe into accounting",
+      "publisher": "SYNTHETIC demo wire"
+    },
+    {
+      "delay_s": 10,
+      "imitates": "google_news",
+      "title": "Russia launches invasion of neighbouring state; West readies sweeping sanctions",
+      "publisher": "SYNTHETIC demo wire"
+    },
+    {
+      "delay_s": 10,
+      "imitates": "gdelt",
+      "title": "Invasion confirmed as troops cross border; sanctions and market sell-off spread worldwide",
+      "publisher": "SYNTHETIC demo aggregator"
+    }
+  ]
+}
