@@ -8,7 +8,7 @@ PY := .venv/bin/python
 BOOT := python3.11
 endif
 
-.PHONY: setup venv install models probe test test-fast lint
+.PHONY: setup venv install models probe test test-fast lint capture replay ingest-once
 
 setup: venv install models
 
@@ -33,3 +33,12 @@ test-fast:
 
 lint:
 	"$(PY)" -m ruff check .
+
+capture:
+	"$(PY)" scripts/capture_cache.py
+
+replay:
+	"$(PY)" -m risk_engine.ingestion.replay --limit 20
+
+ingest-once:
+	"$(PY)" -m risk_engine.ingestion.scheduler --once

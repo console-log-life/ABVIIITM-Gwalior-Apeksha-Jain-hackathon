@@ -1,0 +1,83 @@
+# Per-source ingestion settings. Rate limits are token buckets: `capacity` requests may burst,
+# then one token refills every `min_gap_s` seconds. `interval_s` is how often the LIVE scheduler polls.
+# backoff_*_s: how long a source is parked after a 429 (rate limited) or 403 (blocked).
+
+google_news:
+  interval_s: 600
+  capacity: 3
+  min_gap_s: 1.5
+  max_items_per_query: 40
+  editions:
+    US: "hl=en-US&gl=US&ceid=US:en"
+    IN: "hl=en-IN&gl=IN&ceid=IN:en"
+  queries:
+    - {q: "Apple stock", edition: US, ticker: AAPL}
+    - {q: "Microsoft stock", edition: US, ticker: MSFT}
+    - {q: "JPMorgan shares", edition: US, ticker: JPM}
+    - {q: "Tesla stock", edition: US, ticker: TSLA}
+    - {q: "Nvidia stock", edition: US, ticker: NVDA}
+    - {q: "credit rating downgrade", edition: US}
+    - {q: "bond default bankruptcy", edition: US}
+    - {q: "Federal Reserve interest rates", edition: US}
+    - {q: "sanctions tariffs markets", edition: US}
+    - {q: "Reliance Industries shares", edition: IN, ticker: RELIANCE.NS}
+    - {q: "HDFC Bank shares", edition: IN, ticker: HDFCBANK.NS}
+    - {q: "Tata Motors shares", edition: IN, ticker: TATAMOTORS.NS}
+    - {q: "Infosys shares", edition: IN, ticker: INFY.NS}
+    - {q: "RBI repo rate", edition: IN}
+    - {q: "Adani Group shares", edition: IN}
+
+reddit:
+  interval_s: 600
+  capacity: 1
+  min_gap_s: 120          # never two Reddit requests closer than this
+  backoff_429_s: 900      # park for 15 min after HTTP 429
+  backoff_403_s: 3600
+  subreddits: [stocks, investing, wallstreetbets, IndianStockMarket]   # ONE per cycle, rotating
+
+mastodon:
+  interval_s: 600
+  capacity: 2
+  min_gap_s: 2
+  backoff_429_s: 900
+  instance: mastodon.social
+  limit: 40
+  tags: [stocks, investing, finance, markets]
+
+bluesky:
+  interval_s: 900
+  capacity: 2
+  min_gap_s: 2
+  backoff_429_s: 900
+  limit: 25
+  queries:
+    - {q: "$AAPL", ticker: AAPL}
+    - {q: "$TSLA", ticker: TSLA}
+    - {q: "$NVDA", ticker: NVDA}
+    - {q: "credit downgrade"}
+    - {q: "stock market selloff"}
+    - {q: "Nifty Sensex"}
+
+finnhub:
+  interval_s: 900
+  capacity: 5
+  min_gap_s: 1.1          # free tier ~60 req/min
+  backoff_429_s: 120
+  lookback_days: 2
+  symbols: [AAPL, MSFT, JPM, TSLA, NVDA]
+
+gdelt:
+  interval_s: 1800
+  capacity: 1
+  min_gap_s: 6            # GDELT asks for >=5 s between requests
+  backoff_429_s: 1800
+  query: '(sanctions OR "central bank" OR tariff OR invasion OR default) sourcelang:english'
+  max_records: 50
+
+stocktwits:
+  interval_s: 900
+  capacity: 1
+  min_gap_s: 5
+  backoff_429_s: 900
+  backoff_403_s: 3600
+  symbols: [AAPL, TSLA, NVDA]

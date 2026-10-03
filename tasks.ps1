@@ -1,8 +1,8 @@
 # Windows equivalent of the Makefile.  Usage: powershell -ExecutionPolicy Bypass -File tasks.ps1 <target>
-param([Parameter(Mandatory = $true)][ValidateSet("setup", "install", "models", "probe", "test", "test-fast", "lint")][string]$Target)
+param([Parameter(Mandatory = $true)][ValidateSet("setup", "install", "models", "probe", "test", "test-fast", "lint", "capture", "replay", "ingest-once")][string]$Target)
 
 $ErrorActionPreference = "Stop"
-Set-Location $PSScriptRoot
+Set-Location -LiteralPath $PSScriptRoot  # path may contain spaces ("GT LAB")
 $py = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
 
 function Invoke-Install { & $py -m pip install --upgrade pip; & $py -m pip install -r requirements.txt }
@@ -19,5 +19,8 @@ switch ($Target) {
     "test" { & $py -m pytest -q --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing }
     "test-fast" { & $py -m pytest -q -m "not model" }
     "lint" { & $py -m ruff check . }
+    "capture" { & $py scripts/capture_cache.py }
+    "replay" { & $py -m risk_engine.ingestion.replay --limit 20 }
+    "ingest-once" { & $py -m risk_engine.ingestion.scheduler --once }
 }
 exit $LASTEXITCODE

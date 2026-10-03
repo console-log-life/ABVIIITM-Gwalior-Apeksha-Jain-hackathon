@@ -3,7 +3,7 @@
 AI/NLP financial risk signals from news and social text, plus downstream portfolio stress testing.
 S&P Global × CRISIL "Code to Connect Hackathon 2026" — Phase 3.
 
-> Status: Milestone M0 (skeleton). The full README is written in M7.
+> Status: Milestone M1 (ingestion). The full README is written in M7.
 
 ## Quickstart (M0)
 
@@ -14,6 +14,8 @@ copy .env.example .env                       # optional; app runs with zero keys
 .\.venv\Scripts\python.exe scripts\probe_sources.py
 .\.venv\Scripts\python.exe scripts\setup_models.py
 .\.venv\Scripts\python.exe -m pytest -q
+.\.venv\Scripts\python.exe scripts\capture_cache.py           # collect real data for REPLAY (run 2-3x/day)
+.\.venv\Scripts\python.exe -m risk_engine.ingestion.replay     # stream cached data
 ```
 
 On Linux/macOS, or with GNU make: `make setup`, `make probe`, `make test`.

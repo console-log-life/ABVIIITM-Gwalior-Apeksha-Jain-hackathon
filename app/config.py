@@ -42,6 +42,8 @@ class Settings(BaseSettings):
 
     # Optional keys
     finnhub_api_key: str = ""
+    bluesky_handle: str = ""
+    bluesky_app_password: str = ""
 
     # HTTP behaviour (bounded by spec: <=10 s general, <=20 s GDELT, <=2 retries)
     user_agent: str = "risk-signal-engine/0.1 (hackathon research prototype)"
@@ -109,6 +111,10 @@ class Settings(BaseSettings):
     @property
     def has_finnhub(self) -> bool:
         return bool(self.finnhub_api_key.strip())
+
+    @property
+    def has_bluesky(self) -> bool:
+        return bool(self.bluesky_handle.strip() and self.bluesky_app_password.strip())
 
     @property
     def uses_provided_portfolio(self) -> bool:

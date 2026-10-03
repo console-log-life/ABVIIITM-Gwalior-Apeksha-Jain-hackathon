@@ -17,6 +17,8 @@ class Source(str, Enum):
     GDELT = "gdelt"
     STOCKTWITS = "stocktwits"
     REDDIT = "reddit"
+    BLUESKY = "bluesky"
+    MASTODON = "mastodon"
     MANUAL = "manual"
     SCENARIO = "scenario"
 
@@ -67,6 +69,8 @@ SOURCE_TYPE_OF: dict[Source, SourceType] = {
     Source.GDELT: SourceType.NEWS,
     Source.STOCKTWITS: SourceType.SOCIAL,
     Source.REDDIT: SourceType.SOCIAL,
+    Source.BLUESKY: SourceType.SOCIAL,
+    Source.MASTODON: SourceType.SOCIAL,
 }
 
 
@@ -101,7 +105,7 @@ class RawDocument(_Strict):
     text: str = Field(min_length=1)
     url: str | None = None
     publisher: str | None = None
-    hint_ticker: str | None = Field(default=None, pattern=r"^[A-Z0-9.\-]{1,12}$")
+    hint_ticker: str | None = Field(default=None, pattern=r"^[A-Z0-9.\-]{1,15}$")
     user_sentiment_tag: Literal["Bullish", "Bearish"] | None = None
     # Extension (documented): the real source a SCENARIO doc imitates, for its credibility prior.
     imitated_source: Source | None = None

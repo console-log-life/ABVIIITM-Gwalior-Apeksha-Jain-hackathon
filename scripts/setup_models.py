@@ -93,6 +93,7 @@ def ensure_spacy(download: bool) -> bool:
 
 
 def main() -> int:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # Windows consoles default to cp1252
     ap = argparse.ArgumentParser()
     ap.add_argument("--zero-shot", action="store_true", help="also fetch the optional zero-shot model")
     ap.add_argument("--verify-only", action="store_true", help="skip downloads, only verify offline load")

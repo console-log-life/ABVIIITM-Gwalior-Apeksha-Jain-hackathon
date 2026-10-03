@@ -1,30 +1,52 @@
 # Data sources
 
 A source is only claimed as working after `scripts/probe_sources.py` passes against it.
-Raw results of the latest run: `data/probe_results.json` (not committed; regenerate with `make probe`).
+Raw results of the latest run: `data/probe_results.json` (not committed; regenerate with `tasks.ps1 probe`).
+Per-source settings (queries, intervals, rate limits, backoffs): `risk_engine/ingestion/sources.yaml`.
 
-## Probe results — 2026-10-03, developer laptop (Windows 11, home network)
+## Probe and capture results — 2026-10-03, developer laptop (Windows 11, home network)
 
-| Source | Type | Result | Detail | Decision |
+| Source | Type | Probe result | Live capture (same evening) | Status in the system |
 |---|---|---|---|---|
-| Google News RSS (US: `hl=en-US&gl=US`) | news | PASS | HTTP 200, 100 items, ~1 s | **Primary news** |
-| Google News RSS (IN: `hl=en-IN&gl=IN`) | news | PASS | HTTP 200, 100 items, ~0.6 s | **Primary news (India issuers)** |
-| Finnhub company-news | news | SKIP | `FINNHUB_API_KEY` not set | Optional; adapter skips cleanly without a key |
-| GDELT DOC 2.0 | news | FAIL | HTTP 429 on two runs (~10–14 s responses) | Best-effort background only; skip on failure; re-probe before demo |
-| StockTwits symbol stream | social | FAIL | HTTP 403 on two runs (blocked, likely Cloudflare) | Not used unless a later probe passes |
-| Reddit RSS `r/stocks/new/.rss` | social | PASS | HTTP 200, 25 items | **Primary social** |
-| Reddit RSS `r/investing/new/.rss` | social | FAIL | HTTP 429 on the second Reddit request, even with a 6 s gap | Reddit throttles unauthenticated RSS hard; the adapter must use a long per-source interval and rotate subreddits across cycles |
+| Google News RSS (US + IN editions) | news | PASS — HTTP 200, 100 items/query | 581 new headlines from 15 queries | **Primary news** |
+| GDELT DOC 2.0 | news | FAIL — HTTP 429 on 3 probes | 1 of 3 runs succeeded (50 articles, 44 new); next run 429 | Best-effort; 30 min backoff on 429 |
+| Finnhub company-news | news | SKIP — no `FINNHUB_API_KEY` | — | Optional; adapter skips cleanly without a key |
+| Reddit RSS (`/r/{sub}/new/.rss`) | social | PASS for r/stocks; 429 when a second request followed within ~60 s | 25 posts per run | **Primary social**, rate-limited (see below) |
+| Mastodon hashtag timelines (mastodon.social `#stocks #investing #finance #markets`) | social | PASS — HTTP 200, 40 statuses per tag | 76 + 53 new posts in two runs | **Social** (added in M1 after passing the probe) |
+| Bluesky `app.bsky.feed.searchPosts` (authenticated) | social | SKIP — `BLUESKY_HANDLE` / `BLUESKY_APP_PASSWORD` not set | — | Adapter built; activates when credentials are set. Not claimed as working until a probe PASSes |
+| StockTwits symbol stream | social | FAIL — HTTP 403 on every attempt (blocked) | — | Best-effort; 1 h backoff on 403 |
 
-Result: requirement R2 (at least one news and one social source) is met by Google News + Reddit RSS.
-The social source is unofficial and best-effort; REPLAY mode (cached real captures) is the fallback.
+Result: requirement R2 (at least one news and one social source) is met by Google News plus Reddit RSS
+and Mastodon. Both social sources are unofficial and best-effort; REPLAY mode (cached real captures) is the fallback.
+
+## Reddit throttling policy
+
+Reddit throttles unauthenticated RSS hard, and the probe confirmed it (429 on a second request within about 60 s). The adapter:
+
+- polls **one subreddit per cycle**, rotating `stocks → investing → wallstreetbets → IndianStockMarket`;
+- never sends two Reddit requests less than **120 s** apart (token bucket; if a cycle comes too soon it is
+  skipped, not delayed, and the same subreddit is tried next time);
+- parks Reddit for **15 min** after any HTTP 429.
+
+Rotation position, last request time and backoffs are saved in `data/cache/state.json` between
+`capture_cache.py` runs.
+
+## Caching real data for REPLAY
+
+`scripts/capture_cache.py` fetches every live source once and writes only new documents to
+`data/cache/captures/capture_<UTC timestamp>.jsonl` with `provenance=CACHED_REAL` and the real `captured_at`.
+Documents are deduplicated against the whole existing cache (exact plus same-source near-duplicates).
 
 ## Excluded by design
 
-- **X/Twitter API** — no free tier since Feb 2026.
-- **Yahoo Finance RSS** — reported HTTP 429s since Sep 2026.
-- **Reddit OAuth API** — requires app approval; we use only public subreddit RSS.
+- **X/Twitter API**: no free tier since Feb 2026.
+- **Yahoo Finance RSS**: reported HTTP 429s since Sep 2026.
+- **Reddit OAuth API**: requires app approval; we use only public subreddit RSS.
 
 ## Constraints we honour
 
-- Google News items are headline + publisher + timestamp only (no body); links are Google redirects and are not decoded.
-- Descriptive `User-Agent` on every request; timeouts ≤10 s (GDELT ≤20 s); at most 2 retries; GDELT bodies are validated as JSON before parsing.
+- Google News items are headline + publisher + timestamp only (no body). Links are Google redirects and are not decoded.
+- Descriptive `User-Agent` on every request. Timeouts are ≤10 s (GDELT ≤20 s), with at most 2 retries (transport errors and 5xx only).
+- GDELT bodies are validated as JSON before parsing, because it can return plain-text errors with HTTP 200.
+- API keys are sent in headers (Finnhub `X-Finnhub-Token`), never in URLs, so they cannot leak into logs.
+- Bluesky uses an **app password**, never the account password. The session is reused and refreshed, not re-created each cycle.
