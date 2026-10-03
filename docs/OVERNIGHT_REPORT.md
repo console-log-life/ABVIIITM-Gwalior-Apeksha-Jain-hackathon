@@ -23,7 +23,7 @@ check, but **it is not ready to submit** until you supply the 3 links.
 - **Coverage:** 88%.
 - **Lint:** ruff clean.
 - **Fresh clone:** `git clone` → `tasks.ps1 setup` → `tasks.ps1 test`: 142 passed (clone deleted afterwards).
-- **Real data:** 911 CACHED_REAL documents across 11 capture runs; the capture log is in `docs/PROGRESS.md`.
+- **Real data:** 911 CACHED_REAL documents from 10 capture runs (10 files in `data/cache/captures/`); the capture log is in `docs/PROGRESS.md`.
 
 ## Start the demo (one command)
 
