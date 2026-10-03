@@ -1,8 +1,8 @@
 # PROGRESS (build memory — read this first after any restart)
 
-**Current milestone:** M3 (impact integration, store, bus, API) — starting
-**Last commit:** see `git log -1` (M2 committed)
-**Next step:** M3 capture run, then store.py / bus.py / FastAPI
+**Current milestone:** M4 (portfolio + stress engine) — starting
+**Last commit:** see `git log -1` (M3 committed)
+**Next step:** M4 capture run, then generate_portfolio.py / pricers.py / scenarios.yaml / triggers.py / stress_engine.py
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -15,6 +15,7 @@ plus overrides recorded below. No pushes, no remotes, no `git reset --hard`, not
 | 2026-10-03 17:22 | M1 (first run) | 726 | 726 |
 | 2026-10-03 17:22 | M1 (second run) | 53 | 779 |
 | 2026-10-03 17:38 | M2 | 40 | 819 |
+| 2026-10-03 17:55 | M3 | 36 | 855 |
 
 ## Milestones
 
@@ -42,6 +43,23 @@ Remaining `@name` strings exist only inside post URLs (allowed by user decision)
 **Impact scorer + corroboration were built in M2** (CLI must print a full RiskSignal) — no stub was needed; M3 wires them to store/API.
 **Known issues:** keyword rules give false positives (e.g. "The war on data centres" → Geopolitical); 47% of real docs → Other;
 ORG-less headlines from a ticker-specific Google query fall back to the query's ticker hint (macro ones become MARKET).
+
+### M3 — store, bus, API — DONE (self-gated)
+**Files:** `risk_engine/store.py` (SQLite: documents, signals, stress_runs, stress_results, source_health; indexes
+signals(ticker,timestamp), signals(event_type)), `risk_engine/bus.py` (signal.created, stress.completed), `risk_engine/ingestion/state.py`,
+`app/runtime.py` (single ingest/analyze path, LIVE scheduler with capture state, REPLAY/SCENARIO playback, reset),
+`app/main.py`, `app/api/{models,deps,routes_signals,routes_health,routes_demo}.py`, `tests/test_api.py`.
+**Run:** `.venv\Scripts\python.exe -m uvicorn app.main:app --port 8000` → http://127.0.0.1:8000/docs
+**Actual output (real server, FinBERT):** /health status ok, finbert loaded; /docs 200; POST /analyze "US imposes sweeping sanctions on Russia
+as invasion fears grow; markets plunge" → MARKET, Geopolitical, 9.1 Critical, SYNTHETIC; empty text → 422; SSE emitted `event: signal`
+for it; persisted in /signals and /signals/export.jsonl.
+**Tests:** 121 passed (fast + model), ruff clean. Every OpenAPI operation has an example (tested).
+**Extra endpoints (small, needed by dashboard):** `POST /mode` (mode switch), `GET /demo/status`.
+**Fixes found while testing:** langdetect called "Apple unveils new iPhone lineup" French (0.99999) → language check skipped under
+40 chars and overruled by English function words; the pipeline no longer doubles title+text for the language check.
+SSE implemented with a plain StreamingResponse (sse-starlette removed from requirements). Ruff B008 configured for FastAPI markers.
+**Known issues:** SSE clients that subscribe after an event miss it unless they use `replay_last`; `/demo/reset` deletes all
+stress runs (incl. ones triggered by LIVE signals) — acceptable for a demo tool, documented in the endpoint summary.
 
 ## User overrides / decisions given (2026-10-03, before overnight run)
 - Portfolio: synthetic, seed 42, labelled SYNTHETIC.

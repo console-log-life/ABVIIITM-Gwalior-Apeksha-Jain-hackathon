@@ -15,7 +15,6 @@ from __future__ import annotations
 
 import argparse
 import asyncio
-import json
 import os
 import sys
 from collections import Counter
@@ -35,30 +34,10 @@ from risk_engine.ingestion.scheduler import (  # noqa: E402
     print_reports,
     process_result,
 )
+from risk_engine.ingestion.state import apply_state, save_state  # noqa: E402
 from risk_engine.logging_setup import setup_logging  # noqa: E402
 from risk_engine.preprocessing.dedup import Deduplicator  # noqa: E402
 from risk_engine.schemas import Provenance, RawDocument  # noqa: E402
-
-STATE_FILE = "state.json"
-
-
-def load_state(cache_dir: Path) -> dict:
-    p = cache_dir / STATE_FILE
-    if not p.exists():
-        return {}
-    try:
-        return json.loads(p.read_text(encoding="utf-8"))
-    except (OSError, ValueError):
-        return {}
-
-
-def save_state(cache_dir: Path, adapters: list[BaseAdapter]) -> None:
-    state = load_state(cache_dir)
-    for a in adapters:
-        state[a.name] = a.export_state()
-    tmp = cache_dir / (STATE_FILE + ".tmp")
-    tmp.write_text(json.dumps(state, indent=2), encoding="utf-8")
-    os.replace(tmp, cache_dir / STATE_FILE)
 
 
 def write_capture(cache_dir: Path, docs: list[RawDocument], stamp: datetime) -> Path | None:
@@ -79,9 +58,7 @@ async def capture(
     adapters: list[BaseAdapter], cache_dir: Path, threshold: int = 92
 ) -> tuple[list[CycleReport], Path | None]:
     cache_dir.mkdir(parents=True, exist_ok=True)
-    state = load_state(cache_dir)
-    for a in adapters:
-        a.import_state(state.get(a.name, {}))
+    apply_state(adapters, cache_dir)
 
     dedup = Deduplicator(threshold)
     dedup.seed(load_cached_documents(cache_dir))

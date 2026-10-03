@@ -50,7 +50,7 @@ def _prepare(doc: RawDocument) -> RawDocument:
     text = clean_text(doc.text) or title
     if not title and not text:
         raise DocumentRejected("text is empty after cleaning")
-    if not is_english(f"{title}. {text}"):
+    if not is_english(title if text == title else f"{title}. {text}"):
         raise DocumentRejected("text does not appear to be English")
     return doc.model_copy(update={"title": title or text[:200], "text": text})
 
@@ -80,8 +80,19 @@ class RiskPipeline:
         self.corroboration = corroboration or CorroborationTracker(self.settings.corroboration_window_h)
         self._lock = threading.Lock()
 
-    def process_batch(self, docs: list[RawDocument]) -> list[RiskSignal]:
-        prepared = [_prepare(d) for d in docs]
+    def process_batch(self, docs: list[RawDocument], skip_rejected: bool = False) -> list[RiskSignal]:
+        """Analyse documents in input order. With skip_rejected, unusable docs are logged and omitted
+        (ingestion); otherwise the first DocumentRejected is raised (API input -> HTTP 422)."""
+        prepared = []
+        for d in docs:
+            try:
+                prepared.append(_prepare(d))
+            except DocumentRejected as exc:
+                if not skip_rejected:
+                    raise
+                log.info("pipeline: skipping %s (%s)", d.doc_id, exc)
+        if not prepared:
+            return []
         sentiments = self.sentiment.analyze_many([(d.title, d.text) for d in prepared])
         out = []
         with self._lock:  # corroboration order must follow input order

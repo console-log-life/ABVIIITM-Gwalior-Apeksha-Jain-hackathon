@@ -4,7 +4,6 @@
 # --- API / config ---
 fastapi==0.115.6
 uvicorn[standard]==0.34.0
-sse-starlette==2.2.1
 pydantic==2.10.4
 pydantic-settings==2.7.1
 SQLAlchemy==2.0.36

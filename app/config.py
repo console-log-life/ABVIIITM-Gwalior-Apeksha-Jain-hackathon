@@ -77,9 +77,12 @@ class Settings(BaseSettings):
     transaction_data_path: Path | None = None
     portfolio_path: Path = Path("./portfolio/portfolio_data.csv")
 
-    # Demo
+    # Demo / replay
     demo_seed: int = 42
     demo_step_seconds: float = Field(default=10.0, ge=0)
+    demo_story_path: Path = Path("./data/scenarios/demo_story.json")
+    replay_limit: int = Field(default=120, ge=1)
+    replay_delay_s: float = Field(default=0.5, ge=0)
 
     @field_validator("transaction_data_path", mode="before")
     @classmethod

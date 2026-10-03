@@ -12,7 +12,12 @@ from risk_engine.schemas import RawDocument
 log = get_logger(__name__)
 
 MAX_TEXT_CHARS = 5000
-MIN_CHARS_FOR_LANG_CHECK = 25
+MIN_CHARS_FOR_LANG_CHECK = 40
+# Words that are common in English and rare/absent in other Latin-script languages we see in feeds.
+ENGLISH_FUNCTION_WORDS = frozenset({
+    "the", "and", "of", "to", "for", "with", "after", "as", "on", "its", "is", "are", "was", "from", "by",
+    "over", "amid", "says", "new", "shares", "stock", "stocks", "will", "has", "have", "this", "that", "be",
+})
 NON_EN_REJECT_PROB = 0.90
 
 # Inline tags (Mastodon hashtag links: <a>#<span>Finance</span></a>) vanish; block tags become spaces.
@@ -91,7 +96,13 @@ def is_english(text: str) -> bool:
     except Exception:  # langdetect raises on feature-less input
         return True
     top = langs[0]
-    return not (top.lang != "en" and top.prob >= NON_EN_REJECT_PROB)
+    if top.lang == "en" or top.prob < NON_EN_REJECT_PROB:
+        return True
+    # langdetect is unreliable on short headlines ("Apple unveils new iPhone lineup" -> not English at 0.99),
+    # so a confident non-English verdict is overruled by >= 2 English-only function words.
+    tokens = re.findall(r"[a-z']+", text.lower())
+    needed = 1 if len(tokens) < 12 else 2
+    return len(set(tokens) & ENGLISH_FUNCTION_WORDS) >= needed
 
 
 def clean_document(doc: RawDocument) -> RawDocument | None:
