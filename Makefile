@@ -8,7 +8,7 @@ PY := .venv/bin/python
 BOOT := python3.11
 endif
 
-.PHONY: setup venv install models probe test test-fast lint capture replay ingest-once api dashboard demo demo-offline drill check-dashboard screenshots portfolio
+.PHONY: setup venv install models probe test test-fast lint capture replay ingest-once api dashboard demo demo-offline drill check-dashboard screenshots portfolio evaluate benchmark submission
 
 setup: venv install models
 
@@ -66,3 +66,12 @@ screenshots:
 
 portfolio:
 	"$(PY)" -m portfolio.generate_portfolio
+
+evaluate:
+	"$(PY)" scripts/evaluate.py
+
+benchmark:
+	"$(PY)" scripts/benchmark_latency.py
+
+submission:
+	"$(PY)" scripts/build_submission.py

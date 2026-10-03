@@ -1,8 +1,8 @@
 # PROGRESS (build memory — read this first after any restart)
 
-**Current milestone:** M8 (DoSelect submission pack) — in progress
-**Last commit:** see `git log -1` (M7 committed)
-**Next step:** M8 commit, then docs/OVERNIGHT_REPORT.md
+**Current milestone:** ALL MILESTONES M0–M8 DONE — overnight run finished
+**Last commit:** see `git log -1`
+**Next step:** user actions in docs/OVERNIGHT_REPORT.md (review eval labels, links, repo, rehearsal)
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -21,6 +21,7 @@ plus overrides recorded below. No pushes, no remotes, no `git reset --hard`, not
 | 2026-10-03 18:32 | M5 (health snapshot run) | 3 | 899 |
 | 2026-10-03 18:39 | M6 | 4 | 903 |
 | 2026-10-03 18:55 | M7 | 1 | 904 |
+| 2026-10-03 19:37 | M8 | 7 | 911 |
 
 ## Milestones
 
@@ -135,6 +136,19 @@ StockTwits tag agreement: not measured (n=0, blocked). Same-author-bias caveat w
 → `tasks.ps1 test` → 142 passed, coverage 88%; clone deleted afterwards.
 **Transient:** one `setup_models.py --zero-shot` run reported FinBERT offline-verify FAIL with empty stderr while the machine was out
 of process resources (bash fork errors at the same time); `--verify-only` re-run PASSED for all three models.
+
+### M8 — DoSelect submission pack — DONE (self-gated; links pending from user)
+**Files:** `docs/submission/doselect_answer.md` (source), `docs/submission/doselect_answer.html` (paste this; tags h2/h3/p/ul/li/strong only),
+`scripts/build_submission.py` (renderer + 19 mechanical checks), tasks.ps1/Makefile targets `evaluate`, `benchmark`, `submission`.
+**Check result:** 19/19 PASS — sections in order, 1,047 words, exec summary 73 words, 7 feature bullets, no code, allowed HTML tags,
+claimed sources {google_news, reddit, mastodon} = probe PASS set, every Results number (12) traced to eval/benchmark JSON or a live
+StressEngine run, only the 3 link placeholders, SYNTHETIC/CACHED_REAL/simulated present, "not investment advice" present,
+5 limitations with required topics, capture-date phrase matches the cache, PRELIMINARY flagged.
+**NOT READY TO SUBMIT** until the user supplies the 3 links → replace placeholders → `tasks.ps1 submission` → confirm 0 placeholders.
+**Manual review (non-mechanical items):** every feature named in the answer exists and is visible in the demo (provenance badges, one
+pipeline, explainability page, corroboration escalation in story step 4, trigger audit log, 12-section dashboard + headline box,
+offline drill). README uses the same numbers and the same source list.
+**Final state:** 142 tests passed, coverage 88%, ruff clean.
 
 ## User overrides / decisions given (2026-10-03, before overnight run)
 - Portfolio: synthetic, seed 42, labelled SYNTHETIC.

@@ -1,7 +1,8 @@
 # Windows equivalent of the Makefile.  Usage: powershell -ExecutionPolicy Bypass -File tasks.ps1 <target>
 param([Parameter(Mandatory = $true)][ValidateSet(
         "setup", "install", "models", "probe", "test", "test-fast", "lint", "capture", "replay", "ingest-once",
-        "api", "dashboard", "demo", "demo-offline", "drill", "check-dashboard", "screenshots", "portfolio")]
+        "api", "dashboard", "demo", "demo-offline", "drill", "check-dashboard", "screenshots", "portfolio",
+        "evaluate", "benchmark", "submission")]
     [string]$Target)
 
 $ErrorActionPreference = "Stop"
@@ -33,5 +34,8 @@ switch ($Target) {
     "check-dashboard" { & $py scripts/check_dashboard.py }
     "screenshots" { & $py scripts/screenshot_dashboard.py }
     "portfolio" { & $py -m portfolio.generate_portfolio }
+    "evaluate" { & $py scripts/evaluate.py }
+    "benchmark" { & $py scripts/benchmark_latency.py }
+    "submission" { & $py scripts/build_submission.py }
 }
 exit $LASTEXITCODE
