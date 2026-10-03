@@ -40,6 +40,20 @@ def clean_text(raw: str | None) -> str:
     return _WS_RE.sub(" ", s).strip()
 
 
+_MENTION_RE = re.compile(r"(?<![\w@])@[A-Za-z0-9_][\w.-]*(?:@[\w.-]+)?")
+_HASHTAG_SPACING_RE = re.compile(r"(?<!\S)# (?=\w)")
+
+
+def scrub_mentions(text: str) -> str:
+    """Privacy: replace @handles (incl. @user@instance) in social text with a neutral token."""
+    return _MENTION_RE.sub("@user", text)
+
+
+def repair_hashtag_spacing(text: str) -> str:
+    """Older captures rendered Mastodon hashtags as '# Finance'; restore '#Finance'."""
+    return _HASHTAG_SPACING_RE.sub("#", text)
+
+
 def strip_publisher_suffix(title: str, publisher: str | None) -> str:
     """Google News titles look like 'Headline - Publisher'. Remove the suffix when it matches."""
     if publisher:

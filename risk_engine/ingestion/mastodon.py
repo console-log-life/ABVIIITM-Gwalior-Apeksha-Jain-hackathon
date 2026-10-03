@@ -6,7 +6,7 @@ from __future__ import annotations
 from typing import Any
 
 from risk_engine.ingestion.base import BaseAdapter, SourceSkip, parse_iso
-from risk_engine.preprocessing.clean import clean_text, make_title
+from risk_engine.preprocessing.clean import clean_text, make_title, scrub_mentions
 from risk_engine.schemas import Provenance, RawDocument, Source
 
 
@@ -17,13 +17,13 @@ def parse_mastodon_statuses(statuses: list[dict], tag: str) -> list[RawDocument]
             continue
         if st.get("language") not in (None, "en"):
             continue
-        text = clean_text(st.get("content"))
+        text = scrub_mentions(clean_text(st.get("content")))
         if not text:
             continue
-        acct = (st.get("account") or {}).get("acct") or "unknown"
         docs.append(RawDocument.build(
             source=Source.MASTODON, title=make_title(text), text=text, url=st.get("url") or st.get("uri"),
-            provenance=Provenance.LIVE, published_at=parse_iso(st.get("created_at")), publisher=f"@{acct}",
+            provenance=Provenance.LIVE, published_at=parse_iso(st.get("created_at")),
+            publisher=f"#{tag}",  # the channel, never the author (privacy)
         ))
     return docs
 

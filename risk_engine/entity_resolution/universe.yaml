@@ -1,0 +1,97 @@
+# Issuer universe for entity resolution (25 issuers).
+# rating_bucket values are ILLUSTRATIVE approximations for the hackathon stress model — NOT official ratings.
+#
+# aliases:            matched case-insensitively on word boundaries, no extra condition.
+# ambiguous_aliases:  common words / brand names that only count when a context keyword appears in the same
+#                     text (see context_keywords + per-issuer context) or the document carries a matching
+#                     ticker hint. e.g. "apple pie recipe" must NOT resolve to AAPL.
+
+context_keywords: [stock, stocks, share, shares, shareholder, shareholders, investor, investors, company, companies,
+  ceo, cfo, chief executive, earnings, revenue, revenues, profit, profits, quarter, quarterly, results, guidance,
+  supplier, suppliers, inc, corp, corporation, ltd, limited, plc, nasdaq, nyse, nse, bse, sensex, nifty,
+  market cap, valuation, analyst, analysts, downgrade, upgrade, rating, bond, bonds, debt, lawsuit, sues, sued,
+  antitrust, regulator, regulators, probe, fine, deal, acquisition, merger, layoffs, sales, dividend, buyback,
+  ipo, launch, launches, unveils, recall, factory, plant, chips, ai]
+
+issuers:
+  # ---------------- United States (S&P 100 large caps) ----------------
+  - {issuer_id: US-AAPL, name: Apple Inc., ticker: AAPL, sector: Information Technology, country: US,
+     rating_bucket: AAA-AA, type: corporate,
+     aliases: [Apple Inc, Apple Inc., Apple's iPhone, Tim Cook],
+     ambiguous_aliases: [Apple], context: [iphone, ipad, mac, macbook, app store, cupertino, vision pro, ios]}
+  - {issuer_id: US-MSFT, name: Microsoft Corp., ticker: MSFT, sector: Information Technology, country: US,
+     rating_bucket: AAA-AA, type: corporate, aliases: [Microsoft, Satya Nadella], ambiguous_aliases: [],
+     context: [azure, windows, copilot]}
+  - {issuer_id: US-NVDA, name: Nvidia Corp., ticker: NVDA, sector: Information Technology, country: US,
+     rating_bucket: AAA-AA, type: corporate, aliases: [Nvidia, NVIDIA, Jensen Huang], ambiguous_aliases: [],
+     context: [gpu, gpus, blackwell]}
+  - {issuer_id: US-GOOGL, name: Alphabet Inc., ticker: GOOGL, sector: Communication Services, country: US,
+     rating_bucket: AAA-AA, type: corporate, aliases: [Alphabet Inc, Google, Sundar Pichai, YouTube],
+     ambiguous_aliases: [Alphabet], context: [search, gemini, android]}
+  - {issuer_id: US-AMZN, name: Amazon.com Inc., ticker: AMZN, sector: Consumer Discretionary, country: US,
+     rating_bucket: AAA-AA, type: corporate, aliases: [Amazon.com, Amazon Web Services, AWS, Andy Jassy],
+     ambiguous_aliases: [Amazon], context: [prime, e-commerce, ecommerce, retailer, cloud]}
+  - {issuer_id: US-META, name: Meta Platforms Inc., ticker: META, sector: Communication Services, country: US,
+     rating_bucket: AAA-AA, type: corporate, aliases: [Meta Platforms, Facebook, Instagram, WhatsApp, Mark Zuckerberg],
+     ambiguous_aliases: [Meta], context: [social media, metaverse, llama]}
+  - {issuer_id: US-TSLA, name: Tesla Inc., ticker: TSLA, sector: Consumer Discretionary, country: US,
+     rating_bucket: BBB, type: corporate, aliases: [Tesla, Elon Musk's Tesla], ambiguous_aliases: [],
+     context: [ev, evs, cybertruck, robotaxi, gigafactory]}
+  - {issuer_id: US-JPM, name: JPMorgan Chase & Co., ticker: JPM, sector: Financials, country: US,
+     rating_bucket: A, type: bank, aliases: [JPMorgan, JP Morgan, J.P. Morgan, JPMorgan Chase, Jamie Dimon],
+     ambiguous_aliases: [Chase], context: [bank, banking, lender]}
+  - {issuer_id: US-BAC, name: Bank of America Corp., ticker: BAC, sector: Financials, country: US,
+     rating_bucket: A, type: bank, aliases: [Bank of America, BofA, BofA Securities], ambiguous_aliases: [],
+     context: [bank, lender]}
+  - {issuer_id: US-GS, name: Goldman Sachs Group Inc., ticker: GS, sector: Financials, country: US,
+     rating_bucket: A, type: bank, aliases: [Goldman Sachs, David Solomon], ambiguous_aliases: [Goldman],
+     context: [bank, investment bank, wall street]}
+  - {issuer_id: US-XOM, name: Exxon Mobil Corp., ticker: XOM, sector: Energy, country: US,
+     rating_bucket: AAA-AA, type: corporate, aliases: [Exxon Mobil, ExxonMobil, Exxon], ambiguous_aliases: [],
+     context: [oil, crude, refinery]}
+  - {issuer_id: US-BA, name: Boeing Co., ticker: BA, sector: Industrials, country: US,
+     rating_bucket: BBB, type: corporate, aliases: [Boeing], ambiguous_aliases: [],
+     context: [737, 787, faa, aircraft, planemaker]}
+  - {issuer_id: US-F, name: Ford Motor Co., ticker: F, sector: Consumer Discretionary, country: US,
+     rating_bucket: BBB, type: corporate, aliases: [Ford Motor, Ford Motor Co], ambiguous_aliases: [Ford],
+     context: [automaker, carmaker, f-150, vehicles, dealers]}
+  - {issuer_id: US-INTC, name: Intel Corp., ticker: INTC, sector: Information Technology, country: US,
+     rating_bucket: BBB, type: corporate, aliases: [Intel Corp, Intel Corporation], ambiguous_aliases: [Intel],
+     context: [chipmaker, foundry, semiconductor, processors]}
+  - {issuer_id: US-PFE, name: Pfizer Inc., ticker: PFE, sector: Health Care, country: US,
+     rating_bucket: A, type: corporate, aliases: [Pfizer], ambiguous_aliases: [],
+     context: [drug, drugmaker, vaccine, fda]}
+  - {issuer_id: US-WMT, name: Walmart Inc., ticker: WMT, sector: Consumer Staples, country: US,
+     rating_bucket: AAA-AA, type: corporate, aliases: [Walmart, Wal-Mart], ambiguous_aliases: [],
+     context: [retailer, stores]}
+
+  # ---------------- India ----------------
+  - {issuer_id: IN-RELIANCE, name: Reliance Industries Ltd., ticker: RELIANCE.NS, sector: Energy, country: IN,
+     rating_bucket: BBB, type: corporate, aliases: [Reliance Industries, RIL, Mukesh Ambani, Reliance Jio, Jio Platforms],
+     ambiguous_aliases: [Reliance], context: [ambani, jio, refining, retail]}
+  - {issuer_id: IN-HDFCBANK, name: HDFC Bank Ltd., ticker: HDFCBANK.NS, sector: Financials, country: IN,
+     rating_bucket: BBB, type: bank, aliases: [HDFC Bank], ambiguous_aliases: [HDFC], context: [bank, lender]}
+  - {issuer_id: IN-TATAMOTORS, name: Tata Motors Ltd., ticker: TATAMOTORS.NS, sector: Consumer Discretionary,
+     country: IN, rating_bucket: BB, type: corporate, aliases: [Tata Motors, Jaguar Land Rover, JLR],
+     ambiguous_aliases: [], context: [automaker, carmaker, vehicles, ev]}
+  - {issuer_id: IN-INFY, name: Infosys Ltd., ticker: INFY.NS, sector: Information Technology, country: IN,
+     rating_bucket: A, type: corporate, aliases: [Infosys, Salil Parekh], ambiguous_aliases: [],
+     context: [it services, outsourcing]}
+  - {issuer_id: IN-ADANIENT, name: Adani Enterprises Ltd., ticker: ADANIENT.NS, sector: Industrials, country: IN,
+     rating_bucket: BB, type: corporate, aliases: [Adani Enterprises, Adani Group, Gautam Adani],
+     ambiguous_aliases: [Adani], context: [ports, conglomerate, hindenburg]}
+  - {issuer_id: IN-SBIN, name: State Bank of India, ticker: SBIN.NS, sector: Financials, country: IN,
+     rating_bucket: BBB, type: bank, aliases: [State Bank of India, SBI], ambiguous_aliases: [],
+     context: [bank, lender, psu bank]}
+
+  # ---------------- Sovereigns / global bank ----------------
+  - {issuer_id: SOV-US, name: United States Treasury, ticker: null, sector: Sovereign, country: US,
+     rating_bucket: AAA-AA, type: sovereign,
+     aliases: [US Treasury, U.S. Treasury, Treasury yields, Treasury yield, US Treasuries, U.S. Treasuries, Treasuries],
+     ambiguous_aliases: [], context: [yields, bonds, auction]}
+  - {issuer_id: SOV-IN, name: Government of India, ticker: null, sector: Sovereign, country: IN,
+     rating_bucket: BBB, type: sovereign,
+     aliases: [Government of India, Indian government bonds, India's sovereign rating, G-Sec, G-Secs,
+               Indian sovereign bonds], ambiguous_aliases: [], context: [bond yields, sovereign]}
+  - {issuer_id: GB-HSBC, name: HSBC Holdings plc, ticker: HSBC, sector: Financials, country: GB,
+     rating_bucket: A, type: bank, aliases: [HSBC, HSBC Holdings], ambiguous_aliases: [], context: [bank, lender]}

@@ -14,6 +14,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from risk_engine.logging_setup import get_logger
+from risk_engine.preprocessing.clean import repair_hashtag_spacing
 from risk_engine.schemas import Provenance, RawDocument
 
 log = get_logger(__name__)
@@ -42,6 +43,9 @@ def load_cached_documents(cache_dir: Path) -> list[RawDocument]:
                     log.warning("replay: %s:%d has provenance %s; relabelling CACHED_REAL", f.name, lineno,
                                 doc.provenance.value)
                     doc = doc.model_copy(update={"provenance": Provenance.CACHED_REAL})
+                fixed = {k: repair_hashtag_spacing(getattr(doc, k)) for k in ("title", "text")}
+                if fixed["title"] != doc.title or fixed["text"] != doc.text:  # re-clean older captures on load
+                    doc = doc.model_copy(update=fixed)
                 if doc.doc_id in seen:
                     continue
                 seen.add(doc.doc_id)

@@ -4,14 +4,14 @@ Messages may carry a user Bullish/Bearish tag, kept as a weak label."""
 from __future__ import annotations
 
 from risk_engine.ingestion.base import BaseAdapter, SourceSkip, parse_iso
-from risk_engine.preprocessing.clean import clean_text, make_title
+from risk_engine.preprocessing.clean import clean_text, make_title, scrub_mentions
 from risk_engine.schemas import Provenance, RawDocument, Source
 
 
 def parse_stocktwits(payload: dict, symbol: str) -> list[RawDocument]:
     docs: list[RawDocument] = []
     for m in payload.get("messages") or []:
-        body = clean_text(m.get("body"))
+        body = scrub_mentions(clean_text(m.get("body")))
         if not body:
             continue
         user = (m.get("user") or {}).get("username") or "unknown"
@@ -19,7 +19,8 @@ def parse_stocktwits(payload: dict, symbol: str) -> list[RawDocument]:
         docs.append(RawDocument.build(
             source=Source.STOCKTWITS, title=make_title(body), text=body,
             url=f"https://stocktwits.com/{user}/message/{m.get('id')}", provenance=Provenance.LIVE,
-            published_at=parse_iso(m.get("created_at")), publisher=f"@{user}", hint_ticker=symbol,
+            published_at=parse_iso(m.get("created_at")), hint_ticker=symbol,
+            publisher=f"${symbol} stream",  # the channel, never the author (privacy)
             user_sentiment_tag=tag if tag in ("Bullish", "Bearish") else None,
         ))
     return docs

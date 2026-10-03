@@ -1,0 +1,106 @@
+# Impact score (spec 6.4). ALL values here are expert-set priors, NOT learned or calibrated.
+#   Impact = clip(1 + 9 * Q * (wE*E + wM*M + wX*X + wR*R), 1, 10), rounded to 1 dp
+
+weights: {E: 0.40, M: 0.25, X: 0.20, R: 0.15}
+
+event_severity:          # E base, before intensifier adjustment; E is clipped to [0, 1]
+  Credit Event: 0.90
+  Geopolitical: 0.85
+  Macroeconomic: 0.75
+  Regulatory: 0.70
+  Litigation: 0.60
+  M&A: 0.60
+  Supply Chain: 0.60
+  Earnings: 0.55
+  Management: 0.45
+  Product Launch: 0.30
+  Other: 0.20
+
+sentiment_magnitude:     # M = |s| * (negative_multiplier if s < 0 else positive_multiplier)
+  negative_multiplier: 1.0
+  positive_multiplier: 0.6
+
+exposure:                # X
+  market: 1.0
+  held_base: 0.4         # held issuer: held_base + held_scale * exposure / max issuer exposure
+  held_scale: 0.6
+  non_held_resolved: 0.3
+  unresolved: 0.1
+
+credibility:             # R = source prior + per_corroborating_source * (distinct sources - 1), capped
+  per_corroborating_source: 0.10
+  cap: 1.0
+  source_prior:
+    finnhub: 0.85
+    google_news: 0.85
+    gdelt: 0.75
+    reddit: 0.40
+    stocktwits: 0.40
+    mastodon: 0.40        # social, same prior as other unofficial social sources
+    bluesky: 0.40
+    manual: 0.60
+    # scenario: uses the prior of the source it imitates (imitated_source)
+
+confidence_shrinkage: {base: 0.6, scale: 0.4}   # Q = base + scale * confidence
+
+risk_levels:             # lower bounds, checked from the top
+  Critical: 8.5
+  High: 7.0
+  Medium: 4.0
+  Low: 1.0
+
+factor_phrases:          # used to build the one-sentence `reason` from the top-2 weighted contributions
+  E: "{event} severity (E = {E:.2f})"
+  M_neg: "strongly negative sentiment (s = {s:+.2f})"
+  M_pos: "positive sentiment (s = {s:+.2f})"
+  X_market: "market-wide scope"
+  X_held: "portfolio exposure to {company}"
+  X_other: "limited portfolio relevance ({company})"
+  R: "source credibility ({source}, {n} distinct source{plural})"
+
+# business_implication templates: event -> entity kind (held | market | other) -> sentence.
+# {company} and {relation} placeholders are filled in; unknown combos fall back to `default`.
+implications:
+  Credit Event:
+    held: "Credit deterioration at a held issuer ({company}{relation}); expect spread widening on its bonds and higher loan PD."
+    market: "Broad credit stress; expect wider credit spreads across the book, especially high-yield and BB/B loans."
+    other: "Credit stress at a non-held name ({company}); monitor for contagion to the same sector and rating bucket."
+  Geopolitical:
+    held: "Geopolitical shock touching a held issuer ({company}{relation}); review country and supply-chain exposure."
+    market: "Market-wide geopolitical shock; expect risk-off: wider spreads, lower equities and EM FX pressure."
+    other: "Geopolitical development; monitor for second-order effects on held sectors and countries."
+  Macroeconomic:
+    held: "Macro development relevant to {company}; reassess rate and spread sensitivity of its positions."
+    market: "Macro shock; expect repricing of rates-sensitive positions (bonds, fixed-rate loans, swaps)."
+    other: "Macro development; review duration and rate-hedge positioning."
+  Regulatory:
+    held: "Regulatory action against a held issuer ({company}{relation}); potential fines and earnings pressure, watch for rating action."
+    market: "Sector-wide regulatory change; review exposures in affected sectors."
+    other: "Regulatory action at a non-held name ({company}); check for read-across to held peers."
+  Litigation:
+    held: "Litigation risk at a held issuer ({company}{relation}); contingent liability could pressure credit metrics."
+    market: "Legal development with market-wide implications; monitor affected sectors."
+    other: "Litigation at a non-held name ({company}); low direct portfolio impact."
+  M&A:
+    held: "M&A activity at a held issuer ({company}{relation}); leverage and rating may change, review bond covenants."
+    market: "M&A wave; monitor event-risk on held issuers in the sector."
+    other: "M&A at a non-held name ({company}); limited direct impact."
+  Supply Chain:
+    held: "Supply-chain disruption affecting a held issuer ({company}{relation}); revenue and margin risk."
+    market: "Broad supply-chain disruption; watch input-cost inflation and sector earnings."
+    other: "Supply-chain issue at a non-held name ({company}); check held customers and suppliers."
+  Earnings:
+    held: "Earnings news at a held issuer ({company}{relation}); update credit view and equity valuation."
+    market: "Earnings-season signal for the market; limited credit impact on its own."
+    other: "Earnings news at a non-held name ({company}); minimal portfolio impact."
+  Management:
+    held: "Management change at a held issuer ({company}{relation}); governance and strategy uncertainty."
+    market: "Leadership change with market relevance; low direct credit impact."
+    other: "Management change at a non-held name ({company}); minimal portfolio impact."
+  Product Launch:
+    held: "Product news at a held issuer ({company}{relation}); low credit relevance, mildly informative for revenue outlook."
+    market: "Product news; low risk relevance."
+    other: "Product news at a non-held name ({company}); negligible portfolio impact."
+  Other:
+    default: "No clear risk event identified; informational only."
+  default: "Monitor; no specific portfolio action implied."

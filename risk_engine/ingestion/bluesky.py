@@ -11,18 +11,18 @@ from typing import Any
 
 from risk_engine.ingestion.base import BaseAdapter, HTTPStatusFailure, SourceSkip, parse_iso
 from risk_engine.logging_setup import get_logger
-from risk_engine.preprocessing.clean import clean_text, make_title
+from risk_engine.preprocessing.clean import clean_text, make_title, scrub_mentions
 from risk_engine.schemas import Provenance, RawDocument, Source
 
 log = get_logger(__name__)
 PDS = "https://bsky.social/xrpc"
 
 
-def parse_bluesky_posts(posts: list[dict], ticker: str | None) -> list[RawDocument]:
+def parse_bluesky_posts(posts: list[dict], ticker: str | None, query: str = "") -> list[RawDocument]:
     docs: list[RawDocument] = []
     for p in posts:
         record = p.get("record") or {}
-        text = clean_text(record.get("text"))
+        text = scrub_mentions(clean_text(record.get("text")))
         if not text:
             continue
         handle = (p.get("author") or {}).get("handle") or "unknown"
@@ -31,7 +31,7 @@ def parse_bluesky_posts(posts: list[dict], ticker: str | None) -> list[RawDocume
             source=Source.BLUESKY, title=make_title(text), text=text,
             url=f"https://bsky.app/profile/{handle}/post/{rkey}" if rkey else None,
             provenance=Provenance.LIVE, published_at=parse_iso(record.get("createdAt") or p.get("indexedAt")),
-            publisher=f"@{handle}", hint_ticker=ticker,
+            publisher=f"search: {query}" if query else None, hint_ticker=ticker,  # never the author
         ))
     return docs
 
@@ -106,5 +106,5 @@ class BlueskyAdapter(BaseAdapter):
                 if docs:
                     break
                 raise
-            docs.extend(parse_bluesky_posts(posts, item.get("ticker")))
+            docs.extend(parse_bluesky_posts(posts, item.get("ticker"), item["q"]))
         return docs

@@ -55,6 +55,8 @@ class Settings(BaseSettings):
     # Models
     model_cache_dir: Path = Path("./models")
     finbert_model: str = "ProsusAI/finbert"
+    # auto = FinBERT, falling back to the lexicon if the model cannot load; finbert | lexicon force one backend
+    sentiment_backend: str = Field(default="auto", pattern="^(auto|finbert|lexicon)$")
     enable_zero_shot: bool = False
     zero_shot_model: str = "typeform/distilbert-base-uncased-mnli"
 
