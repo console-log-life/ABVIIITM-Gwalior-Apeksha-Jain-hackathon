@@ -97,14 +97,18 @@ class _FinBertModel:
         self._lock = threading.Lock()
 
     def predict(self, texts: list[str]) -> list[dict[str, float]]:
-        out: list[dict[str, float]] = []
+        # Batch similar-length segments together (padding to the longest item dominates CPU cost), then restore order.
+        order = sorted(range(len(texts)), key=lambda i: len(texts[i]))
+        out: list[dict[str, float] | None] = [None] * len(texts)
         with self._lock, self._torch.no_grad():
-            for i in range(0, len(texts), BATCH_SIZE):
-                enc = self.tok(texts[i : i + BATCH_SIZE], return_tensors="pt", truncation=True,
+            for i in range(0, len(order), BATCH_SIZE):
+                idx = order[i : i + BATCH_SIZE]
+                enc = self.tok([texts[j] for j in idx], return_tensors="pt", truncation=True,
                                max_length=MAX_TOKENS, padding=True)
                 probs = self._torch.softmax(self.model(**enc).logits, dim=-1).tolist()
-                out += [map_logits_to_probs(row, self.id2label) for row in probs]
-        return out
+                for j, row in zip(idx, probs, strict=True):
+                    out[j] = map_logits_to_probs(row, self.id2label)
+        return out  # type: ignore[return-value]
 
 
 class SentimentEngine:

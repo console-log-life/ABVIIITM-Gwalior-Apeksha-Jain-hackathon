@@ -1,0 +1,524 @@
+{
+  "generated_at": "2026-10-03T19:14:05.123455+00:00",
+  "git_commit": "387fffa",
+  "preliminary": true,
+  "label_status": {
+    "draft_agent": 147
+  },
+  "n": 147,
+  "n_random_subset": 75,
+  "gold_distribution": {
+    "sentiment": {
+      "Neutral": 59,
+      "Negative": 50,
+      "Positive": 38
+    },
+    "event": {
+      "Other": 59,
+      "Geopolitical": 17,
+      "Credit Event": 13,
+      "Macroeconomic": 21,
+      "Earnings": 8,
+      "Litigation": 2,
+      "Management": 9,
+      "Regulatory": 11,
+      "M&A": 2,
+      "Product Launch": 5
+    }
+  },
+  "sentiment_finbert": {
+    "n": 147,
+    "accuracy": 0.653,
+    "macro_f1": 0.648,
+    "labels": [
+      "Negative",
+      "Neutral",
+      "Positive"
+    ],
+    "confusion": [
+      [
+        30,
+        11,
+        9
+      ],
+      [
+        12,
+        42,
+        5
+      ],
+      [
+        5,
+        9,
+        24
+      ]
+    ]
+  },
+  "sentiment_lexicon_fallback": {
+    "n": 147,
+    "accuracy": 0.68,
+    "macro_f1": 0.675,
+    "labels": [
+      "Negative",
+      "Neutral",
+      "Positive"
+    ],
+    "confusion": [
+      [
+        25,
+        23,
+        2
+      ],
+      [
+        6,
+        52,
+        1
+      ],
+      [
+        3,
+        12,
+        23
+      ]
+    ]
+  },
+  "event_rules": {
+    "n": 147,
+    "accuracy": 0.803,
+    "macro_f1": 0.792,
+    "labels": [
+      "Credit Event",
+      "Earnings",
+      "Geopolitical",
+      "Litigation",
+      "M&A",
+      "Macroeconomic",
+      "Management",
+      "Other",
+      "Product Launch",
+      "Regulatory"
+    ],
+    "confusion": [
+      [
+        10,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        7,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        16,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        1,
+        0,
+        17,
+        0,
+        3,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        7,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        5,
+        1,
+        0,
+        6,
+        2,
+        1,
+        43,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5,
+        0
+      ],
+      [
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        9
+      ]
+    ]
+  },
+  "entity": {
+    "n": 147,
+    "accuracy": 0.891
+  },
+  "random_subset": {
+    "sentiment_finbert": {
+      "n": 75,
+      "accuracy": 0.6,
+      "macro_f1": 0.595,
+      "labels": [
+        "Negative",
+        "Neutral",
+        "Positive"
+      ],
+      "confusion": [
+        [
+          12,
+          9,
+          4
+        ],
+        [
+          8,
+          22,
+          3
+        ],
+        [
+          2,
+          4,
+          11
+        ]
+      ]
+    },
+    "event_rules": {
+      "n": 75,
+      "accuracy": 0.827,
+      "macro_f1": 0.765,
+      "labels": [
+        "Credit Event",
+        "Earnings",
+        "Geopolitical",
+        "Litigation",
+        "M&A",
+        "Macroeconomic",
+        "Management",
+        "Other",
+        "Regulatory"
+      ],
+      "confusion": [
+        [
+          2,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          2,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          9,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          7,
+          0,
+          3,
+          0
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          2,
+          0,
+          0,
+          1,
+          2,
+          0,
+          39,
+          0
+        ],
+        [
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1
+        ]
+      ]
+    },
+    "entity_accuracy": 0.853
+  },
+  "stocktwits_tag_agreement": {
+    "n": 0,
+    "note": "not measured: StockTwits blocked (HTTP 403) on our network, so no Bullish/Bearish-tagged messages were captured"
+  },
+  "event_rules_plus_zero_shot": {
+    "n": 147,
+    "accuracy": 0.776,
+    "macro_f1": 0.77,
+    "labels": [
+      "Credit Event",
+      "Earnings",
+      "Geopolitical",
+      "Litigation",
+      "M&A",
+      "Macroeconomic",
+      "Management",
+      "Other",
+      "Product Launch",
+      "Regulatory"
+    ],
+    "confusion": [
+      [
+        10,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        7,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        15,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        2,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0,
+        1,
+        0,
+        17,
+        0,
+        2,
+        0,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        7,
+        0,
+        0,
+        1
+      ],
+      [
+        1,
+        8,
+        1,
+        0,
+        6,
+        1,
+        1,
+        40,
+        0,
+        1
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        5,
+        0
+      ],
+      [
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        9
+      ]
+    ]
+  },
+  "zero_shot_decision": {
+    "macro_f1_rules": 0.792,
+    "macro_f1_rules_plus_zero_shot": 0.77,
+    "gain": -0.022,
+    "enable_by_default": false,
+    "model": "typeform/distilbert-base-uncased-mnli"
+  },
+  "zero_shot_note": "rules 0.792 vs rules+zero-shot 0.77 macro-F1 (n=147) \u2192 keep OFF"
+}

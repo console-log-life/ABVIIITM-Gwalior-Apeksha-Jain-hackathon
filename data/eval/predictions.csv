@@ -1,0 +1,148 @@
+id,text,gold_sentiment,pred_sentiment,sentiment_score,gold_event,pred_event,evidence,gold_ticker,pred_entity
+0,"Nvidia, Broadcom, and AMD Investors Need to Have Oct. 15 Circled on Their Calendars",Neutral,Neutral,-0.082,Other,Other,,NVDA,NVDA
+1,Where Will HDFC Bank Share Price be in the Next 5 Years?,Neutral,Neutral,-0.004,Other,Other,,HDFCBANK.NS,HDFCBANK.NS
+2,Morgan Stanley lowers Apple stock price target on limited upside,Negative,Negative,-0.618,Other,Other,,AAPL,AAPL
+3,Tata Motors Share Price Today Down 8%,Negative,Negative,-0.956,Other,Other,,TATAMOTORS.NS,TATAMOTORS.NS
+4,"Trump to sign Russia sanctions bill; India-US ties, energy market on edge",Negative,Positive,0.483,Geopolitical,Geopolitical,sanctions; russia,MARKET,MARKET
+5,Private Equity Healthcare Bankruptcies are on the Rise,Negative,Negative,-0.93,Credit Event,Credit Event,bankruptcies,UNRESOLVED,UNRESOLVED
+6,Infosys shares recover from 52-week low: Here's why,Positive,Negative,-0.737,Other,Other,,INFY.NS,INFY.NS
+7,Why Tesla (TSLA) Stock Is Trading Up Today,Positive,Neutral,0.16,Other,Other,,TSLA,TSLA
+8,What's Going On With Microsoft Stock?,Neutral,Negative,-0.661,Other,Other,,MSFT,MSFT
+9,Repo rate stays at 5.25%: Why your home loan EMI may still change in 2026 and what historical data shows,Neutral,Neutral,-0.047,Macroeconomic,Macroeconomic,repo rate,MARKET,MARKET
+10,CoreWeave Stock Just Got a Jaw-Dropping Upgrade From JPMorgan,Positive,Positive,0.912,Other,Other,,UNRESOLVED,JPM
+11,Is Microsoft Stock Paying You Enough For The Swings?,Neutral,Neutral,0.028,Other,Other,,MSFT,MSFT
+12,"22,514 Shares in JPMorgan Chase & Co. $JPM Acquired by Markowski Investments",Neutral,Neutral,-0.016,Other,M&A,acquired,JPM,JPM
+13,Apple Stocks Rises Although AI Agents Threaten App-Store Gatekeeping,Positive,Negative,-0.655,Other,Other,,AAPL,AAPL
+14,Nvidia share buyback plan gets $150 billion boost,Positive,Neutral,0.153,Other,Other,,NVDA,NVDA
+15,"Tata Motors Jumps 5% After Strong Q1, Firm Demand Outlook",Positive,Positive,0.914,Earnings,Earnings,outlook,TATAMOTORS.NS,TATAMOTORS.NS
+16,Explained: Why Adani Group stocks rose up to 5% today,Positive,Positive,0.925,Other,Other,,ADANIENT.NS,ADANIENT.NS
+17,Nvidia Isn’t the Only AI Stock With Massive Upside Potential,Positive,Neutral,-0.095,Other,Other,,NVDA,NVDA
+18,Udaan faces insolvency proceedings in Singapore over $170 million bond default: Report,Negative,Negative,-0.885,Credit Event,Credit Event,default; insolvency,UNRESOLVED,UNRESOLVED
+19,Adani Energy to Adani Ports: Adani Group shares rise as the US Court dismisses criminal case against Gautam Adani,Positive,Positive,0.848,Litigation,Litigation,court,ADANIENT.NS,ADANIENT.NS
+20,What makes the Federal Reserve decide to raise or lower interest rates?,Neutral,Negative,-0.426,Macroeconomic,Macroeconomic,interest rates; federal reserve,MARKET,MARKET
+21,"Stock markets edged higher in early trade amid lower crude oil prices, buying in Reliance Industries",Positive,Positive,0.818,Macroeconomic,Macroeconomic,crude oil prices,MARKET,RELIANCE.NS
+22,Adani Group shares: Rs 1.4 lakh crore wiped out as MSCI rebalancing triggers sharp volatility,Negative,Negative,-0.955,Other,Other,,ADANIENT.NS,ADANIENT.NS
+23,Tata Motors Shares Gain 2.11% to Rs 446.00 in Early Trade,Positive,Positive,0.881,Other,Other,,TATAMOTORS.NS,TATAMOTORS.NS
+24,Reliance Industries shares contribute to Nifty recovery; Jefferies sees 53% upside,Positive,Positive,0.93,Other,Other,,RELIANCE.NS,RELIANCE.NS
+25,IonQ vs. Microsoft: Which Stock Has More Quantum Upside in October?,Neutral,Neutral,-0.08,Other,Other,,MSFT,MSFT
+26,"RBI likely to raise rates by 50 bps by December, Crisil’s top economist says",Negative,Positive,0.885,Macroeconomic,Macroeconomic,rbi,MARKET,MARKET
+27,4 Experts Weigh In on How Tesla's Next Chapter Could Make or Break the Stock,Neutral,Neutral,-0.032,Other,Other,,TSLA,TSLA
+28,Nvidia Stock Just Gave Investors Notice Its Best Days Are Over,Negative,Neutral,0.111,Other,Other,,NVDA,NVDA
+29,NYC Private School That Inspired ‘Gossip Girl’ Cut by Moody’s,Negative,Neutral,-0.138,Credit Event,Other,,UNRESOLVED,UNRESOLVED
+30,Tesla Stock Moves Lower as Delivery Week Tightens the Volume Test,Negative,Negative,-0.934,Other,Other,,TSLA,TSLA
+31,HDFC Bank shares: Will stock finally reward its investors after Anup Bagchi as new MD-CEO?,Neutral,Positive,0.411,Management,Management,ceo,HDFCBANK.NS,HDFCBANK.NS
+32,Reliance Industries Shares Remain Under Pressure After SEBI Administrative Warning Over Alleged Insider Trading,Negative,Negative,-0.93,Regulatory,Regulatory,sebi,RELIANCE.NS,RELIANCE.NS
+33,"HDFC Bank: Why the stock can’t catch a break Just ~5% return for investors in 5 years, versus nearly 55% for the Nifty. Profits are still growing, but slower. NIMs and return ratios have fallen, CASA has weakened, governance overhangs persist and ICICI Bank",Negative,Negative,-0.946,Other,Earnings,profits,HDFCBANK.NS,HDFCBANK.NS
+34,Explained - What do the Accenture results mean for Indian IT companies,Neutral,Neutral,0.031,Earnings,Earnings,results,UNRESOLVED,UNRESOLVED
+35,Senate passes Russia sanctions championed by Graham | Honolulu Star - Advertiser,Negative,Negative,-0.489,Geopolitical,Geopolitical,sanctions; russia,MARKET,MARKET
+36,"Modi , Putin seek stronger ties as Russia calls for BRICS to counter West - Asia & Pacific",Neutral,Positive,0.88,Geopolitical,Geopolitical,brics; russia,MARKET,MARKET
+37,"America is actually hurting its own interest : India economy well - insulated against US tariffs on Russian oil , says Kotak Securities Expert",Neutral,Negative,-0.662,Geopolitical,Geopolitical,tariffs; economy,MARKET,MARKET
+38,Will India Face US Sanctions Over Russian and Iranian Oil Purchases ? Senate Advances Bill,Negative,Neutral,-0.039,Geopolitical,Geopolitical,sanctions,MARKET,MARKET
+39,Italy Central Bank Orders Sanctions Screening for Crypto Transfers,Neutral,Negative,-0.78,Regulatory,Geopolitical,sanctions; central bank,UNRESOLVED,MARKET
+40,Over 60 US Senators back Russia sanctions Bill ; India among countries that could face up to 100 % US tariff,Negative,Positive,0.478,Geopolitical,Geopolitical,sanctions; tariff; russia,MARKET,MARKET
+41,China suffers setback to dedollarize global finance as Saudi Arabia exits Beijing payment scheme,Neutral,Negative,-0.915,Geopolitical,Other,,MARKET,UNRESOLVED
+42,Trump attempting to fire Lisa Cook after Supreme Court ruling : Report,Negative,Negative,-0.832,Macroeconomic,Litigation,ruling; court,MARKET,UNRESOLVED
+43,US Senate Unveils Revised Russia Sanctions Bill As Lawmakers Push To Cement Graham Legacy,Negative,Neutral,-0.138,Geopolitical,Geopolitical,sanctions; russia; unveils,MARKET,MARKET
+44,EU hands Ukraine €1 . 4bn in interest from frozen Russian assets following deadly attack on Kyiv,Neutral,Negative,-0.448,Geopolitical,Geopolitical,ukraine,MARKET,MARKET
+45,Us Tariffs On Russian Oil : India examining new US tariff powers targeting Russian oil buyers : Piyush Goyal,Negative,Neutral,0.083,Geopolitical,Geopolitical,tariffs,MARKET,MARKET
+46,"Russia central bank gingerly cuts rates , caught between business complaints and inflation – Winnipeg Free Press",Neutral,Negative,-0.865,Macroeconomic,Macroeconomic,inflation; central bank,MARKET,MARKET
+47,Started in 2023 november.,Neutral,Neutral,-0.025,Other,Other,,UNRESOLVED,UNRESOLVED
+48,France is starting to look like a peripheral and that should concern everyone holding euro assets,Negative,Neutral,0.077,Macroeconomic,Other,,MARKET,UNRESOLVED
+49,This is the END! Not for forever,Neutral,Neutral,-0.095,Other,Other,,UNRESOLVED,UNRESOLVED
+50,Have you ever liked a company so much that you bought its stock despite thinking it was overpriced?,Neutral,Neutral,0.053,Other,Other,,UNRESOLVED,UNRESOLVED
+51,Investment thesis for trading week 10/5 - 10/9,Neutral,Neutral,-0.025,Other,Other,,UNRESOLVED,UNRESOLVED
+52,I can only invest in individual stocks (no ETFs or Mutual Funds) what to do?,Neutral,Neutral,-0.013,Other,Other,,UNRESOLVED,UNRESOLVED
+53,Nike fumbled so bad that its stock chart created the Jumpman formation. is this a sign?,Negative,Negative,-0.28,Other,Other,,UNRESOLVED,UNRESOLVED
+54,South Korea Announces $120 Billion Plan For Eight Large-Scale Nuclear Power Plants In US,Neutral,Neutral,0.197,Other,Other,,UNRESOLVED,UNRESOLVED
+55,Holding SGOV for more than 3 months. I don’t understand a comment.,Neutral,Neutral,-0.18,Other,Other,,UNRESOLVED,UNRESOLVED
+56,Treasuries yields still rose after nonstellar NFP report.,Negative,Positive,0.627,Macroeconomic,Other,,SOV-US,SOV-US
+57,Short Straddle CPR Strategy,Neutral,Neutral,-0.008,Other,Other,,UNRESOLVED,UNRESOLVED
+58,India isn’t short of demand. We’re just building the wrong half of the economy.,Neutral,Negative,-0.432,Macroeconomic,Macroeconomic,economy,MARKET,MARKET
+59,Google says allocate my IRA as 100% equities. I'm retiring next year.,Neutral,Neutral,-0.033,Other,Other,,UNRESOLVED,GOOGL
+60,Groww account balance deducted from hdfc but not added to groww,Negative,Neutral,-0.046,Other,Other,,UNRESOLVED,UNRESOLVED
+61,Nidec shares have plummeted as much as 20% in Tokyo after the Japanese motor maker's auditor declined to give an opinion on its long-awaited financial statements.,Negative,Negative,-0.964,Other,Other,,UNRESOLVED,UNRESOLVED
+62,"Quarterly Update: Q3 2026 Q3 was quieter but still constructive: profits stayed strong, inflation remained above the Fed’s target, and we believe earnings matter more than the November election over…",Positive,Positive,0.87,Other,Macroeconomic,inflation; the fed; earnings; profits; quarterly,UNRESOLVED,MARKET
+63,"Nvidia Reaches Record $5.7 Trillion Market Value Chipmaker Nvidia hits an all-time high, becoming one of the world's most valuable companies as AI demand drives growth.",Positive,Positive,0.89,Other,Other,,NVDA,NVDA
+64,Optioneer is featured on Awesome Indie!,Neutral,Neutral,0.098,Other,Other,,UNRESOLVED,UNRESOLVED
+65,AI Will Be a Boon for Savers #AI #Finance #Economy,Positive,Neutral,0.243,Other,Macroeconomic,economy,UNRESOLVED,MARKET
+66,"🟠 UPDATE US Fed Minutes Release Amid Diminished Rate-Hike Prospects Major stock indexes rose sharply, with the Nasdaq Composite hitting a new high.",Positive,Positive,0.801,Macroeconomic,Macroeconomic,fed,MARKET,MARKET
+67,Three principles for protecting capital: 1.,Neutral,Neutral,0.046,Other,Other,,UNRESOLVED,UNRESOLVED
+68,The Current Outlook for the Micro Private Capital Market from October 2026 to March 2027 https:// courtg9000.wordpress.com/2026/…,Neutral,Neutral,-0.043,Other,Earnings,outlook,UNRESOLVED,UNRESOLVED
+69,⚡ NEWS G-7 Countries Release Strategic Oil Reserves to Curb Gas Prices The Group of Seven nations has agreed to release up to 100 million barrels of diesel and crude oil reserves.,Neutral,Positive,0.723,Macroeconomic,Other,,MARKET,UNRESOLVED
+70,Ego Cost Him a Billion Dollars #finance #business #investing,Negative,Neutral,-0.038,Other,Other,,UNRESOLVED,UNRESOLVED
+71,"Smart investment strategy starts with clear goals, risk control, and portfolio diversification.",Neutral,Neutral,0.145,Other,Other,,UNRESOLVED,UNRESOLVED
+72,UK urged to act as Polymarket takes bets on whether HSBC and Lloyds will fail #Finance #Business #Economy,Negative,Neutral,-0.011,Credit Event,Macroeconomic,economy,HSBC,HSBC
+73,"Something for the economics nerds: a new edition of Ibbotson's ""Stock and Bond Returns,"" is free online.",Neutral,Neutral,0.026,Other,Other,,UNRESOLVED,UNRESOLVED
+74,"Nikkei Rises 1.0%, Led by Chip Stocks #Finance #Stocks #Technology",Positive,Positive,0.812,Other,Other,,MARKET,UNRESOLVED
+75,Are Distressed-Debt Exchanges More Likely To Avert or Delay a Bankruptcy?,Neutral,Negative,-0.406,Credit Event,Credit Event,bankruptcy; distressed,UNRESOLVED,UNRESOLVED
+76,Moody’s downgrades Fayette County Schools’ credit ratings once more,Negative,Negative,-0.887,Credit Event,Credit Event,downgrades; credit ratings,UNRESOLVED,UNRESOLVED
+77,S&P and Moody’s downgrade Hormel Foods following $1.05B Brakebush deal,Negative,Negative,-0.954,Credit Event,Credit Event,downgrade,UNRESOLVED,UNRESOLVED
+78,Sale process advances for bankrupt proton center with $550 million of bond debt,Negative,Neutral,0.078,Credit Event,Credit Event,bankrupt,UNRESOLVED,UNRESOLVED
+79,Moody’s downgrades Fayette County Public Schools’ credit rating once again,Negative,Negative,-0.922,Credit Event,Credit Event,downgrades; credit rating,UNRESOLVED,UNRESOLVED
+80,Jackson Hospital blames Blue Cross Blue Shield of Alabama for its collapse — but the bankruptcy records tell a different story,Negative,Negative,-0.306,Credit Event,Credit Event,bankruptcy,UNRESOLVED,UNRESOLVED
+81,RIL stock: Three events that could drive a re-rating post 19% fall this year,Positive,Negative,-0.941,Other,Other,,RELIANCE.NS,RELIANCE.NS
+82,"Georgia proton center, with $550 million of muni debt, files bankruptcy",Negative,Negative,-0.591,Credit Event,Credit Event,bankruptcy,UNRESOLVED,UNRESOLVED
+83,The Manufacturers Life Insurance Company Reduces Stake in JPMorgan Chase & Co. $JPM,Neutral,Neutral,0.124,Other,M&A,stake,JPM,JPM
+84,Reliance Industries promoters raise stake to 50.48%; stock gains 2% ahead of Q1 results,Positive,Positive,0.92,Other,Earnings,q1 results,RELIANCE.NS,RELIANCE.NS
+85,Bank of Lithuania says OTP Russia business will face scrutiny in Luminor takeover review,Neutral,Negative,-0.798,M&A,M&A,takeover,UNRESOLVED,UNRESOLVED
+86,"114,144 JPMorgan Chase & Co. $JPM Shares Acquired by Waverly Advisors LLC",Neutral,Neutral,-0.02,Other,M&A,acquired,JPM,JPM
+87,Oracle Corp goes for high-stakes ratings gamble in AI strategy,Neutral,Neutral,0.115,Credit Event,Other,,UNRESOLVED,UNRESOLVED
+88,"Leandro Leviste’s ABS-CBN stake is shrinking, and so is everyone else’s https:// web.brid.gy/r/ ler.com/newsbreak/inside-track/leandro-leviste-abs-cbn-stake-shrinking-same-everyone-else/",Neutral,Negative,-0.954,Other,M&A,stake,UNRESOLVED,UNRESOLVED
+89,JPMorgan Chase & Co. $JPM Shares Acquired by Baird Financial Group Inc.,Neutral,Neutral,-0.03,Other,M&A,acquired,JPM,JPM
+90,JPMorgan Chase & Co. $JPM Shares Newly Acquired by VIRGINIA RETIREMENT SYSTEMS ET Al,Neutral,Neutral,0.017,Other,M&A,acquired,JPM,JPM
+91,Reliance Industries shares in focus as company gets Sebi's warning over alleged insider trading,Negative,Negative,-0.579,Regulatory,Regulatory,sebi,RELIANCE.NS,RELIANCE.NS
+92,Community Banks Swing Back at Trump Regulators Over Crypto Charters #Finance #Crypto #Regulation,Neutral,Negative,-0.833,Regulatory,Regulatory,regulators,UNRESOLVED,UNRESOLVED
+93,Reliance Industries Shares Under Pressure After Sebi Warning Over Insider Trading By Employees,Negative,Negative,-0.909,Regulatory,Regulatory,sebi,RELIANCE.NS,RELIANCE.NS
+94,Adani Shares Slip As Sebi Settles MPS Case Against Four Group Firms,Negative,Negative,-0.944,Regulatory,Regulatory,sebi,ADANIENT.NS,ADANIENT.NS
+95,RBI Repo Rate Hike Forecast Signals a Costlier Urban Economy,Negative,Positive,0.801,Macroeconomic,Macroeconomic,rate hike; rbi; economy,MARKET,MARKET
+96,HDFC Bank Says India Regulator Approves Anup Bagchi as CEO,Neutral,Neutral,0.037,Management,Regulatory,regulator; ceo,HDFCBANK.NS,HDFCBANK.NS
+97,"India regulator allows Adani, four group firms to settle public-float violations case",Positive,Negative,-0.27,Regulatory,Regulatory,regulator,ADANIENT.NS,ADANIENT.NS
+98,"Trapped by SEBI-Registered RA ""Wealthy Brains"" (Akash Khatri)",Negative,Neutral,-0.141,Regulatory,Regulatory,sebi,UNRESOLVED,UNRESOLVED
+99,"India rejects Adani-linked offshore funds' requests to settle non-disclosure cases, sources say",Negative,Negative,-0.612,Regulatory,Other,,ADANIENT.NS,UNRESOLVED
+100,SEBI says Adani firms paid 15 million rupees to settle disclosure violations,Neutral,Neutral,-0.177,Regulatory,Regulatory,sebi,ADANIENT.NS,UNRESOLVED
+101,"Jio Platforms IPO may open on October 21, issue estimated at $3.8 billion: Report",Neutral,Neutral,0.006,Other,Other,,RELIANCE.NS,RELIANCE.NS
+102,Settlement reached on bankrupt Texas senior living community's bonds,Neutral,Neutral,-0.067,Credit Event,Credit Event,bankrupt; settlement,UNRESOLVED,UNRESOLVED
+103,Reliance Industries’ shares settle higher; three developments market participants need to know,Positive,Positive,0.261,Other,Other,,RELIANCE.NS,RELIANCE.NS
+104,"Adani Group stocks rally: Adani Enterprises, Adani Green in focus after latest US court relief",Positive,Neutral,-0.13,Litigation,Litigation,court,ADANIENT.NS,ADANIENT.NS
+105,5 Adani group stocks in focus as firms settle Sebi proceedings linked to Hindenburg report,Neutral,Neutral,-0.085,Regulatory,Regulatory,sebi,ADANIENT.NS,ADANIENT.NS
+106,Issue 19 of Real Estate News Weekly is live.,Neutral,Neutral,-0.02,Other,Other,,UNRESOLVED,UNRESOLVED
+107,India's HDFC Bank appoints outsider Anup Bagchi as CEO,Neutral,Neutral,-0.018,Management,Management,ceo; appoints,HDFCBANK.NS,HDFCBANK.NS
+108,HDFC Bank ADRs jump over 5% after Anup Bagchi appointed as MD & CEO for three years,Positive,Positive,0.829,Management,Management,ceo; appointed,HDFCBANK.NS,HDFCBANK.NS
+109,HDFC Bank shares rise as RBI approves Anup Bagchi as new CEO,Positive,Neutral,0.133,Management,Macroeconomic,rbi; ceo,HDFCBANK.NS,HDFCBANK.NS
+110,India’s largest private lender HDFC Bank sees shares rise after CEO announces surprise exit,Positive,Positive,0.861,Management,Management,ceo,HDFCBANK.NS,HDFCBANK.NS
+111,HDFC Bank gets a new CEO in Anup Bagchi - Can the share price get a new lease of life too?,Neutral,Neutral,0.149,Management,Management,ceo,HDFCBANK.NS,HDFCBANK.NS
+112,"HDFC Bank shares rise 3% as lender shortlists CEO candidates. Why Bernstein, Nomura, others see up to 62%",Positive,Positive,0.645,Management,Management,ceo,HDFCBANK.NS,HDFCBANK.NS
+113,How much Nvidia stock does CEO Jensen Huang actually own?,Neutral,Neutral,-0.001,Other,Management,ceo,NVDA,NVDA
+114,"HDFC Bank CEO transition nears; Jefferies sees rerating scope, sets target at Rs 880",Positive,Positive,0.667,Management,Management,ceo,HDFCBANK.NS,HDFCBANK.NS
+115,Tata Motors launches tender offer for common shares of Iveco Group,Neutral,Neutral,0.123,M&A,M&A,tender offer; launches,TATAMOTORS.NS,TATAMOTORS.NS
+116,"Jio IPO nears launch: DRHP filed, SEBI clears path",Positive,Neutral,0.021,Other,Regulatory,sebi; launch,RELIANCE.NS,UNRESOLVED
+117,Apple (AAPL) Launches New Safeguards Against AI Agents,Neutral,Positive,0.343,Product Launch,Product Launch,launches,AAPL,AAPL
+118,Apple stock pops on report it will unveil all-new smart home hub at Oct. 13 event,Positive,Neutral,0.089,Product Launch,Product Launch,unveil,AAPL,AAPL
+119,"US Senate unveils revised Russia sanctions bill to cement Lindsey Graham legacy , targets top buyers of Russian energy",Negative,Positive,0.447,Geopolitical,Geopolitical,sanctions; russia; unveils,MARKET,MARKET
+120,Jim Cramer is urging investors to buy Apple stock ahead of foldable iPhone launch,Positive,Neutral,0.149,Product Launch,Product Launch,launch,AAPL,AAPL
+121,"Microsoft, IBD Stock Of The Day, Makes Bullish Move As Software Giant Launches AI Super-App",Positive,Positive,0.662,Product Launch,Product Launch,launches,MSFT,MSFT
+122,Apple Stocks Fall as India Payments Launch Meets UPI Dominance,Negative,Negative,-0.938,Product Launch,Product Launch,launch,AAPL,AAPL
+123,"Weekly Earnings Thread Oct 5 - Oct 9, 2026",Neutral,Neutral,-0.049,Earnings,Earnings,earnings,UNRESOLVED,UNRESOLVED
+124,Microsoft’s stock is on track to post its biggest quarterly gain in 28 years,Positive,Positive,0.92,Other,Earnings,quarterly,MSFT,MSFT
+125,"Infosys, Wipro ADRs jump up to 10% after Accenture Q4 results beat Wall Street estimates",Positive,Positive,0.922,Earnings,Earnings,q4 results,INFY.NS,INFY.NS
+126,🪨 “Persistent effort can turn small advances into lasting results.” #Markets #Investing #StoneCapitalGrowth #Persistence #WealthBuilding #SocialMedia,Neutral,Neutral,0.068,Other,Earnings,results,UNRESOLVED,UNRESOLVED
+127,"IT Q2 results 2026 date and time: TCS, Infosys, HCL Tech FY 2027 earnings announcement schedule",Neutral,Neutral,-0.015,Earnings,Earnings,earnings; q2 results,INFY.NS,INFY.NS
+128,Tesla: Shares Rise on Third-Quarter Deliveries Ahead of Consensus Estimates,Positive,Positive,0.86,Earnings,Earnings,quarter,TSLA,TSLA
+129,Tata Motors PV Falls 6% as Q1 Profit Slumps 80%,Negative,Negative,-0.959,Earnings,Earnings,profit,TATAMOTORS.NS,TATAMOTORS.NS
+130,Tesla Q3 Deliveries Top Expectations; The Stock Is Rising,Positive,Positive,0.925,Earnings,Other,,TSLA,TSLA
+131,"US Senate passes Russia sanctions bill , India and others at risk of 100 % tariffs",Negative,Negative,-0.65,Geopolitical,Geopolitical,sanctions; tariffs; russia,MARKET,MARKET
+132,"US Senate Clears Russia Sanctions Bill , India Faces New Tariff Risk",Negative,Negative,-0.79,Geopolitical,Geopolitical,sanctions; tariff; russia,MARKET,MARKET
+133,"Boom at the front , bust at home : Russia war economy is holding but its people are cracking",Negative,Negative,-0.615,Geopolitical,Geopolitical,war; russia,MARKET,MARKET
+134,"The war on data centres is real, and it’s starting to scare markets",Negative,Negative,-0.838,Other,Geopolitical,war,UNRESOLVED,MARKET
+135,"Russia Sanctions Bill : US eases Russia sanctions bill , cuts tariff threat on India and China from 500 % to 100 %",Positive,Positive,0.847,Geopolitical,Geopolitical,sanctions; tariff; russia,MARKET,MARKET
+136,WATCH: Warsh says 'inflation is too high' after Fed raises interest rate 1st time in 3 years,Negative,Negative,-0.629,Macroeconomic,Macroeconomic,interest rate; inflation; fed,MARKET,MARKET
+137,US tariffs on India: sanctions or trade negotiations?,Neutral,Neutral,-0.088,Geopolitical,Geopolitical,sanctions; tariffs,MARKET,MARKET
+138,"Trump tariffs on Russia's oil buyers bring economic, political risks",Negative,Negative,-0.892,Geopolitical,Geopolitical,tariffs; russia,MARKET,MARKET
+139,"Wall Street week ahead: Fed minutes, unemployment data, consumer sentiment update",Neutral,Neutral,-0.055,Macroeconomic,Macroeconomic,fed; unemployment,MARKET,MARKET
+140,Fed Raises Interest Rates in Push for ‘Timelier’ Retreat in Inflation,Negative,Positive,0.263,Macroeconomic,Macroeconomic,interest rates; inflation; fed,MARKET,MARKET
+141,"HSBC expects RBI to raise repo rate by 50 bps in FY27 amid strong growth, inflation pressures",Neutral,Positive,0.914,Macroeconomic,Macroeconomic,inflation; rbi,MARKET,HSBC
+142,"⚡ NEWS US Markets Surge on Weak September Jobs Report Major US stock indexes, including the Nasdaq, S&P 500, and Dow Jones, rose sharply following a weak September jobs report showing fewer jobs…",Positive,Positive,0.663,Macroeconomic,Macroeconomic,jobs report,MARKET,MARKET
+143,"October repo rate hike could dent festive housing demand, impact developer financing",Negative,Negative,-0.953,Macroeconomic,Macroeconomic,rate hike; repo rate,MARKET,MARKET
+144,Fed's Logan calls for '50 bps or more' in rate hikes,Negative,Positive,0.491,Macroeconomic,Macroeconomic,rate hikes,MARKET,MARKET
+145,Soft Jobs Report Boosts Market Bets Fed Will Skip October Rate Increase,Positive,Negative,-0.444,Macroeconomic,Macroeconomic,rate increase; jobs report,MARKET,MARKET
+146,RBI repo rate could head towards 6.5%,Negative,Positive,0.37,Macroeconomic,Macroeconomic,rbi,MARKET,MARKET

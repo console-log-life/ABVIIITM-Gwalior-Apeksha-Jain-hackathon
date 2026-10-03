@@ -16,6 +16,17 @@ Per-source settings (queries, intervals, rate limits, backoffs): `risk_engine/in
 | Bluesky `app.bsky.feed.searchPosts` (authenticated) | social | SKIP — `BLUESKY_HANDLE` / `BLUESKY_APP_PASSWORD` not set | — | Adapter built; activates when credentials are set. Not claimed as working until a probe PASSes |
 | StockTwits symbol stream | social | FAIL — HTTP 403 on every attempt (blocked) | — | Best-effort; 1 h backoff on 403 |
 
+### Re-probe — 2026-10-03 ~19:00 UTC (M7, before writing the README)
+
+| Source | Result |
+|---|---|
+| Google News US / IN | PASS (100 / 100 items) |
+| Reddit `r/investing` | PASS (25 items) |
+| Mastodon `#stocks` / `#investing` | PASS (40 / 40) |
+| GDELT | FAIL HTTP 429 |
+| StockTwits | FAIL HTTP 403 |
+| Finnhub / Bluesky | SKIP (no keys) |
+
 Result: requirement R2 (at least one news and one social source) is met by Google News plus Reddit RSS
 and Mastodon. Both social sources are unofficial and best-effort; REPLAY mode (cached real captures) is the fallback.
 
