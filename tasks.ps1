@@ -1,5 +1,8 @@
 # Windows equivalent of the Makefile.  Usage: powershell -ExecutionPolicy Bypass -File tasks.ps1 <target>
-param([Parameter(Mandatory = $true)][ValidateSet("setup", "install", "models", "probe", "test", "test-fast", "lint", "capture", "replay", "ingest-once")][string]$Target)
+param([Parameter(Mandatory = $true)][ValidateSet(
+        "setup", "install", "models", "probe", "test", "test-fast", "lint", "capture", "replay", "ingest-once",
+        "api", "dashboard", "demo", "demo-offline", "drill", "check-dashboard", "screenshots", "portfolio")]
+    [string]$Target)
 
 $ErrorActionPreference = "Stop"
 Set-Location -LiteralPath $PSScriptRoot  # path may contain spaces ("GT LAB")
@@ -16,11 +19,19 @@ switch ($Target) {
     "install" { Invoke-Install }
     "models" { & $py scripts/setup_models.py }
     "probe" { & $py scripts/probe_sources.py }
-    "test" { & $py -m pytest -q --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing }
+    "test" { & $py -m pytest -q --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing --cov-report=xml }
     "test-fast" { & $py -m pytest -q -m "not model" }
     "lint" { & $py -m ruff check . }
     "capture" { & $py scripts/capture_cache.py }
     "replay" { & $py -m risk_engine.ingestion.replay --limit 20 }
     "ingest-once" { & $py -m risk_engine.ingestion.scheduler --once }
+    "api" { & $py -m uvicorn app.main:app --host 127.0.0.1 --port 8000 }
+    "dashboard" { & $py -m streamlit run app/dashboard/Home.py --server.port 8501 }
+    "demo" { & $py scripts/run_demo.py }
+    "demo-offline" { & $py scripts/run_demo.py --offline }
+    "drill" { & $py scripts/failure_drill.py }
+    "check-dashboard" { & $py scripts/check_dashboard.py }
+    "screenshots" { & $py scripts/screenshot_dashboard.py }
+    "portfolio" { & $py -m portfolio.generate_portfolio }
 }
 exit $LASTEXITCODE

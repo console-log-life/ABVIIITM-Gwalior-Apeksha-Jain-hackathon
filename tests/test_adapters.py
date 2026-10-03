@@ -57,6 +57,15 @@ def test_token_bucket_restore_across_processes(clock):
     assert b.wait_time() == pytest.approx(90)
 
 
+async def test_more_requests_than_capacity_wait_instead_of_failing(recorder_factory, settings, health):
+    """Regression: 4 Mastodon tags with capacity 2 must all be fetched (real clock, short gap)."""
+    rec = recorder_factory(lambda r: httpx.Response(200, json=[]))
+    cfg = _cfg(capacity=2, min_gap_s=0.2, instance="m.example", tags=["a", "b", "c", "d"], limit=5)
+    async with rec.client() as c:
+        res = await MastodonAdapter(c, settings, cfg, health=health).fetch()
+    assert res.status is SourceStatus.EMPTY and len(rec.requests) == 4
+
+
 # ---------------------------------------------------------------- google news
 
 async def test_google_news_parses_feed(recorder_factory, settings, clock, health):

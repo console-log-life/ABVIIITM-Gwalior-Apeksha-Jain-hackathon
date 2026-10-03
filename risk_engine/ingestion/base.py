@@ -225,9 +225,10 @@ class BaseAdapter(ABC):
         if wait > self.block_max_s:
             raise SourceSkip(SourceStatus.RATE_LIMITED, f"rate limit: next request allowed in {wait:.0f}s")
         if wait > 0:
-            await asyncio.sleep(wait)
-        if not self.bucket.try_acquire():  # pragma: no cover - only under clock skew
-            raise SourceSkip(SourceStatus.RATE_LIMITED, "rate limit")
+            # small margin: sleeping exactly `wait` can leave the bucket at 0.9999 tokens (float rounding)
+            await asyncio.sleep(wait + 0.05)
+        if not self.bucket.try_acquire():
+            raise SourceSkip(SourceStatus.RATE_LIMITED, "rate limit (token not refilled after wait)")
 
     async def request(self, method: str, url: str, *, timeout: float | None = None,
                       **kwargs: Any) -> httpx.Response:

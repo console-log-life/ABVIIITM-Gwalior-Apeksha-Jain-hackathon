@@ -1,8 +1,8 @@
 # PROGRESS (build memory — read this first after any restart)
 
-**Current milestone:** M6 (demo mode, run_demo, failure drills, full suite) — starting
-**Last commit:** see `git log -1` (M5 committed)
-**Next step:** M6 capture run, then scripts/run_demo.py, offline + source-kill drills, coverage
+**Current milestone:** M7 (evaluation + docs) — starting
+**Last commit:** see `git log -1` (M6 committed)
+**Next step:** M7 capture run, then data/eval/labelled_headlines.csv (draft_agent), evaluate.py, benchmark_latency.py, docs
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -19,6 +19,7 @@ plus overrides recorded below. No pushes, no remotes, no `git reset --hard`, not
 | 2026-10-03 18:16 | M4 | 36 | 891 |
 | 2026-10-03 18:25 | M5 | 5 | 896 |
 | 2026-10-03 18:32 | M5 (health snapshot run) | 3 | 899 |
+| 2026-10-03 18:39 | M6 | 4 | 903 |
 
 ## Milestones
 
@@ -97,6 +98,25 @@ idiosyncratic_credit IN-ADANIENT 0.15% GREEN (CDS hedge offsets).
 **Found during verification:** REPLAY of real data turned a fund's quarterly letter ("inflation remained above the Fed's target") into
 MARKET Macroeconomic 7.1 → macro_rate_shock_moderate (4.24%). This is a real systemic false positive of the keyword rules (judge Q&A).
 **Tests:** 139 passed, ruff clean.
+
+### M6 — Demo, drills, full suite — DONE (self-gated)
+**Files:** `scripts/run_demo.py` (one command: API + dashboard + reset + story; `--offline`, `--replay N`, `--exit-after-story`),
+`scripts/failure_drill.py` (process-level offline/outage drill), `tests/test_failure_drills.py` (source killed mid-run), `DEMO.md`,
+tasks.ps1/Makefile targets (api, dashboard, demo, demo-offline, drill, check-dashboard, screenshots, portfolio, capture, test).
+**Determinism:** `run_demo.py --offline --exit-after-story --step-seconds 2` run twice → identical signals/scores/stress results
+(3.6 Low · 8.7 Critical → idiosyncratic 0.41% GREEN · 7.0 High → geopolitical_moderate 1.32% AMBER · 9.1 Critical (2 sources) →
+geopolitical_severe 2.45% RED). (A display race that hid the last signal in the console was fixed with a final poll.)
+**Offline + outage drill (`scripts/failure_drill.py`): 7/7 PASS** — API starts with HF offline + all outbound HTTP via a dead proxy;
+FinBERT loads from ./models; SCENARIO story 4 signals / 3 runs; LIVE → google_news/mastodon/reddit DEGRADED, gdelt/stocktwits BACKOFF,
+finnhub/bluesky DISABLED, none OK; API keeps serving; REPLAY 10 CACHED_REAL signals; dashboard 7/7 pages during the outage.
+**Source-kill drill (pytest):** google_news killed after cycle 1 → DEGRADED, DEGRADED, DOWN; reddit stays OK and keeps feeding signals;
+/health shows DOWN with the ConnectError.
+**Bug found + fixed:** token-bucket float rounding made a source with more requests than burst capacity report RATE_LIMITED after
+waiting (Mastodon in the M6 capture); now sleeps wait + 50 ms; regression test added.
+**Tests:** 142 passed (141 fast + 1 model), coverage 88% (`tasks.ps1 test`, coverage.xml), ruff clean. Screenshots refreshed from a real
+demo run (story + REPLAY 30).
+**Known issues:** REPLAY of real data produces systemic false positives (e.g. a Cyprus investment-fund article → MARKET Macroeconomic
+8.0 → macro_rate_shock_moderate 4.24% RED); the demo story itself is unaffected (REPLAY is opt-in via `--replay`).
 
 ## User overrides / decisions given (2026-10-03, before overnight run)
 - Portfolio: synthetic, seed 42, labelled SYNTHETIC.

@@ -31,3 +31,4 @@ data/cache/*.tmp
 data/cache/captures/*.tmp
 *.log
 .tmp/
+coverage.xml

@@ -8,7 +8,7 @@ PY := .venv/bin/python
 BOOT := python3.11
 endif
 
-.PHONY: setup venv install models probe test test-fast lint capture replay ingest-once
+.PHONY: setup venv install models probe test test-fast lint capture replay ingest-once api dashboard demo demo-offline drill check-dashboard screenshots portfolio
 
 setup: venv install models
 
@@ -26,7 +26,7 @@ probe:
 	"$(PY)" scripts/probe_sources.py
 
 test:
-	"$(PY)" -m pytest -q --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing
+	"$(PY)" -m pytest -q --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing --cov-report=xml
 
 test-fast:
 	"$(PY)" -m pytest -q -m "not model"
@@ -42,3 +42,27 @@ replay:
 
 ingest-once:
 	"$(PY)" -m risk_engine.ingestion.scheduler --once
+
+api:
+	"$(PY)" -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+
+dashboard:
+	"$(PY)" -m streamlit run app/dashboard/Home.py --server.port 8501
+
+demo:
+	"$(PY)" scripts/run_demo.py
+
+demo-offline:
+	"$(PY)" scripts/run_demo.py --offline
+
+drill:
+	"$(PY)" scripts/failure_drill.py
+
+check-dashboard:
+	"$(PY)" scripts/check_dashboard.py
+
+screenshots:
+	"$(PY)" scripts/screenshot_dashboard.py
+
+portfolio:
+	"$(PY)" -m portfolio.generate_portfolio
