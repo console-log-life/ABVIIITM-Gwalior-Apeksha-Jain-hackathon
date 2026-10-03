@@ -1,0 +1,21 @@
+[project]
+name = "risk-signal-engine"
+version = "0.1.0"
+description = "AI/NLP financial risk signal engine with downstream portfolio stress testing (hackathon MVP)"
+requires-python = ">=3.11,<3.12"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "model: requires downloaded model weights (run scripts/setup_models.py first)",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP"]

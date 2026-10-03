@@ -1,0 +1,36 @@
+# CPU-only torch wheels
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# --- API / config ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sse-starlette==2.2.1
+pydantic==2.10.4
+pydantic-settings==2.7.1
+SQLAlchemy==2.0.36
+
+# --- NLP ---
+torch==2.5.1
+transformers==4.47.1
+spacy==3.8.3
+rapidfuzz==3.11.0
+langdetect==1.0.9
+
+# --- Ingestion ---
+httpx==0.28.1
+feedparser==6.0.11
+tenacity==9.0.0
+PyYAML==6.0.2
+
+# --- Dashboard / data ---
+streamlit==1.41.1
+plotly==5.24.1
+pandas==2.2.3
+numpy==2.2.1
+scikit-learn==1.6.0
+
+# --- Dev / test ---
+pytest==8.3.4
+pytest-asyncio==0.25.0
+pytest-cov==6.0.0
+ruff==0.8.4

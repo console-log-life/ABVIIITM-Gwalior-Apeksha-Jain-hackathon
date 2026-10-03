@@ -1,0 +1,28 @@
+# secrets
+.env
+
+# python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+pip_install.log
+.tmp/
+coverage.xml
+
+# runtime artefacts
+logs/
+models/
+data/*.db
+data/*.db-journal
+data/probe_results.json
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

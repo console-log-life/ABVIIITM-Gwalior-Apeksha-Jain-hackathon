@@ -1,0 +1,125 @@
+"""Central configuration. Every tunable comes from the environment / .env via pydantic-settings."""
+
+from __future__ import annotations
+
+from enum import Enum
+from functools import lru_cache
+from pathlib import Path
+
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
+
+class AppMode(str, Enum):
+    LIVE = "LIVE"
+    REPLAY = "REPLAY"
+    SCENARIO = "SCENARIO"
+
+
+class Settings(BaseSettings):
+    model_config = SettingsConfigDict(
+        env_file=PROJECT_ROOT / ".env",
+        env_file_encoding="utf-8",
+        extra="ignore",
+        case_sensitive=False,
+    )
+
+    # Runtime
+    app_mode: AppMode = AppMode.SCENARIO
+    log_level: str = "INFO"
+    log_dir: Path = Path("./logs")
+
+    # Storage
+    db_path: Path = Path("./data/risk_engine.db")
+    cache_dir: Path = Path("./data/cache")
+
+    # API / dashboard
+    api_host: str = "127.0.0.1"
+    api_port: int = 8000
+    api_base_url: str = "http://127.0.0.1:8000"
+
+    # Optional keys
+    finnhub_api_key: str = ""
+
+    # HTTP behaviour (bounded by spec: <=10 s general, <=20 s GDELT, <=2 retries)
+    user_agent: str = "risk-signal-engine/0.1 (hackathon research prototype)"
+    http_timeout_s: float = Field(default=10.0, gt=0, le=10.0)
+    gdelt_timeout_s: float = Field(default=20.0, gt=0, le=20.0)
+    http_max_retries: int = Field(default=2, ge=0, le=2)
+    ingest_interval_s: int = Field(default=300, ge=30)
+
+    # Models
+    model_cache_dir: Path = Path("./models")
+    finbert_model: str = "ProsusAI/finbert"
+    enable_zero_shot: bool = False
+    zero_shot_model: str = "typeform/distilbert-base-uncased-mnli"
+
+    # NLP thresholds
+    sentiment_neg_threshold: float = Field(default=-0.25, ge=-1.0, le=0.0)
+    sentiment_pos_threshold: float = Field(default=0.25, ge=0.0, le=1.0)
+    near_dup_threshold: int = Field(default=92, ge=50, le=100)
+    corroboration_window_h: float = Field(default=6.0, gt=0)
+
+    # Stress triggers
+    trigger_systemic_min_impact: float = Field(default=7.0, ge=1, le=10)
+    trigger_systemic_severe_impact: float = Field(default=8.5, ge=1, le=10)
+    trigger_idiosyncratic_min_impact: float = Field(default=6.0, ge=1, le=10)
+    trigger_cooldown_min: int = Field(default=30, ge=0)
+    risk_appetite_loss_pct: float = Field(default=2.0, gt=0)
+
+    # Portfolio
+    transaction_data_path: Path | None = None
+    portfolio_path: Path = Path("./portfolio/portfolio_data.csv")
+
+    # Demo
+    demo_seed: int = 42
+    demo_step_seconds: float = Field(default=10.0, ge=0)
+
+    @field_validator("transaction_data_path", mode="before")
+    @classmethod
+    def _blank_to_none(cls, v: object) -> object:
+        return None if v in ("", None) else v
+
+    @field_validator("log_level")
+    @classmethod
+    def _upper_level(cls, v: str) -> str:
+        v = v.upper()
+        if v not in {"DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"}:
+            raise ValueError(f"invalid LOG_LEVEL {v!r}")
+        return v
+
+    def resolve(self, p: Path) -> Path:
+        """Resolve a configured path relative to the project root (not the CWD)."""
+        return p if p.is_absolute() else (PROJECT_ROOT / p).resolve()
+
+    @property
+    def db_file(self) -> Path:
+        return self.resolve(self.db_path)
+
+    @property
+    def models_dir(self) -> Path:
+        return self.resolve(self.model_cache_dir)
+
+    @property
+    def cache_path(self) -> Path:
+        return self.resolve(self.cache_dir)
+
+    @property
+    def has_finnhub(self) -> bool:
+        return bool(self.finnhub_api_key.strip())
+
+    @property
+    def uses_provided_portfolio(self) -> bool:
+        return self.transaction_data_path is not None and self.resolve(self.transaction_data_path).exists()
+
+
+@lru_cache(maxsize=1)
+def get_settings() -> Settings:
+    return Settings()
+
+
+STRESS_DISCLAIMER = (
+    "Simplified, illustrative hackathon stress model. Not a production or regulatory risk model."
+)
