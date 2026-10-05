@@ -2,9 +2,9 @@
 
 > Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
 
-**Current task:** NIGHT 2 — task 3 (demo stability)
-**Last commit:** 105b949
-**Next step:** task 3: FinBERT threads/warm-up, test split, preflight, two demo runs
+**Current task:** NIGHT 2 — task 4 (label review spreadsheet)
+**Last commit:** 32b8c55
+**Next step:** task 4: label_review.xlsx + import_label_review.py + round-trip test
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -37,6 +37,18 @@ Rules: no AI attribution in commits; no history rewrite; keep .tmp/backup/pre-re
   geopolitical_moderate 29, geopolitical_severe 5, macro_rate_shock_moderate 7, macro_rate_shock_severe 2, macro_rate_cut 2,
   idiosyncratic 5).
 - Evaluate unchanged (0.653/0.648 · 0.81/0.795 · 0.898). Tests: 174 fast + 3 model (one shared FinBERT load per process).
+
+### Night 2 · Task 3: demo stability (DONE)
+- FinBERT: process-wide singleton (`load_finbert`, cached per model+dir), `torch.set_num_threads(TORCH_THREADS=2)`,
+  log lines "Loading FinBERT … (once per process; torch threads=2)" / "FinBERT ready in 6.8 s", warm-up inference at
+  API startup (0.12 s). Model tests share one session fixture (`finbert_engine`).
+- `tasks.ps1 test` = fast suite + coverage, then model tests in a SEPARATE process; new `test-model`, `preflight`
+  (same in Makefile). Result: 174 passed (87%) + 3 passed.
+- `scripts/preflight.py`: RAM (WARN < 2 GB), FinBERT files + spaCy offline, DB writable, ports 8000/8501, demo story,
+  portfolio, REPLAY data, live probe (non-blocking, 60 s cap) → GO / NO-GO. Tonight: GO with 1 warning (1.7 GB free).
+- Demo end-to-end twice (`run_demo.py --exit-after-story`, then `--offline --exit-after-story`, both with the
+  dashboard): identical to before: 3.6 Low · 8.7 → idiosyncratic 0.41% GREEN · 7.0 → moderate 1.32% AMBER ·
+  9.1 (2 sources) → severe 2.45% RED. No demo numbers changed, so DEMO.md / demo_script / submission are unaffected.
 
 ## Capture log (CACHED_REAL growth)
 
