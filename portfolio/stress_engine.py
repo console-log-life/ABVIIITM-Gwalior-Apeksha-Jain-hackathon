@@ -139,8 +139,8 @@ class StressEngine:
         }
 
     # ------------------------------------------------------------------ bus integration
-    def evaluate(self, sig: RiskSignal) -> list[TriggerDecision]:
-        return self.triggers.evaluate(sig)
+    def evaluate(self, sig: RiskSignal, source: str | None = None) -> list[TriggerDecision]:
+        return self.triggers.evaluate(sig, source)
 
     def reset(self) -> None:
         self.triggers.reset()
@@ -159,7 +159,10 @@ def attach_stress_engine(rt: Runtime) -> StressEngine:
     exposures = issuer_exposures(engine.portfolio)
 
     async def on_signal(sig: RiskSignal) -> None:
-        for d in engine.evaluate(sig):
+        # effective source: a scenario document counts as the source it imitates (stored on the document row)
+        row = await asyncio.to_thread(rt.store.get_signal, sig.signal_id)
+        source = (row or {}).get("imitated_source") or sig.source.value
+        for d in engine.evaluate(sig, source):
             summary, positions = await asyncio.to_thread(engine.run, d.scenario, d.scope_issuer_id, d.signal_id, d.rule)
             demo = sig.provenance.value == "SYNTHETIC"
             await asyncio.to_thread(rt.store.save_stress_run, summary, positions, demo)

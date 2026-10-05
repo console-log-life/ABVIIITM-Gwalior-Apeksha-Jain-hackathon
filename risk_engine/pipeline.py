@@ -14,8 +14,8 @@ import threading
 from functools import lru_cache
 
 from app.config import Settings, get_settings
-from risk_engine.entity_resolution.resolver import EntityResolver, Resolution, get_resolver
-from risk_engine.event_classifier.rules import RuleEventClassifier, get_event_classifier
+from risk_engine.entity_resolution.resolver import MARKET_EVENTS, EntityResolver, Resolution, get_resolver
+from risk_engine.event_classifier.rules import EventResult, RuleEventClassifier, get_event_classifier
 from risk_engine.impact_scoring.corroboration import CorroborationTracker
 from risk_engine.impact_scoring.scorer import ImpactInput, ImpactScorer
 from risk_engine.logging_setup import get_logger
@@ -53,6 +53,23 @@ def _prepare(doc: RawDocument) -> RawDocument:
     if not is_english(title if text == title else f"{title}. {text}"):
         raise DocumentRejected("text does not appear to be English")
     return doc.model_copy(update={"title": title or text[:200], "text": text})
+
+
+def classify_and_resolve(classifier: RuleEventClassifier, resolver: EntityResolver, title: str, text: str | None,
+                         hint_ticker: str | None = None) -> tuple[EventResult, Resolution]:
+    """Event classification + entity resolution, including the market evidence guard: a MARKET-wide
+    Geopolitical/Macroeconomic call needs >= N distinct matched patterns of that class (taxonomy.yaml
+    market_min_distinct_patterns); otherwise it is demoted to the secondary class, or Other.
+    Shared by the pipeline and scripts/evaluate.py so the evaluation measures exactly what runs."""
+    full = title if not text or text == title else f"{title}. {text}"
+    event = classifier.classify(full)
+    base = resolver.resolve(title, text, hint_ticker)
+    res = base.finalize(event.primary)
+    while (res.kind == "MARKET" and event.primary in MARKET_EVENTS
+           and event.distinct_patterns() < classifier.market_min_patterns):
+        event = classifier.demote(event)
+        res = base.finalize(event.primary)
+    return event, res
 
 
 def default_exposures() -> dict[str, float]:
@@ -104,9 +121,7 @@ class RiskPipeline:
         return self.process_batch([doc])[0]
 
     def _finish(self, doc: RawDocument, sent) -> RiskSignal:
-        full = doc.title if doc.text == doc.title else f"{doc.title}. {doc.text}"
-        event = self.classifier.classify(full)
-        res: Resolution = self.resolver.resolve(doc.title, doc.text, doc.hint_ticker).finalize(event.primary)
+        event, res = classify_and_resolve(self.classifier, self.resolver, doc.title, doc.text, doc.hint_ticker)
         eff_source = (doc.imitated_source or doc.source).value
         ts = doc.published_at or doc.captured_at
         key = self.corroboration.entity_key(res.kind, res.issuer_id, res.ticker)

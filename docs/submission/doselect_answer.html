@@ -13,7 +13,7 @@
 <h3>Downstream module</h3>
 <p>Module B: Strategic Portfolio Stress Testing was implemented. The stress engine subscribes to every new signal on an internal event bus and reads its event type and impact score.</p>
 <ul>
-<li><strong>Systemic trigger:</strong> a Geopolitical, Macroeconomic or Credit Event that is market-wide or confirmed by at least two independent sources, with impact of at least 7.0. It runs a moderate scenario, or a severe one from 8.5.</li>
+<li><strong>Systemic trigger:</strong> a Geopolitical, Macroeconomic or Credit Event that is market-wide or confirmed by at least two independent sources, with impact of at least 7.0, reported by a news source; social posts only add corroboration. It runs a moderate scenario, or a severe one from 8.5.</li>
 <li><strong>Idiosyncratic trigger:</strong> a Credit, Regulatory or Litigation event on a held issuer with impact of at least 6.0. It shocks only that issuer's bonds, loans, equity and credit protection.</li>
 </ul>
 <p>A cooldown prevents repeated runs, and every run stores its triggering signal as an audit trail. Outputs show the value before and after the shock, the loss by asset class, sector, issuer and country, the top-10 positions, the hedge offset, concentration and a red/amber/green status against a 2% risk appetite.</p>
@@ -37,9 +37,9 @@
 <h3>Data sources</h3>
 <p>Sources used (each passed our source probe): Google News RSS (news), Reddit subreddit RSS (social), Mastodon hashtag timelines (social).</p>
 <ul>
-<li><strong>Real, live:</strong> documents fetched from these sources during a session (label: LIVE).</li>
+<li><strong>Real, live:</strong> fetched during a session (label: LIVE).</li>
 <li><strong>Real, cached:</strong> real headlines and posts captured on 2026-10-03 for replay, each shown with its capture time (label: CACHED_REAL).</li>
-<li><strong>Synthetic:</strong> the scripted demo story, user-typed headlines and the generated portfolio (seed 42, 49 positions), all labelled SYNTHETIC.</li>
+<li><strong>Synthetic:</strong> the demo story, user-typed text and the generated portfolio (seed 42, 49 positions), labelled SYNTHETIC.</li>
 <li><strong>Simulated:</strong> every stress-test result, produced by an illustrative model.</li>
 </ul>
 <h3>Key features</h3>
@@ -56,8 +56,9 @@
 <p>PRELIMINARY: the gold labels were drafted by an AI assistant and are pending human review. The same assistant wrote the event rules, which likely flatters them.</p>
 <ul>
 <li>Sentiment accuracy (FinBERT, headline text): 0.653, macro-F1 0.648 (n = 147 real headlines).</li>
-<li>Event classification accuracy: 0.803, macro-F1 0.792 (n = 147).</li>
-<li>Entity resolution accuracy: 0.891 (n = 147).</li>
+<li>Event classification accuracy: 0.762, macro-F1 0.768 (n = 147).</li>
+<li>Entity resolution accuracy: 0.857 (n = 147).</li>
+<li>Replaying all 911 cached real documents, the false-trigger fixes cut simulated stress runs from 84 to 59 (n = 911).</li>
 <li>Processing latency on a CPU-only laptop: median 204.7 ms and p95 1085.2 ms per document (n = 200).</li>
 <li>Simulated stress output (illustrative model, synthetic portfolio): the severe geopolitical scenario loses 2.45% of portfolio value.</li>
 <li>Agreement with user-tagged social sentiment, and any trading or return impact: not measured.</li>
@@ -68,7 +69,7 @@
 <ul>
 <li>The impact weights are expert priors, not calibrated against market reactions.</li>
 <li>The stress model is simplified and illustrative: no correlations, no full revaluation, and the portfolio is synthetic.</li>
-<li>The social sources are unofficial and best-effort; some candidate sources were blocked or rate-limited.</li>
+<li>The social sources are unofficial and best-effort; some candidates were blocked.</li>
 <li>Google News provides headline-only text, so the models see short inputs.</li>
 <li>The labelled evaluation set is small (147 items, AI-drafted labels), and the keyword rules produce some false positives on real data.</li>
 </ul>
@@ -78,7 +79,7 @@
 <li>Calibrating the impact score against observed market reactions.</li>
 <li>More and licensed datasets with full article text.</li>
 <li>Historical backtesting of triggers and signals.</li>
-<li>Production-grade risk models with full revaluation and correlated scenarios.</li>
+<li>Full-revaluation risk models with correlated scenarios.</li>
 <li>Scalability, security and access control.</li>
 </ul>
 <h3>Deliverables</h3>

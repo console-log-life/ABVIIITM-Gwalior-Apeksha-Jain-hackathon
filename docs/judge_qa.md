@@ -32,12 +32,19 @@
    the next step.
 8. **Why rules for event classification, not a classifier?**
    Rules give transparent evidence phrases and need no training data. We tested a zero-shot tie-breaker and it
-   lowered macro-F1 (0.792 → 0.770), so it's off.
+   lowered macro-F1 (0.768 → 0.751), so it's off.
 9. **⚠️ False positives?**
-   Yes. "The war on data centres" reads as Geopolitical, and a fund newsletter mentioning inflation became a MARKET
-   macro signal that triggered a systemic stress run during replay. Keyword rules have no notion of figurative
-   language. Mitigations are corroboration requirements, cooldown and human review. A fine-tuned classifier is future
-   work.
+   Yes, and we measured them. Replaying all 911 cached real documents produced 84 stress runs. Misfires included
+   "The war on data centres" (read as Geopolitical), a fund newsletter and a Cyprus fund story from Mastodon (read as
+   market-wide macro), and "SEC" resolving to the Government of India.
+
+   We fixed these with regression tests: news-only systemic triggers (social posts only corroborate), ≥ 2 distinct
+   cues for a market-wide call, figurative-"war" guards and a stricter fuzzy entity match. The same replay now gives
+   59 runs (`docs/trigger_replay.md`).
+
+   The cost: event accuracy on our preliminary labels fell from 0.803 to 0.762, because some genuine single-cue
+   headlines like "RBI repo rate could head towards 6.5%" are now demoted. Positive court or regulatory news can still
+   fire idiosyncratic stress.
 10. **⚠️ False negatives?**
     Supply-chain stories are untested: our sample had no examples. Headline-only text misses events buried in
     article bodies.
@@ -90,7 +97,7 @@
 ## Accuracy / evaluation
 
 23. **⚠️ How accurate is it?**
-    PRELIMINARY on n = 147 real headlines with AI-drafted labels: sentiment 0.653, events 0.803, entities 0.891. It's
+    PRELIMINARY on n = 147 real headlines with AI-drafted labels: sentiment 0.653, events 0.762, entities 0.857. It's
     a small set, labelled by one annotator with same-author bias. Not a benchmark.
 24. **Did you measure trading performance?**
     No, and we make no return or alpha claims.

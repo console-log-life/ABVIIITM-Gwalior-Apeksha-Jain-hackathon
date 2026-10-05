@@ -181,7 +181,10 @@ class EntityResolver:
             if cand == norm:
                 score, method = 100.0, "spacy_org"
             else:
-                if not distinctive & (set(cand.split()) - GENERIC_TOKENS):
+                # every distinctive token of the candidate must appear in the ORG span: "SEC" must not match the alias
+                # "G-Sec" (Government of India), and "Reliance" must not match "Reliance Jio"
+                cand_distinctive = set(cand.split()) - GENERIC_TOKENS
+                if not cand_distinctive or not cand_distinctive <= distinctive:
                     continue
                 score = fuzz.token_set_ratio(norm, cand)
                 if score < FUZZY_THRESHOLD:

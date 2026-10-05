@@ -27,6 +27,7 @@ from risk_engine.schemas import RiskSignal
 from tests.conftest import FakeClock
 
 FIX = Path(__file__).parent / "fixtures" / "sample_risk_signal.json"
+INVASION = "Russia launches invasion as war escalates; markets plunge on sweeping sanctions"
 
 
 @pytest.fixture(scope="module")
@@ -199,8 +200,7 @@ def client(tmp_path):
 
 
 def test_headline_to_signal_to_trigger_to_stress(client):
-    sig = client.post("/analyze", json={
-        "text": "Russia launches invasion as war escalates; markets plunge on sweeping sanctions"}).json()
+    sig = client.post("/analyze", json={"source": "google_news", "text": INVASION}).json()
     assert sig["company"] == "MARKET" and sig["event_type"] == "Geopolitical" and sig["impact_score"] >= 7
     runs = client.get("/stress-runs").json()["runs"]
     assert len(runs) == 1 and runs[0]["trigger_signal_id"] == sig["signal_id"]
@@ -210,8 +210,7 @@ def test_headline_to_signal_to_trigger_to_stress(client):
     assert latest["disclaimer"] == STRESS_DISCLAIMER and 0.5 <= latest["loss_pct"] <= 15
     assert client.get("/health").json()["bus"]["stress.completed"] == 1
     # same headline again: duplicate -> no new signal, no new run
-    again = client.post("/analyze", json={
-        "text": "Russia launches invasion as war escalates; markets plunge on sweeping sanctions"})
+    again = client.post("/analyze", json={"source": "google_news", "text": INVASION})
     assert again.headers["X-Duplicate"] == "true"
     assert len(client.get("/stress-runs").json()["runs"]) == 1
 

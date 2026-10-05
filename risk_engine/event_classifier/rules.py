@@ -29,7 +29,11 @@ class EventResult:
     scores: dict[str, float]
     intensifier_adj: float
     intensifier_terms: list[str] = field(default_factory=list)
-    method: str = "rules"  # rules | rules+zero-shot
+    method: str = "rules"  # rules | rules+zero-shot | ...+market-evidence-guard
+    evidence_by_class: dict[str, list[str]] = field(default_factory=dict)  # one phrase per distinct matched pattern
+
+    def distinct_patterns(self, cls: str | None = None) -> int:
+        return len(self.evidence_by_class.get(cls or self.primary, []))
 
 
 class RuleEventClassifier:
@@ -40,6 +44,7 @@ class RuleEventClassifier:
             raise ValueError(f"taxonomy.yaml has classes outside the spec taxonomy: {unknown}")
         self.order: list[str] = list(data["classes"])  # tie-break priority
         self.secondary_ratio = float(data.get("secondary_ratio", 0.6))
+        self.market_min_patterns = int(data.get("market_min_distinct_patterns", 2))
         self.patterns = {c: [(_wrap(i["p"]), float(i["w"])) for i in items] for c, items in data["classes"].items()}
         ints = data.get("intensifiers", {})
         self.int_clip = tuple(ints.get("clip", [-0.2, 0.25]))
@@ -90,7 +95,22 @@ class RuleEventClassifier:
                 terms.append(m.group(0))
         adj = max(self.int_clip[0], min(self.int_clip[1], adj))
         scores_out = {c: s for c, s in scores.items() if s > 0}
-        return EventResult(primary, secondary, evidence, scores_out, round(adj, 3), terms, method)
+        matched = {c: ev for c, ev in evidence_by_class.items() if ev}
+        return EventResult(primary, secondary, evidence, scores_out, round(adj, 3), terms, method, matched)
+
+    def demote(self, result: EventResult) -> EventResult:
+        """Drop the primary class (too little evidence for a market-wide call): the secondary class becomes primary,
+        or 'Other' if there is none. Intensifiers are kept (they describe the text, not the class)."""
+        new = result.secondary or "Other"
+        rest = [c for c in sorted(result.scores, key=lambda c: (-result.scores[c], self.order.index(c)))
+                if c not in (result.primary, new)]
+        secondary = None
+        if new != "Other" and rest and result.scores[rest[0]] >= self.secondary_ratio * result.scores[new]:
+            secondary = rest[0]
+        evidence = list(dict.fromkeys(result.evidence_by_class.get(new, []) +
+                                      (result.evidence_by_class.get(secondary, []) if secondary else [])))
+        return EventResult(new, secondary, evidence, result.scores, result.intensifier_adj, result.intensifier_terms,
+                           result.method + "+market-evidence-guard", result.evidence_by_class)
 
 
 @lru_cache(maxsize=1)

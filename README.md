@@ -106,7 +106,9 @@ are exposed at `GET /methodology`.
   $830.0m. The gross mix is loans 40%, bonds 35%, derivative overlays (IRS/CDS/FX) 17%, equity 8%. It includes
   three CDS hedges.
 - **Systemic trigger:** a Geopolitical, Macroeconomic or Credit event that is MARKET-wide or has ≥ 2 corroborating
-  sources, with impact ≥ 7.0. It runs the moderate scenario, or the severe one at impact ≥ 8.5.
+  sources, with impact ≥ 7.0, **reported by a news source** (Google News, Finnhub, GDELT). Social posts never
+  trigger systemic stress on their own; they only add corroboration. It runs the moderate scenario, or the severe
+  one at impact ≥ 8.5.
 - **Idiosyncratic trigger:** a credit, regulatory or litigation event on a held issuer with impact ≥ 6.0. It runs an
   issuer-only shock.
 - **Cooldown:** 30 minutes, and every run stores its triggering signal_id.
@@ -194,14 +196,23 @@ powershell -ExecutionPolicy Bypass -File tasks.ps1 drill      # offline / outage
 |---|---:|---:|
 | Sentiment accuracy, FinBERT (headline only) | 0.653 | 147 |
 | Sentiment macro-F1, FinBERT | 0.648 | 147 |
-| Event classification accuracy, rules | 0.803 | 147 |
-| Event classification macro-F1, rules | 0.792 | 147 |
-| Entity resolution accuracy | 0.891 | 147 |
-| Zero-shot tie-breaker effect on event macro-F1 | 0.792 → 0.770 (kept off) | 147 |
+| Event classification accuracy, rules | 0.762 | 147 |
+| Event classification macro-F1, rules | 0.768 | 147 |
+| Entity resolution accuracy | 0.857 | 147 |
+| Zero-shot tie-breaker effect on event macro-F1 | 0.768 → 0.751 (kept off) | 147 |
 | StockTwits Bullish/Bearish agreement | not measured (source blocked) | 0 |
 
 Latency (`scripts/benchmark_latency.py` → [docs/benchmark.md](docs/benchmark.md), CPU-only laptop, n = 200 real cached
 documents, full pipeline): **median 204.7 ms, p95 1085.2 ms per document**; 278.9 ms per document when batched.
+
+Event and entity accuracy fell from 0.803 / 0.891 (the earlier `scripts/evaluate.py` run, recorded in
+[docs/PROGRESS.md](docs/PROGRESS.md)) after we added the market-evidence guard (a MARKET-wide macro or
+geopolitical call needs ≥ 2 distinct cues). The guard trades classification recall for fewer false stress triggers.
+
+**Stress-trigger replay** (`scripts/replay_trigger_report.py` → [docs/trigger_replay.md](docs/trigger_replay.md), all
+911 cached real documents, simulated stress): **84 → 59 stress runs** after the false-positive fixes. Systemic runs fell
+from 74 to 50, and runs triggered by social posts fell from 11 to 0. Some of the 26 removed runs were genuine
+single-cue market stories (recall cost).
 
 Accuracy versus market outcomes, returns and alpha: **not measured**.
 
@@ -214,9 +225,10 @@ Accuracy versus market outcomes, returns and alpha: **not measured**.
   rate-limited.
 - Google News provides headlines only (no article body), so the NLP sees short text.
 - The evaluation set is small (n = 147), its labels are AI-drafted drafts, and it has no Supply Chain examples.
-- Keyword event rules produce false positives on real data. For example, "The war on data centres" reads as
-  Geopolitical, and a fund newsletter mentioning inflation becomes a MARKET Macroeconomic signal that can trigger a
-  systemic stress run.
+- Keyword event rules still produce false positives on real data. We fixed four observed misfires, with regression
+  tests: figurative "war on data centres", a fund newsletter and a Cyprus fund story from social media, and "SEC"
+  resolving to the Government of India. Positive court or regulatory news can still fire idiosyncratic stress, and
+  rate-cut headlines map to the rate-hike scenario family. See [docs/trigger_replay.md](docs/trigger_replay.md).
 
 ## Future work
 

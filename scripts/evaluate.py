@@ -28,6 +28,7 @@ from sklearn.metrics import accuracy_score, confusion_matrix, f1_score  # noqa: 
 from app.config import Settings, get_settings  # noqa: E402
 from risk_engine.entity_resolution.resolver import get_resolver  # noqa: E402
 from risk_engine.event_classifier.rules import RuleEventClassifier  # noqa: E402
+from risk_engine.pipeline import classify_and_resolve  # noqa: E402
 from risk_engine.schemas import EVENT_TYPES  # noqa: E402
 from risk_engine.sentiment.finbert import SentimentEngine  # noqa: E402
 
@@ -107,9 +108,10 @@ def main() -> int:
     fin = finbert.analyze_many([(t, None) for t in texts])
     lex = lexicon.analyze_many([(t, None) for t in texts])
     rules = RuleEventClassifier()
-    ev = [rules.classify(t) for t in texts]
     resolver = get_resolver()
-    ents = [entity_key(resolver.resolve(t).finalize(e.primary)) for t, e in zip(texts, ev, strict=True)]
+    pairs = [classify_and_resolve(rules, resolver, t, None) for t in texts]  # same guard as the pipeline
+    ev = [e for e, _ in pairs]
+    ents = [entity_key(r) for _, r in pairs]
 
     pred_s, pred_lex = [x.label for x in fin], [x.label for x in lex]
     pred_e = [e.primary for e in ev]
@@ -139,7 +141,7 @@ def main() -> int:
         from risk_engine.event_classifier.zero_shot import ZeroShotTieBreaker
         try:
             zs = RuleEventClassifier(zero_shot=ZeroShotTieBreaker())
-            pred_zs = [zs.classify(t).primary for t in texts]
+            pred_zs = [classify_and_resolve(zs, resolver, t, None)[0].primary for t in texts]
             res["event_rules_plus_zero_shot"] = metrics(gold_e, pred_zs)
             gain = res["event_rules_plus_zero_shot"]["macro_f1"] - res["event_rules"]["macro_f1"]
             res["zero_shot_decision"] = {

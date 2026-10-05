@@ -59,7 +59,7 @@ secondary, impact 8.7.
 ## Slide 5: Stress testing (Module B)
 - **Portfolio:** 49 synthetic positions (seed 42), including loans, bonds, IRS, CDS hedges, FX forwards and equity.
 - **Systemic trigger:** a geopolitical, macro or credit event that is MARKET-wide or corroborated, with impact ≥ 7
-  (severe at ≥ 8.5).
+  (severe at ≥ 8.5), and only when a news source reports it. Social posts only corroborate.
 - **Idiosyncratic trigger:** a credit, regulatory or litigation event on a held issuer with impact ≥ 6. Each trigger
   has a 30-minute cooldown and an audit trail.
 - **Outputs:** before/after waterfall, top-10 positions (hedges in green), sector × asset heatmap, HHI, RAG versus
@@ -72,7 +72,8 @@ secondary, impact 8.7.
 
 ## Slide 6: Results, dashboard and business impact
 - **PRELIMINARY evaluation** (n = 147 real headlines; labels AI-drafted, pending review): sentiment accuracy 0.653;
-  event accuracy 0.803; entity accuracy 0.891.
+  event accuracy 0.762; entity accuracy 0.857.
+- **False-trigger fixes on all 911 cached real documents:** stress runs 84 → 59; triggered by social posts 11 → 0.
 - **Latency on a CPU laptop** (n = 200): median 204.7 ms, p95 1085.2 ms per document.
 - **Reliability:** 142 automated tests; offline/outage drill 7/7.
 - **Dashboard:** 12 sections plus "analyse your own headline".

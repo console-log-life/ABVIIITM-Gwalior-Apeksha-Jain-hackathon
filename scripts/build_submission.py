@@ -103,7 +103,8 @@ def allowed_numbers() -> set[str]:
         elif isinstance(x, int | float) and not isinstance(x, bool):
             vals.update({f"{x}", f"{x:g}", f"{float(x):.1f}", f"{float(x):.2f}", f"{float(x):.3f}"})
 
-    for p in (EVAL, BENCH):
+    replay = [ROOT / "data" / "eval" / f"trigger_replay_{x}.json" for x in ("before", "after")]
+    for p in (EVAL, BENCH, *[r for r in replay if r.exists()]):
         walk(json.loads(p.read_text(encoding="utf-8")))
     from app.config import get_settings
     from portfolio.stress_engine import StressEngine

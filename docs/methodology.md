@@ -31,8 +31,9 @@ aliases, a sector, a country and an **illustrative** rating bucket. Resolution r
 2. The alias dictionary. Ambiguous brand words (Apple, Amazon, Ford, Intel, Reliance, …) must be capitalised and need
    a context keyword (shares, CEO, earnings, iPhone, …) or a ticker hint. So "apple pie recipe" does not resolve.
 3. spaCy `en_core_web_sm` ORG spans matched exactly to names and aliases.
-4. rapidfuzz `token_set_ratio ≥ 88` on ORG spans. Because token_set_ratio scores 100 for any token subset, a fuzzy
-   match also needs a shared non-generic token.
+4. rapidfuzz `token_set_ratio ≥ 88` on ORG spans. Because token_set_ratio scores 100 for any token subset, *every*
+   distinctive (non-generic) token of the candidate name must also appear in the ORG span. So "SEC" no longer matches
+   the alias "G-Sec" (Government of India).
 5. The ticker hint from a ticker-specific search query, used only when the text names no company.
 6. If nothing resolves: `MARKET` for Geopolitical/Macroeconomic events, otherwise `UNRESOLVED`.
 
@@ -56,11 +57,18 @@ The pattern "X's supplier" sets `relation = supplier`, which appears in the busi
 - **Primary / secondary:** the primary event is the argmax. Ties go to the more severe class (YAML order). A secondary
   event is reported when its score is ≥ 60% of the primary.
 - **Evidence:** the matched phrases are returned as `event_evidence`.
+- **Market evidence guard:** a MARKET-wide Geopolitical or Macroeconomic call needs at least 2 *distinct* matched
+  patterns of that class (`market_min_distinct_patterns`). Otherwise the call is demoted to the secondary class, or to
+  Other, and entity resolution is re-run (`risk_engine.pipeline.classify_and_resolve`, used by the pipeline and by
+  `scripts/evaluate.py`). This trades some recall for far fewer false systemic triggers (see `docs/trigger_replay.md`).
+- **Figurative-use guards:** "price war", "talent war", "culture war", "bidding war", "turf war", "streaming war",
+  "console war" and "fare war", plus "war on <lowercase noun>" ("war on data centres", "war on drugs"), are not
+  geopolitical. "War on Ukraine" (a proper noun) still is.
 - **Intensifiers:** these adjust the severity factor E but not the class. Default/bankruptcy/invasion/collapse/fraud add
   +0.15, war/sanctions/halt +0.10. Rumour/considering/may/could/reportedly/talks subtract 0.10; "may" is
   case-sensitive, so the month is ignored. The total is clipped to [−0.20, +0.25].
 - **Optional zero-shot tie-breaker** (`typeform/distilbert-base-uncased-mnli`): it stays **OFF** because
-  `scripts/evaluate.py` measured macro-F1 0.770 with it versus 0.792 without (n=147, PRELIMINARY labels).
+  `scripts/evaluate.py` measured macro-F1 0.751 with it versus 0.768 without (n=147, PRELIMINARY labels).
 
 ## 5. Impact score (`risk_engine/impact_scoring/weights.yaml`)
 
@@ -114,7 +122,7 @@ BBB 1.0×IG, BB 1.0×HY, B-or-below 1.3×HY.
 
 | Trigger | Condition | Scenario run |
 |---|---|---|
-| Systemic | {Geopolitical, Macroeconomic, Credit Event} and (MARKET or ≥ 2 sources) and impact ≥ 7.0 | moderate below 8.5, severe at 8.5 or above |
+| Systemic | {Geopolitical, Macroeconomic, Credit Event} and (MARKET or ≥ 2 sources) and impact ≥ 7.0 and the signal comes from a **news source** (`SYSTEMIC_TRIGGER_SOURCES`: google_news, finnhub, gdelt; scenario docs count as the source they imitate). Social posts only add corroboration | moderate below 8.5, severe at 8.5 or above |
 | Idiosyncratic | {Credit, Regulatory, Litigation} on a held issuer and impact ≥ 6.0 | issuer-only scenario |
 
 A 30-minute cooldown applies per scenario and scope. Suppressed triggers are logged, and every run stores its

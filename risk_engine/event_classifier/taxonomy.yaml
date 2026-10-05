@@ -5,6 +5,9 @@
 # Weights are expert-set priors, not learned.
 
 secondary_ratio: 0.6
+# A MARKET-wide Geopolitical/Macroeconomic call needs at least this many DISTINCT matched patterns of that class;
+# otherwise the pipeline demotes it (secondary class, or Other). One keyword ("war", "inflation") is not enough.
+market_min_distinct_patterns: 2
 
 classes:
   Credit Event:
@@ -26,7 +29,9 @@ classes:
     - {p: "spreads? widen(?:s|ed|ing)?|widening spreads", w: 2}
     - {p: "write-?downs?|write-?offs?", w: 1}
   Geopolitical:
-    - {p: "(?<!price )(?<!bidding )(?<!talent )wars?|wartime", w: 3}
+    # Figurative-use guards: "price war", "talent war", "culture war", ... and "war on <lowercase noun>"
+    # ("war on data centres", "war on drugs") are not geopolitical; "war on Ukraine" (proper noun) still is.
+    - {p: "(?<!price )(?<!bidding )(?<!talent )(?<!culture )(?<!turf )(?<!streaming )(?<!console )(?<!fare )wars?(?!(?-i: on [a-z]))|wartime", w: 3}
     - {p: "invasion|invad(?:e|es|ed|ing)", w: 3}
     - {p: "sanctions?|sanctioned", w: 3}
     - {p: "missiles?|air ?strikes?|drone strikes?|military strikes?", w: 3}
@@ -42,7 +47,7 @@ classes:
     - {p: "tensions?", w: 1}
     - {p: "nato|united nations|g7|brics", w: 1}
     - {p: "tariffs?", w: 1}
-    - {p: "russia|ukraine|taiwan|china-us|us-china|middle east|iran|israel|gaza|north korea|pakistan", w: 1}
+    - {p: "russian?|ukrain(?:e|ian)|taiwan(?:ese)?|china-us|us-china|middle east|iran(?:ian)?|israel(?:i)?|gaza|north korean?|pakistan(?:i)?", w: 1}
   Macroeconomic:
     - {p: "rate (?:hikes?|cuts?|rises?|increases?|decision)", w: 3}
     - {p: "interest rates?", w: 2}
@@ -136,7 +141,7 @@ intensifiers:
     - {p: "defaults?|defaulted", adj: 0.15}
     - {p: "bankrupt(?:cy)?", adj: 0.15}
     - {p: "invasion|invad(?:e|es|ed)", adj: 0.15}
-    - {p: "wars?", adj: 0.10}
+    - {p: "(?<!price )(?<!bidding )(?<!talent )(?<!culture )(?<!turf )(?<!streaming )(?<!console )(?<!fare )wars?(?!(?-i: on [a-z]))", adj: 0.10}
     - {p: "sanctions?", adj: 0.10}
     - {p: "collapse[sd]?", adj: 0.15}
     - {p: "fraud", adj: 0.15}

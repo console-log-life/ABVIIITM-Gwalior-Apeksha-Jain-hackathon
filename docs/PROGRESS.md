@@ -1,8 +1,8 @@
 # PROGRESS (build memory — read this first after any restart)
 
-**Current milestone:** ALL MILESTONES M0–M8 DONE — overnight run finished
+**Current milestone:** post-M8 user tasks (2026-10-04/05): 1 trigger false positives (DONE), 2 repo hygiene, 3 docs consistency
 **Last commit:** see `git log -1`
-**Next step:** user actions in docs/OVERNIGHT_REPORT.md (review eval labels, links, repo, rehearsal)
+**Next step:** task 2 (history rewrite: drop captures/, strip attribution lines; data/cache/sample)
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -150,6 +150,28 @@ pipeline, explainability page, corroboration escalation in story step 4, trigger
 offline drill). README uses the same numbers and the same source list.
 **Final state:** 142 tests passed, coverage 88%, ruff clean.
 
+### Post-M8 task 1: trigger false positives (DONE)
+**Changes:**
+- Systemic stress only from news sources (`SYSTEMIC_TRIGGER_SOURCES` = google_news, finnhub, gdelt; scenario docs use
+  the imitated source); social posts only add corroboration.
+- A MARKET-wide Macroeconomic/Geopolitical call needs >= 2 distinct matched patterns (`market_min_distinct_patterns`),
+  else demoted to secondary/Other (`pipeline.classify_and_resolve`, shared with evaluate.py).
+- Figurative-war guards (price/talent/culture/bidding/turf/streaming/console/fare war; "war on <lowercase>").
+- Adjectival country forms (Russian, Iranian, …).
+- Fuzzy entity match needs all distinctive tokens ("SEC" no longer resolves to Government of India via "G-Sec").
+- Regression tests: `tests/test_trigger_regressions.py`, using the exact real headlines.
+**Replay over all 911 cached docs** (`scripts/replay_trigger_report.py` → docs/trigger_replay.md): stress runs 84 → 59;
+systemic 74 → 50; idiosyncratic 10 → 9; social-triggered 11 → 0; 26 removed (some genuine single-cue stories: recall
+cost), 1 added (cooldown side effect). Remaining FPs: positive court/regulatory news (Adani court relief, Jio SEBI
+clearance) fires idiosyncratic; "Verdict" in an analyst headline → Litigation; rate cuts map to the hike scenario family.
+**Evaluate (PRELIMINARY, n=147):** FinBERT 0.653/0.648 unchanged; events 0.803/0.792 → 0.762/0.768; entities
+0.891 → 0.857; zero-shot 0.768 vs 0.751 → stays off. The drop is the guard demoting single-cue macro headlines that
+the draft labels call MARKET Macroeconomic.
+**Demo story unchanged:** 3.6 Low · 8.7 → idiosyncratic 0.41% · 7.0 → moderate 1.32% · 9.1 → severe 2.45%.
+**Environment note:** a full pytest run segfaulted inside torch while loading FinBERT (Windows access violation) with
+0.7–1.0 GB RAM free (other applications holding memory); the model test passed when run alone. No code fault found.
+**Tests:** 155 fast passed + 1 model test passed (separate processes); ruff clean; build_submission 19/19 (1,064 words).
+
 ## User overrides / decisions given (2026-10-03, before overnight run)
 - Portfolio: synthetic, seed 42, labelled SYNTHETIC.
 - Finnhub/Bluesky only if keys in .env at run time (none present tonight).
@@ -161,6 +183,9 @@ offline drill). README uses the same numbers and the same source list.
 - Eval labels drafted by the agent must carry label_status=draft_agent; metrics marked PRELIMINARY.
 
 ## Blockers / decisions
+
+- D19 (task 1): manual/API text (source `manual`) can no longer trigger SYSTEMIC stress (not a news source); idiosyncratic triggers are unchanged. The e2e API test now submits as google_news.
+- D20 (task 1): kept the >= 2-pattern rule at classification level as instructed, even though it lowers event accuracy on the draft labels; an alternative is applying it only at trigger level (user decision).
 
 - D1 (M2): `token_set_ratio` is 100 for any token subset ("Bank" vs "Bank of America"), so fuzzy matching runs only on spaCy
   ORG spans and requires a shared non-generic token; ORG spans made only of ambiguous brand words need context like aliases.

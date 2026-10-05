@@ -1,7 +1,10 @@
 """Stress triggers (spec 8.4). Thresholds come from config (TRIGGER_* settings).
 
 Systemic:      event in {Geopolitical, Macroeconomic, Credit Event} AND (entity MARKET OR >= 2 corroborating
-               sources) AND impact >= 7.0  ->  <family>_moderate if impact < 8.5, else <family>_severe.
+               sources) AND impact >= 7.0 AND the triggering signal comes from a NEWS source
+               (SYSTEMIC_TRIGGER_SOURCES, default google_news/finnhub/gdelt; scenario docs count as the source they
+               imitate)  ->  <family>_moderate if impact < 8.5, else <family>_severe.
+               Social posts can never trigger systemic stress on their own; they only add corroboration.
 Idiosyncratic: event in {Credit Event, Regulatory, Litigation} on a HELD issuer AND impact >= 6.0
                ->  idiosyncratic_credit for that issuer only.
 Cooldown:      the same scenario + same scope (issuer or MARKET) is not re-run within TRIGGER_COOLDOWN_MIN minutes;
@@ -55,18 +58,21 @@ class TriggerEngine:
             self._last_run.clear()
             self.suppressed.clear()
 
-    def candidates(self, sig: RiskSignal) -> list[TriggerDecision]:
-        """Pure rule evaluation (no cooldown)."""
+    def candidates(self, sig: RiskSignal, source: str | None = None) -> list[TriggerDecision]:
+        """Pure rule evaluation (no cooldown). `source` = effective source (imitated source for scenario docs)."""
         out: list[TriggerDecision] = []
         s = self.s
+        src = source or sig.source.value
         market_wide = sig.company == "MARKET" or sig.corroborating_sources >= 2
-        if sig.event_type in SYSTEMIC_EVENTS and market_wide and sig.impact_score >= s.trigger_systemic_min_impact:
+        news = src in s.systemic_trigger_sources
+        if (sig.event_type in SYSTEMIC_EVENTS and market_wide and news
+                and sig.impact_score >= s.trigger_systemic_min_impact):
             severity = "severe" if sig.impact_score >= s.trigger_systemic_severe_impact else "moderate"
             why = "entity MARKET" if sig.company == "MARKET" else f"{sig.corroborating_sources} corroborating sources"
             out.append(TriggerDecision(
                 scenario=f"{self.family[sig.event_type]}_{severity}", scope_issuer_id=None, signal_id=sig.signal_id,
                 kind="systemic",
-                rule=(f"Systemic: {sig.event_type} with {why} and impact {sig.impact_score} >= "
+                rule=(f"Systemic: {sig.event_type} from news source {src} with {why} and impact {sig.impact_score} >= "
                       f"{s.trigger_systemic_min_impact} → {severity} "
                       f"(severe at >= {s.trigger_systemic_severe_impact})"),
             ))
@@ -80,13 +86,13 @@ class TriggerEngine:
             ))
         return out
 
-    def evaluate(self, sig: RiskSignal) -> list[TriggerDecision]:
+    def evaluate(self, sig: RiskSignal, source: str | None = None) -> list[TriggerDecision]:
         """Apply cooldown. Returns decisions to run; suppressed ones are recorded in self.suppressed."""
         now = self.clock()
         cooldown = self.s.trigger_cooldown_min * 60
         run: list[TriggerDecision] = []
         with self._lock:
-            for d in self.candidates(sig):
+            for d in self.candidates(sig, source):
                 key = (d.scenario, d.scope_issuer_id or "MARKET")
                 last = self._last_run.get(key)
                 if last is not None and now - last < cooldown:
