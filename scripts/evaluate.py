@@ -36,6 +36,7 @@ EVAL_CSV = ROOT / "data" / "eval" / "labelled_headlines.csv"
 OUT_MD = ROOT / "docs" / "evaluation.md"
 OUT_JSON = ROOT / "data" / "eval" / "eval_results.json"
 OUT_PRED = ROOT / "data" / "eval" / "predictions.csv"
+HISTORY = ROOT / "data" / "eval" / "eval_history.json"  # one entry per labelled run, for before/after tables
 SENT_LABELS = ["Negative", "Neutral", "Positive"]
 
 
@@ -90,6 +91,7 @@ def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-zero-shot", action="store_true", help="skip the zero-shot comparison")
+    ap.add_argument("--label", default=None, help="name this run in data/eval/eval_history.json (before/after table)")
     args = ap.parse_args()
 
     rows = load_rows()
@@ -163,6 +165,7 @@ def main() -> int:
             w.writerow([r["id"], r["text"], r["gold_sentiment"], fs.label, fs.score, r["gold_event"], e.primary,
                         "; ".join(e.evidence), r["gold_ticker"], ent])
     OUT_JSON.write_text(json.dumps(res, indent=2), encoding="utf-8")
+    res["history"] = update_history(res, args.label)
     write_markdown(res, rows)
 
     sf, er, en = res["sentiment_finbert"], res["event_rules"], res["entity"]
@@ -178,6 +181,19 @@ def main() -> int:
           f"{res['random_subset']['entity_accuracy']}")
     print(f"wrote {OUT_MD.relative_to(ROOT)}, {OUT_JSON.relative_to(ROOT)}, {OUT_PRED.relative_to(ROOT)}")
     return 0
+
+
+def update_history(res: dict, label: str | None) -> list[dict]:
+    hist = json.loads(HISTORY.read_text(encoding="utf-8")) if HISTORY.exists() else []
+    if label:
+        entry = {"label": label, "generated_at": res["generated_at"], "git_commit": res["git_commit"], "n": res["n"],
+                 "sentiment_acc": res["sentiment_finbert"]["accuracy"],
+                 "sentiment_f1": res["sentiment_finbert"]["macro_f1"], "event_acc": res["event_rules"]["accuracy"],
+                 "event_f1": res["event_rules"]["macro_f1"], "entity_acc": res["entity"]["accuracy"],
+                 "preliminary": res["preliminary"]}
+        hist = [h for h in hist if h["label"] != label] + [entry]
+        HISTORY.write_text(json.dumps(hist, indent=2), encoding="utf-8")
+    return hist
 
 
 def write_markdown(res: dict, rows: list[dict]) -> None:
@@ -220,6 +236,16 @@ def write_markdown(res: dict, rows: list[dict]) -> None:
         "",
         "Macro-F1 averages over the gold classes present. Entity resolution counts a hit when the predicted "
         "ticker / sovereign issuer_id / MARKET / UNRESOLVED equals the gold value.",
+        "",
+        "## History (same 147 items; before/after each change)",
+        "",
+        "| run | sentiment acc | sentiment macro-F1 | event acc | event macro-F1 | entity acc | n |",
+        "|---|---:|---:|---:|---:|---:|---:|",
+        *[f"| {h['label']} | {h['sentiment_acc']} | {h['sentiment_f1']} | {h['event_acc']} | {h['event_f1']} | "
+          f"{h['entity_acc']} | {h['n']} |" for h in res.get("history", [])],
+        "",
+        "All rows are PRELIMINARY (same AI-drafted labels). Rows marked *(recorded)* were produced by earlier runs of "
+        "this script; their outputs are in git history (docs/evaluation.md) and docs/PROGRESS.md.",
         "",
         "## Confusion matrices",
         "",

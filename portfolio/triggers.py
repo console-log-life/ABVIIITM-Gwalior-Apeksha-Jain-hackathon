@@ -5,6 +5,9 @@ Systemic:      event in {Geopolitical, Macroeconomic, Credit Event} AND (entity 
                (SYSTEMIC_TRIGGER_SOURCES, default google_news/finnhub/gdelt; scenario docs count as the source they
                imitate)  ->  <family>_moderate if impact < 8.5, else <family>_severe.
                Social posts can never trigger systemic stress on their own; they only add corroboration.
+               Market evidence rule: a MARKET-wide Geopolitical/Macroeconomic signal needs >= 2 distinct evidence
+               cues of that class (taxonomy.yaml market_min_distinct_patterns). One keyword ("war", "inflation") is
+               not enough to stress the whole book. This rule lives HERE, not in classification.
 Idiosyncratic: event in {Credit Event, Regulatory, Litigation} on a HELD issuer AND impact >= 6.0
                ->  idiosyncratic_credit for that issuer only.
 Cooldown:      the same scenario + same scope (issuer or MARKET) is not re-run within TRIGGER_COOLDOWN_MIN minutes;
@@ -20,11 +23,13 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass
 
 from app.config import Settings
+from risk_engine.event_classifier.rules import RuleEventClassifier
 from risk_engine.logging_setup import get_logger
 from risk_engine.schemas import RiskSignal
 
 log = get_logger(__name__)
 SYSTEMIC_EVENTS = {"Geopolitical", "Macroeconomic", "Credit Event"}
+MARKET_EVIDENCE_EVENTS = {"Geopolitical", "Macroeconomic"}
 IDIOSYNCRATIC_EVENTS = {"Credit Event", "Regulatory", "Litigation"}
 
 
@@ -44,11 +49,12 @@ class TriggerDecision:
 
 class TriggerEngine:
     def __init__(self, settings: Settings, held_issuers: set[str], systemic_family: dict[str, str],
-                 clock: Callable[[], float] = time.time):
+                 clock: Callable[[], float] = time.time, classifier: RuleEventClassifier | None = None):
         self.s = settings
         self.held = set(held_issuers)
         self.family = systemic_family
         self.clock = clock
+        self.classifier = classifier or RuleEventClassifier()
         self._last_run: dict[tuple[str, str], float] = {}
         self.suppressed: deque[dict] = deque(maxlen=200)
         self._lock = threading.Lock()
@@ -58,6 +64,9 @@ class TriggerEngine:
             self._last_run.clear()
             self.suppressed.clear()
 
+    def market_evidence(self, sig: RiskSignal) -> int:
+        return self.classifier.class_evidence_count(sig.event_type, sig.event_evidence)
+
     def candidates(self, sig: RiskSignal, source: str | None = None) -> list[TriggerDecision]:
         """Pure rule evaluation (no cooldown). `source` = effective source (imitated source for scenario docs)."""
         out: list[TriggerDecision] = []
@@ -65,7 +74,10 @@ class TriggerEngine:
         src = source or sig.source.value
         market_wide = sig.company == "MARKET" or sig.corroborating_sources >= 2
         news = src in s.systemic_trigger_sources
-        if (sig.event_type in SYSTEMIC_EVENTS and market_wide and news
+        cues_needed = self.classifier.market_min_patterns
+        weak_market_call = (sig.company == "MARKET" and sig.event_type in MARKET_EVIDENCE_EVENTS
+                            and self.market_evidence(sig) < cues_needed)
+        if (sig.event_type in SYSTEMIC_EVENTS and market_wide and news and not weak_market_call
                 and sig.impact_score >= s.trigger_systemic_min_impact):
             severity = "severe" if sig.impact_score >= s.trigger_systemic_severe_impact else "moderate"
             why = "entity MARKET" if sig.company == "MARKET" else f"{sig.corroborating_sources} corroborating sources"

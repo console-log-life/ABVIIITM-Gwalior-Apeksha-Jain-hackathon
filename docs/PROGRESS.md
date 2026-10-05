@@ -2,13 +2,18 @@
 
 > Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
 
-**Current milestone:** post-M8 user tasks (2026-10-04/05): 1 trigger false positives (DONE), 2 repo hygiene, 3 docs consistency
-**Last commit:** see `git log -1`
-**Next step:** user actions: review eval labels, create GitHub repo + push, slides, rehearsal, 3 links
+**Current task:** NIGHT 2 (2026-10-05/06, deadline 2026-10-10) — task 1 (2-pattern rule: classification → triggers)
+**Last commit:** 55e0efe
+**Next step:** tasks 1→7 of the night-2 brief (see '## Night 2' below); capture again at the end of the night
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
 plus overrides recorded below. No pushes, no remotes, no `git reset --hard`, nothing outside the project dir.
+
+## Night 2 (autonomous, 2026-10-05/06)
+
+Brief: 1 restore classification / 2-pattern rule only in triggers · 2 remaining false positives (idiosyncratic needs s <= -0.25, verdict guard, rate cut vs hike + macro_rate_cut scenario) · 3 demo stability (FinBERT threads, warm-up, test split, preflight) · 4 label-review xlsx + import · 5 7-slide pptx · 6 silent demo video + GitHub (push only if a remote exists) · 7 final consistency + NIGHT2_REPORT.
+Rules: no AI attribution in commits; no history rewrite; keep .tmp/backup/pre-rewrite.bundle; FinBERT once per process, 2 torch threads, never two model processes at once.
 
 ## Capture log (CACHED_REAL growth)
 
@@ -24,6 +29,7 @@ plus overrides recorded below. No pushes, no remotes, no `git reset --hard`, not
 | 2026-10-03 18:39 | M6 | 4 | 903 |
 | 2026-10-03 18:55 | M7 | 1 | 904 |
 | 2026-10-03 19:37 | M8 | 7 | 911 |
+| 2026-10-05 19:24 | Night 2 start | 372 (263 news, 109 social) | 1283 |
 
 ## Milestones
 

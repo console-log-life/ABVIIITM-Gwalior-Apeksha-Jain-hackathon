@@ -70,9 +70,10 @@ def test_social_posts_never_trigger_systemic_stress(pipe, settings, text):
     assert _systemic(settings, sig, "mastodon") == []
 
 
-def test_cyprus_fund_story_is_not_a_market_macro_call(pipe):
-    sig = pipe.process(_doc(CYPRUS_FUND, Source.MASTODON))
-    assert not (sig.company == "MARKET" and sig.event_type == "Macroeconomic")
+def test_cyprus_fund_story_never_starts_systemic_stress_even_as_news(pipe, settings):
+    sig = pipe.process(_doc(CYPRUS_FUND, Source.MASTODON)).model_copy(update={"impact_score": 9.0})
+    assert _systemic(settings, sig, "mastodon") == []
+    assert _systemic(settings, sig, "google_news") == []  # too few market-wide cues, whatever the source
 
 
 def test_sec_is_not_government_of_india(pipe):
@@ -82,11 +83,14 @@ def test_sec_is_not_government_of_india(pipe):
 
 # ---------------------------------------------------------------- the rules behind the fixes
 
-def test_market_call_needs_two_distinct_patterns(pipe):
+def test_market_evidence_rule_lives_in_triggers_not_classification(pipe, settings):
     weak = pipe.process(_doc("Inflation worries linger for small retailers this autumn", Source.GOOGLE_NEWS))
-    strong = pipe.process(_doc("Fed signals two more rate cuts as inflation cools", Source.GOOGLE_NEWS))
-    assert not (weak.company == "MARKET" and weak.event_type in ("Macroeconomic", "Geopolitical"))
-    assert strong.company == "MARKET" and strong.event_type == "Macroeconomic"
+    strong = pipe.process(_doc("Fed raises interest rates as inflation stays hot", Source.GOOGLE_NEWS))
+    # classification is NOT demoted any more: the single-cue headline is still a MARKET macro signal ...
+    assert weak.company == "MARKET" and weak.event_type == "Macroeconomic"
+    # ... but it cannot start a systemic stress run, while a multi-cue one can (impact forced high for the test)
+    assert _systemic(settings, weak.model_copy(update={"impact_score": 9.0}), "google_news") == []
+    assert len(_systemic(settings, strong.model_copy(update={"impact_score": 9.0}), "google_news")) == 1
 
 
 @pytest.mark.parametrize("text,geo", [

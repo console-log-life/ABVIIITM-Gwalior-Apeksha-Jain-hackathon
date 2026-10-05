@@ -8,7 +8,7 @@ id,text,gold_sentiment,pred_sentiment,sentiment_score,gold_event,pred_event,evid
 6,Infosys shares recover from 52-week low: Here's why,Positive,Negative,-0.737,Other,Other,,INFY.NS,INFY.NS
 7,Why Tesla (TSLA) Stock Is Trading Up Today,Positive,Neutral,0.16,Other,Other,,TSLA,TSLA
 8,What's Going On With Microsoft Stock?,Neutral,Negative,-0.661,Other,Other,,MSFT,MSFT
-9,Repo rate stays at 5.25%: Why your home loan EMI may still change in 2026 and what historical data shows,Neutral,Neutral,-0.047,Macroeconomic,Other,,MARKET,UNRESOLVED
+9,Repo rate stays at 5.25%: Why your home loan EMI may still change in 2026 and what historical data shows,Neutral,Neutral,-0.047,Macroeconomic,Macroeconomic,repo rate,MARKET,MARKET
 10,CoreWeave Stock Just Got a Jaw-Dropping Upgrade From JPMorgan,Positive,Positive,0.912,Other,Other,,UNRESOLVED,JPM
 11,Is Microsoft Stock Paying You Enough For The Swings?,Neutral,Neutral,0.028,Other,Other,,MSFT,MSFT
 12,"22,514 Shares in JPMorgan Chase & Co. $JPM Acquired by Markowski Investments",Neutral,Neutral,-0.016,Other,M&A,acquired,JPM,JPM
@@ -25,7 +25,7 @@ id,text,gold_sentiment,pred_sentiment,sentiment_score,gold_event,pred_event,evid
 23,Tata Motors Shares Gain 2.11% to Rs 446.00 in Early Trade,Positive,Positive,0.881,Other,Other,,TATAMOTORS.NS,TATAMOTORS.NS
 24,Reliance Industries shares contribute to Nifty recovery; Jefferies sees 53% upside,Positive,Positive,0.93,Other,Other,,RELIANCE.NS,RELIANCE.NS
 25,IonQ vs. Microsoft: Which Stock Has More Quantum Upside in October?,Neutral,Neutral,-0.08,Other,Other,,MSFT,MSFT
-26,"RBI likely to raise rates by 50 bps by December, Crisil’s top economist says",Negative,Positive,0.885,Macroeconomic,Other,,MARKET,UNRESOLVED
+26,"RBI likely to raise rates by 50 bps by December, Crisil’s top economist says",Negative,Positive,0.885,Macroeconomic,Macroeconomic,rbi,MARKET,MARKET
 27,4 Experts Weigh In on How Tesla's Next Chapter Could Make or Break the Stock,Neutral,Neutral,-0.032,Other,Other,,TSLA,TSLA
 28,Nvidia Stock Just Gave Investors Notice Its Best Days Are Over,Negative,Neutral,0.111,Other,Other,,NVDA,NVDA
 29,NYC Private School That Inspired ‘Gossip Girl’ Cut by Moody’s,Negative,Neutral,-0.138,Credit Event,Other,,UNRESOLVED,UNRESOLVED
@@ -38,12 +38,12 @@ id,text,gold_sentiment,pred_sentiment,sentiment_score,gold_event,pred_event,evid
 36,"Modi , Putin seek stronger ties as Russia calls for BRICS to counter West - Asia & Pacific",Neutral,Positive,0.88,Geopolitical,Geopolitical,brics; russia,MARKET,MARKET
 37,"America is actually hurting its own interest : India economy well - insulated against US tariffs on Russian oil , says Kotak Securities Expert",Neutral,Negative,-0.662,Geopolitical,Geopolitical,tariffs; russian,MARKET,MARKET
 38,Will India Face US Sanctions Over Russian and Iranian Oil Purchases ? Senate Advances Bill,Negative,Neutral,-0.039,Geopolitical,Geopolitical,sanctions; russian,MARKET,MARKET
-39,Italy Central Bank Orders Sanctions Screening for Crypto Transfers,Neutral,Negative,-0.78,Regulatory,Other,,UNRESOLVED,UNRESOLVED
+39,Italy Central Bank Orders Sanctions Screening for Crypto Transfers,Neutral,Negative,-0.78,Regulatory,Geopolitical,sanctions; central bank,UNRESOLVED,MARKET
 40,Over 60 US Senators back Russia sanctions Bill ; India among countries that could face up to 100 % US tariff,Negative,Positive,0.478,Geopolitical,Geopolitical,sanctions; tariff; russia,MARKET,MARKET
 41,China suffers setback to dedollarize global finance as Saudi Arabia exits Beijing payment scheme,Neutral,Negative,-0.915,Geopolitical,Other,,MARKET,UNRESOLVED
 42,Trump attempting to fire Lisa Cook after Supreme Court ruling : Report,Negative,Negative,-0.832,Macroeconomic,Litigation,ruling; court,MARKET,UNRESOLVED
 43,US Senate Unveils Revised Russia Sanctions Bill As Lawmakers Push To Cement Graham Legacy,Negative,Neutral,-0.138,Geopolitical,Geopolitical,sanctions; russia; unveils,MARKET,MARKET
-44,EU hands Ukraine €1 . 4bn in interest from frozen Russian assets following deadly attack on Kyiv,Neutral,Negative,-0.448,Geopolitical,Other,,MARKET,UNRESOLVED
+44,EU hands Ukraine €1 . 4bn in interest from frozen Russian assets following deadly attack on Kyiv,Neutral,Negative,-0.448,Geopolitical,Geopolitical,ukraine,MARKET,MARKET
 45,Us Tariffs On Russian Oil : India examining new US tariff powers targeting Russian oil buyers : Piyush Goyal,Negative,Neutral,0.083,Geopolitical,Geopolitical,tariffs; russian,MARKET,MARKET
 46,"Russia central bank gingerly cuts rates , caught between business complaints and inflation – Winnipeg Free Press",Neutral,Negative,-0.865,Macroeconomic,Macroeconomic,inflation; central bank,MARKET,MARKET
 47,Started in 2023 november.,Neutral,Neutral,-0.025,Other,Other,,UNRESOLVED,UNRESOLVED
@@ -57,15 +57,15 @@ id,text,gold_sentiment,pred_sentiment,sentiment_score,gold_event,pred_event,evid
 55,Holding SGOV for more than 3 months. I don’t understand a comment.,Neutral,Neutral,-0.18,Other,Other,,UNRESOLVED,UNRESOLVED
 56,Treasuries yields still rose after nonstellar NFP report.,Negative,Positive,0.627,Macroeconomic,Other,,SOV-US,SOV-US
 57,Short Straddle CPR Strategy,Neutral,Neutral,-0.008,Other,Other,,UNRESOLVED,UNRESOLVED
-58,India isn’t short of demand. We’re just building the wrong half of the economy.,Neutral,Negative,-0.432,Macroeconomic,Other,,MARKET,UNRESOLVED
+58,India isn’t short of demand. We’re just building the wrong half of the economy.,Neutral,Negative,-0.432,Macroeconomic,Macroeconomic,economy,MARKET,MARKET
 59,Google says allocate my IRA as 100% equities. I'm retiring next year.,Neutral,Neutral,-0.033,Other,Other,,UNRESOLVED,GOOGL
 60,Groww account balance deducted from hdfc but not added to groww,Negative,Neutral,-0.046,Other,Other,,UNRESOLVED,UNRESOLVED
 61,Nidec shares have plummeted as much as 20% in Tokyo after the Japanese motor maker's auditor declined to give an opinion on its long-awaited financial statements.,Negative,Negative,-0.964,Other,Other,,UNRESOLVED,UNRESOLVED
 62,"Quarterly Update: Q3 2026 Q3 was quieter but still constructive: profits stayed strong, inflation remained above the Fed’s target, and we believe earnings matter more than the November election over…",Positive,Positive,0.87,Other,Macroeconomic,inflation; the fed; earnings; profits; quarterly,UNRESOLVED,MARKET
 63,"Nvidia Reaches Record $5.7 Trillion Market Value Chipmaker Nvidia hits an all-time high, becoming one of the world's most valuable companies as AI demand drives growth.",Positive,Positive,0.89,Other,Other,,NVDA,NVDA
 64,Optioneer is featured on Awesome Indie!,Neutral,Neutral,0.098,Other,Other,,UNRESOLVED,UNRESOLVED
-65,AI Will Be a Boon for Savers #AI #Finance #Economy,Positive,Neutral,0.243,Other,Other,,UNRESOLVED,UNRESOLVED
-66,"🟠 UPDATE US Fed Minutes Release Amid Diminished Rate-Hike Prospects Major stock indexes rose sharply, with the Nasdaq Composite hitting a new high.",Positive,Positive,0.801,Macroeconomic,Other,,MARKET,UNRESOLVED
+65,AI Will Be a Boon for Savers #AI #Finance #Economy,Positive,Neutral,0.243,Other,Macroeconomic,economy,UNRESOLVED,MARKET
+66,"🟠 UPDATE US Fed Minutes Release Amid Diminished Rate-Hike Prospects Major stock indexes rose sharply, with the Nasdaq Composite hitting a new high.",Positive,Positive,0.801,Macroeconomic,Macroeconomic,fed,MARKET,MARKET
 67,Three principles for protecting capital: 1.,Neutral,Neutral,0.046,Other,Other,,UNRESOLVED,UNRESOLVED
 68,The Current Outlook for the Micro Private Capital Market from October 2026 to March 2027 https:// courtg9000.wordpress.com/2026/…,Neutral,Neutral,-0.043,Other,Earnings,outlook,UNRESOLVED,UNRESOLVED
 69,⚡ NEWS G-7 Countries Release Strategic Oil Reserves to Curb Gas Prices The Group of Seven nations has agreed to release up to 100 million barrels of diesel and crude oil reserves.,Neutral,Positive,0.723,Macroeconomic,Other,,MARKET,UNRESOLVED
@@ -141,8 +141,8 @@ id,text,gold_sentiment,pred_sentiment,sentiment_score,gold_event,pred_event,evid
 139,"Wall Street week ahead: Fed minutes, unemployment data, consumer sentiment update",Neutral,Neutral,-0.055,Macroeconomic,Macroeconomic,fed; unemployment,MARKET,MARKET
 140,Fed Raises Interest Rates in Push for ‘Timelier’ Retreat in Inflation,Negative,Positive,0.263,Macroeconomic,Macroeconomic,interest rates; inflation; fed,MARKET,MARKET
 141,"HSBC expects RBI to raise repo rate by 50 bps in FY27 amid strong growth, inflation pressures",Neutral,Positive,0.914,Macroeconomic,Macroeconomic,inflation; rbi,MARKET,HSBC
-142,"⚡ NEWS US Markets Surge on Weak September Jobs Report Major US stock indexes, including the Nasdaq, S&P 500, and Dow Jones, rose sharply following a weak September jobs report showing fewer jobs…",Positive,Positive,0.663,Macroeconomic,Other,,MARKET,UNRESOLVED
+142,"⚡ NEWS US Markets Surge on Weak September Jobs Report Major US stock indexes, including the Nasdaq, S&P 500, and Dow Jones, rose sharply following a weak September jobs report showing fewer jobs…",Positive,Positive,0.663,Macroeconomic,Macroeconomic,jobs report,MARKET,MARKET
 143,"October repo rate hike could dent festive housing demand, impact developer financing",Negative,Negative,-0.953,Macroeconomic,Macroeconomic,rate hike; repo rate,MARKET,MARKET
-144,Fed's Logan calls for '50 bps or more' in rate hikes,Negative,Positive,0.491,Macroeconomic,Other,,MARKET,UNRESOLVED
+144,Fed's Logan calls for '50 bps or more' in rate hikes,Negative,Positive,0.491,Macroeconomic,Macroeconomic,rate hikes,MARKET,MARKET
 145,Soft Jobs Report Boosts Market Bets Fed Will Skip October Rate Increase,Positive,Negative,-0.444,Macroeconomic,Macroeconomic,rate increase; jobs report,MARKET,MARKET
-146,RBI repo rate could head towards 6.5%,Negative,Positive,0.37,Macroeconomic,Other,,MARKET,UNRESOLVED
+146,RBI repo rate could head towards 6.5%,Negative,Positive,0.37,Macroeconomic,Macroeconomic,rbi,MARKET,MARKET

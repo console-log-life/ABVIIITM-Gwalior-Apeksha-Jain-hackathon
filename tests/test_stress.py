@@ -135,7 +135,9 @@ def _sig(**kw) -> RiskSignal:
     return RiskSignal.model_validate({**base, **kw})
 
 
-MARKET = {"company": "MARKET", "ticker": None, "issuer_id": None, "sector": None, "country": None}
+MARKET = {"company": "MARKET", "ticker": None, "issuer_id": None, "sector": None, "country": None,
+          # >= 2 distinct cues per market class (market evidence rule in triggers.py)
+          "event_evidence": ["war", "sanctions", "inflation", "rate hike"]}
 
 
 @pytest.fixture

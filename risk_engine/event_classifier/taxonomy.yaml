@@ -5,8 +5,9 @@
 # Weights are expert-set priors, not learned.
 
 secondary_ratio: 0.6
-# A MARKET-wide Geopolitical/Macroeconomic call needs at least this many DISTINCT matched patterns of that class;
-# otherwise the pipeline demotes it (secondary class, or Other). One keyword ("war", "inflation") is not enough.
+# Used by the STRESS TRIGGERS only (portfolio/triggers.py), never by classification: a MARKET-wide
+# Geopolitical/Macroeconomic signal needs at least this many DISTINCT evidence cues of that class before it may start a
+# systemic stress run. One keyword ("war", "inflation") is not enough to stress the whole book.
 market_min_distinct_patterns: 2
 
 classes:

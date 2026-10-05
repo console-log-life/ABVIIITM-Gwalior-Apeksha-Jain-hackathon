@@ -98,19 +98,12 @@ class RuleEventClassifier:
         matched = {c: ev for c, ev in evidence_by_class.items() if ev}
         return EventResult(primary, secondary, evidence, scores_out, round(adj, 3), terms, method, matched)
 
-    def demote(self, result: EventResult) -> EventResult:
-        """Drop the primary class (too little evidence for a market-wide call): the secondary class becomes primary,
-        or 'Other' if there is none. Intensifiers are kept (they describe the text, not the class)."""
-        new = result.secondary or "Other"
-        rest = [c for c in sorted(result.scores, key=lambda c: (-result.scores[c], self.order.index(c)))
-                if c not in (result.primary, new)]
-        secondary = None
-        if new != "Other" and rest and result.scores[rest[0]] >= self.secondary_ratio * result.scores[new]:
-            secondary = rest[0]
-        evidence = list(dict.fromkeys(result.evidence_by_class.get(new, []) +
-                                      (result.evidence_by_class.get(secondary, []) if secondary else [])))
-        return EventResult(new, secondary, evidence, result.scores, result.intensifier_adj, result.intensifier_terms,
-                           result.method + "+market-evidence-guard", result.evidence_by_class)
+    def class_evidence_count(self, cls: str, phrases: list[str]) -> int:
+        """How many of a signal's stored evidence phrases belong to class `cls`. Each evidence phrase is the match of
+        one pattern, so this equals the number of distinct `cls` patterns that fired. Used by the stress triggers
+        (market evidence rule); classification itself is not affected."""
+        pats = [rx for rx, _ in self.patterns.get(cls, [])]
+        return sum(1 for ph in dict.fromkeys(p.lower() for p in phrases) if any(rx.search(ph) for rx in pats))
 
 
 @lru_cache(maxsize=1)

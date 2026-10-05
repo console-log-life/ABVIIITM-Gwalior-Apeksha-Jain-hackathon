@@ -1,0 +1,38 @@
+[
+  {
+    "label": "M7 baseline *(recorded)*",
+    "generated_at": "2026-10-03",
+    "git_commit": "see git log",
+    "n": 147,
+    "sentiment_acc": 0.653,
+    "sentiment_f1": 0.648,
+    "event_acc": 0.803,
+    "event_f1": 0.792,
+    "entity_acc": 0.891,
+    "preliminary": true
+  },
+  {
+    "label": "night-1: 2-cue rule in classification *(recorded)*",
+    "generated_at": "2026-10-05",
+    "git_commit": "see git log",
+    "n": 147,
+    "sentiment_acc": 0.653,
+    "sentiment_f1": 0.648,
+    "event_acc": 0.762,
+    "event_f1": 0.768,
+    "entity_acc": 0.857,
+    "preliminary": true
+  },
+  {
+    "label": "night-2 task 1: rule moved to triggers",
+    "generated_at": "2026-10-05T19:32:56.747607+00:00",
+    "git_commit": "55e0efe",
+    "n": 147,
+    "sentiment_acc": 0.653,
+    "sentiment_f1": 0.648,
+    "event_acc": 0.81,
+    "event_f1": 0.795,
+    "entity_acc": 0.898,
+    "preliminary": true
+  }
+]

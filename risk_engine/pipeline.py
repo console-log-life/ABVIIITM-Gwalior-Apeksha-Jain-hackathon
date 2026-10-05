@@ -14,7 +14,7 @@ import threading
 from functools import lru_cache
 
 from app.config import Settings, get_settings
-from risk_engine.entity_resolution.resolver import MARKET_EVENTS, EntityResolver, Resolution, get_resolver
+from risk_engine.entity_resolution.resolver import EntityResolver, Resolution, get_resolver
 from risk_engine.event_classifier.rules import EventResult, RuleEventClassifier, get_event_classifier
 from risk_engine.impact_scoring.corroboration import CorroborationTracker
 from risk_engine.impact_scoring.scorer import ImpactInput, ImpactScorer
@@ -57,19 +57,12 @@ def _prepare(doc: RawDocument) -> RawDocument:
 
 def classify_and_resolve(classifier: RuleEventClassifier, resolver: EntityResolver, title: str, text: str | None,
                          hint_ticker: str | None = None) -> tuple[EventResult, Resolution]:
-    """Event classification + entity resolution, including the market evidence guard: a MARKET-wide
-    Geopolitical/Macroeconomic call needs >= N distinct matched patterns of that class (taxonomy.yaml
-    market_min_distinct_patterns); otherwise it is demoted to the secondary class, or Other.
-    Shared by the pipeline and scripts/evaluate.py so the evaluation measures exactly what runs."""
+    """Event classification + entity resolution (unresolved + Geopolitical/Macroeconomic -> MARKET).
+    Shared by the pipeline and scripts/evaluate.py so the evaluation measures exactly what runs.
+    The market evidence rule (>= 2 distinct cues) is applied only by the stress triggers, not here."""
     full = title if not text or text == title else f"{title}. {text}"
     event = classifier.classify(full)
-    base = resolver.resolve(title, text, hint_ticker)
-    res = base.finalize(event.primary)
-    while (res.kind == "MARKET" and event.primary in MARKET_EVENTS
-           and event.distinct_patterns() < classifier.market_min_patterns):
-        event = classifier.demote(event)
-        res = base.finalize(event.primary)
-    return event, res
+    return event, resolver.resolve(title, text, hint_ticker).finalize(event.primary)
 
 
 def default_exposures() -> dict[str, float]:
