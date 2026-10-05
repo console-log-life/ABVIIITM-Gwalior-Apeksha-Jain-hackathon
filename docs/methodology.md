@@ -59,10 +59,12 @@ The pattern "X's supplier" sets `relation = supplier`, which appears in the busi
 - **Primary / secondary:** the primary event is the argmax. Ties go to the more severe class (YAML order). A secondary
   event is reported when its score is ≥ 60% of the primary.
 - **Evidence:** the matched phrases are returned as `event_evidence`.
-- **Market evidence guard:** a MARKET-wide Geopolitical or Macroeconomic call needs at least 2 *distinct* matched
-  patterns of that class (`market_min_distinct_patterns`). Otherwise the call is demoted to the secondary class, or to
-  Other, and entity resolution is re-run (`risk_engine.pipeline.classify_and_resolve`, used by the pipeline and by
-  `scripts/evaluate.py`). This trades some recall for far fewer false systemic triggers (see `docs/trigger_replay.md`).
+- **Market evidence guard (trigger only):** classification is not changed. A MARKET-wide Geopolitical or
+  Macroeconomic signal needs at least 2 *distinct* matched patterns of that class (`market_min_distinct_patterns`,
+  counted by `rules.class_evidence_count`) before it may start a **systemic stress run** (`portfolio/triggers.py`).
+  Applying the guard in classification cost event accuracy (0.803 → 0.762 on the PRELIMINARY labels), so it was moved
+  (see `docs/evaluation.md` history and `docs/trigger_replay.md`).
+- **Opinion "verdicts":** "analyst verdict", "our verdict", "verdict on the stock" and similar are not Litigation.
 - **Figurative-use guards:** "price war", "talent war", "culture war", "bidding war", "turf war", "streaming war",
   "console war" and "fare war", plus "war on <lowercase noun>" ("war on data centres", "war on drugs"), are not
   geopolitical. "War on Ukraine" (a proper noun) still is.
@@ -70,7 +72,7 @@ The pattern "X's supplier" sets `relation = supplier`, which appears in the busi
   +0.15, war/sanctions/halt +0.10. Rumour/considering/may/could/reportedly/talks subtract 0.10; "may" is
   case-sensitive, so the month is ignored. The total is clipped to [−0.20, +0.25].
 - **Optional zero-shot tie-breaker** (`typeform/distilbert-base-uncased-mnli`): it stays **OFF** because
-  `scripts/evaluate.py` measured macro-F1 0.751 with it versus 0.768 without (n=147, PRELIMINARY labels).
+  `scripts/evaluate.py` measured macro-F1 0.78 with it versus 0.795 without (n=147, PRELIMINARY labels).
 
 ## 5. Impact score (`risk_engine/impact_scoring/weights.yaml`)
 
@@ -124,8 +126,9 @@ BBB 1.0×IG, BB 1.0×HY, B-or-below 1.3×HY.
 
 | Trigger | Condition | Scenario run |
 |---|---|---|
-| Systemic | {Geopolitical, Macroeconomic, Credit Event} and (MARKET or ≥ 2 sources) and impact ≥ 7.0 and the signal comes from a **news source** (`SYSTEMIC_TRIGGER_SOURCES`: google_news, finnhub, gdelt; scenario docs count as the source they imitate). Social posts only add corroboration | moderate below 8.5, severe at 8.5 or above |
-| Idiosyncratic | {Credit, Regulatory, Litigation} on a held issuer and impact ≥ 6.0 | issuer-only scenario |
+| Systemic | {Geopolitical, Macroeconomic, Credit Event} and (MARKET or ≥ 2 sources) and impact ≥ 7.0 and the signal comes from a **news source** (`SYSTEMIC_TRIGGER_SOURCES`: google_news, finnhub, gdelt; scenario docs count as the source they imitate). Social posts only add corroboration. A MARKET-wide Geopolitical/Macro signal needs ≥ 2 distinct evidence cues | moderate below 8.5, severe at 8.5 or above |
+| Systemic, rates | Macroeconomic rate headline: direction read by `event_classifier/rate_direction.py` | hike → `macro_rate_shock_<severity>`; cut → `macro_rate_cut` (rates −50 bp, IG −10, HY −25, equity +2%, PD ×0.95); unclear → no run |
+| Idiosyncratic | {Credit, Regulatory, Litigation} on a held issuer, impact ≥ 6.0 and sentiment ≤ −0.25 (`TRIGGER_IDIOSYNCRATIC_MAX_SENTIMENT`) | issuer-only scenario |
 
 A 30-minute cooldown applies per scenario and scope. Suppressed triggers are logged, and every run stores its
 triggering `signal_id`.

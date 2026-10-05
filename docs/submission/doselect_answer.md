@@ -45,7 +45,7 @@ Data sources → ingestion → NLP → risk signals → store/API → stress eng
 Sources used (each passed our source probe): Google News RSS (news), Reddit subreddit RSS (social), Mastodon hashtag timelines (social).
 
 - **Real, live:** fetched during a session (label: LIVE).
-- **Real, cached:** real items captured on 2026-10-03 for replay, shown with capture time (label: CACHED_REAL); the public repository ships only a news-headline sample.
+- **Real, cached:** real items captured between 2026-10-03 and 2026-10-05 for replay, shown with capture time (label: CACHED_REAL); the public repository ships only a news-headline sample.
 - **Synthetic:** the demo story, user-typed text and the generated portfolio (seed 42, 49 positions), labelled SYNTHETIC.
 - **Simulated:** every stress-test result, produced by an illustrative model.
 
@@ -64,9 +64,9 @@ Sources used (each passed our source probe): Google News RSS (news), Reddit subr
 PRELIMINARY: the gold labels were drafted by an AI assistant and are pending human review. The same assistant wrote the event rules, which likely flatters them.
 
 - Sentiment accuracy (FinBERT, headline text): 0.653, macro-F1 0.648 (n = 147 real headlines).
-- Event classification accuracy: 0.762, macro-F1 0.768 (n = 147).
-- Entity resolution accuracy: 0.857 (n = 147).
-- Replaying 911 locally captured real documents, the false-trigger fixes cut simulated stress runs from 84 to 59 (n = 911).
+- Event classification accuracy: 0.81, macro-F1 0.795 (n = 147).
+- Entity resolution accuracy: 0.898 (n = 147).
+- Replaying 911 locally captured real documents, the false-trigger fixes cut simulated stress runs from 84 to 50 (n = 911).
 - Processing latency on a CPU-only laptop: median 204.7 ms and p95 1085.2 ms per document (n = 200).
 - Simulated stress output (illustrative model, synthetic portfolio): the severe geopolitical scenario loses 2.45% of portfolio value.
 - Agreement with user-tagged social sentiment, and any trading or return impact: not measured.

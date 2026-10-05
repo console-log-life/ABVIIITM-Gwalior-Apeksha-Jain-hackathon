@@ -3,6 +3,9 @@
 Numbers on these slides must come only from `docs/evaluation.md` (PRELIMINARY until the labels are human-reviewed),
 `docs/benchmark.md` and the stress engine's simulated outputs (always labelled "simulated, illustrative model").
 
+The built deck is `docs/presentation/Risk_Signal_Engine.pptx` (`tasks.ps1 deck`). `scripts/build_presentation.py` reads
+its numbers from the same JSON outputs, so rebuild it after any re-evaluation.
+
 ---
 
 ## Slide 1: Risk Signal Engine: from headlines to portfolio stress in seconds
@@ -72,10 +75,10 @@ secondary, impact 8.7.
 
 ## Slide 6: Results, dashboard and business impact
 - **PRELIMINARY evaluation** (n = 147 real headlines; labels AI-drafted, pending review): sentiment accuracy 0.653;
-  event accuracy 0.762; entity accuracy 0.857.
-- **False-trigger fixes, replayed on 911 locally captured real documents:** stress runs 84 → 59; triggered by social posts 11 → 0.
+  event accuracy 0.81; entity accuracy 0.898.
+- **False-trigger fixes, replayed on 911 locally captured real documents:** stress runs 84 → 50; triggered by social posts 11 → 0.
 - **Latency on a CPU laptop** (n = 200): median 204.7 ms, p95 1085.2 ms per document.
-- **Reliability:** 158 automated tests; offline/outage drill 7/7.
+- **Reliability:** 180 automated tests; offline/outage drill 7/7.
 - **Dashboard:** 12 sections plus "analyse your own headline".
 - **Impact:** faster triage, prioritisation by materiality, instant portfolio view. A decision-support tool, not
   investment advice.

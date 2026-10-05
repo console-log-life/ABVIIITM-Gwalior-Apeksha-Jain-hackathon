@@ -41,3 +41,8 @@ risk model.
 
 If the network or API fails during a presentation, see `docs/demo_script.md` → "Backup plan". In short: `tasks.ps1 demo-offline`
 works without any network, REPLAY shows real cached data, and `docs/screenshots/` holds static images of every page.
+
+Before presenting, run `tasks.ps1 preflight` (GO / NO-GO: RAM, model files, DB, free ports, demo data).
+
+A **silent backup recording** of this story is in `docs/demo/demo_walkthrough.webm` (3:30, 1600×900, captions on
+screen; re-record with `tasks.ps1 video`). A narrated recording still has to be made by a person.

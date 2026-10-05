@@ -32,19 +32,20 @@
    the next step.
 8. **Why rules for event classification, not a classifier?**
    Rules give transparent evidence phrases and need no training data. We tested a zero-shot tie-breaker and it
-   lowered macro-F1 (0.768 → 0.751), so it's off.
+   lowered macro-F1 (0.795 → 0.78), so it's off.
 9. **⚠️ False positives?**
    Yes, and we measured them. Replaying all 911 real documents in our local capture cache produced 84 stress runs. Misfires included
    "The war on data centres" (read as Geopolitical), a fund newsletter and a Cyprus fund story from Mastodon (read as
    market-wide macro), and "SEC" resolving to the Government of India.
 
    We fixed these with regression tests: news-only systemic triggers (social posts only corroborate), ≥ 2 distinct
-   cues for a market-wide call, figurative-"war" guards and a stricter fuzzy entity match. The same replay now gives
-   59 runs (`docs/trigger_replay.md`).
+   cues before a market-wide call can start systemic stress, figurative-"war" guards, a stricter fuzzy entity match,
+   negative sentiment (≤ −0.25) for issuer-only stress, an analyst-"verdict" guard, and rate direction (cuts run a
+   separate rate-cut scenario). The same replay now gives 50 runs (`docs/trigger_replay.md`).
 
-   The cost: event accuracy on our preliminary labels fell from 0.803 to 0.762, because some genuine single-cue
-   headlines like "RBI repo rate could head towards 6.5%" are now demoted. Positive court or regulatory news can still
-   fire idiosyncratic stress.
+   The cost: some genuine single-cue market stories, like "RBI repo rate could head towards 6.5%", no longer start
+   systemic stress. Classification itself is unchanged (event accuracy 0.81). Regulatory settlement headlines can
+   still fire issuer-only stress.
 10. **⚠️ False negatives?**
     Supply-chain stories are untested: our sample had no examples. Headline-only text misses events buried in
     article bodies.
@@ -98,7 +99,7 @@
 ## Accuracy / evaluation
 
 23. **⚠️ How accurate is it?**
-    PRELIMINARY on n = 147 real headlines with AI-drafted labels: sentiment 0.653, events 0.762, entities 0.857. It's
+    PRELIMINARY on n = 147 real headlines with AI-drafted labels: sentiment 0.653, events 0.81, entities 0.898. It's
     a small set, labelled by one annotator with same-author bias. Not a benchmark.
 24. **Did you measure trading performance?**
     No, and we make no return or alpha claims.

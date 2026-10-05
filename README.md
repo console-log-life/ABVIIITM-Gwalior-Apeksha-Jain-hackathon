@@ -111,10 +111,11 @@ are exposed at `GET /methodology`.
   three CDS hedges.
 - **Systemic trigger:** a Geopolitical, Macroeconomic or Credit event that is MARKET-wide or has ≥ 2 corroborating
   sources, with impact ≥ 7.0, **reported by a news source** (Google News, Finnhub, GDELT). Social posts never
-  trigger systemic stress on their own; they only add corroboration. It runs the moderate scenario, or the severe
-  one at impact ≥ 8.5.
-- **Idiosyncratic trigger:** a credit, regulatory or litigation event on a held issuer with impact ≥ 6.0. It runs an
-  issuer-only shock.
+  trigger systemic stress on their own; they only add corroboration. A MARKET-wide call needs ≥ 2 distinct evidence
+  cues. It runs the moderate scenario, or the severe one at impact ≥ 8.5. Rate headlines are read for direction:
+  hikes run the rate-shock scenario, cuts run `macro_rate_cut`, unclear direction runs nothing.
+- **Idiosyncratic trigger:** a credit, regulatory or litigation event on a held issuer with impact ≥ 6.0 and
+  sentiment ≤ −0.25. It runs an issuer-only shock.
 - **Cooldown:** 30 minutes, and every run stores its triggering signal_id.
 - **Simulated losses** with the illustrative model (`StressEngine.run`, funded-MV basis): geopolitical severe 2.45%,
   macro rate shock severe 8.06%, systemic credit severe 3.65%.
@@ -186,7 +187,8 @@ powershell -ExecutionPolicy Bypass -File tasks.ps1 test-fast  # without model-de
 powershell -ExecutionPolicy Bypass -File tasks.ps1 drill      # offline / outage drill against the real API
 ```
 
-- **Test suite:** 158 tests (157 fast + 1 FinBERT model test; pytest, no network in unit tests). Coverage on the
+- **Test suite:** 180 tests (177 fast + 3 FinBERT model tests, run in a separate process; pytest, no network in
+  unit tests). Coverage on the
   fast suite is 87% (`pytest -m "not model" --cov`). It includes regression tests for the real headlines that
   misfired.
 - **Failure drill:** `scripts/failure_drill.py` passed 7/7 checks with every outbound HTTP request blocked.
@@ -201,23 +203,24 @@ powershell -ExecutionPolicy Bypass -File tasks.ps1 drill      # offline / outage
 |---|---:|---:|
 | Sentiment accuracy, FinBERT (headline only) | 0.653 | 147 |
 | Sentiment macro-F1, FinBERT | 0.648 | 147 |
-| Event classification accuracy, rules | 0.762 | 147 |
-| Event classification macro-F1, rules | 0.768 | 147 |
-| Entity resolution accuracy | 0.857 | 147 |
-| Zero-shot tie-breaker effect on event macro-F1 | 0.768 → 0.751 (kept off) | 147 |
+| Event classification accuracy, rules | 0.81 | 147 |
+| Event classification macro-F1, rules | 0.795 | 147 |
+| Entity resolution accuracy | 0.898 | 147 |
+| Zero-shot tie-breaker effect on event macro-F1 | 0.795 → 0.78 (kept off) | 147 |
 | StockTwits Bullish/Bearish agreement | not measured (source blocked) | 0 |
 
 Latency (`scripts/benchmark_latency.py` → [docs/benchmark.md](docs/benchmark.md), CPU-only laptop, n = 200 real cached
 documents, full pipeline): **median 204.7 ms, p95 1085.2 ms per document**; 278.9 ms per document when batched.
 
-Event and entity accuracy fell from 0.803 / 0.891 (the earlier `scripts/evaluate.py` run, recorded in
-[docs/PROGRESS.md](docs/PROGRESS.md)) after we added the market-evidence guard (a MARKET-wide macro or
-geopolitical call needs ≥ 2 distinct cues). The guard trades classification recall for fewer false stress triggers.
+The market-evidence guard (a MARKET-wide macro or geopolitical call needs ≥ 2 distinct cues) now gates only the
+systemic stress trigger, not classification. When it lived in classification, event / entity accuracy fell from
+0.803 / 0.891 to 0.762 / 0.857; moving it to the trigger restored them (0.81 / 0.898). The before/after history is in
+[docs/evaluation.md](docs/evaluation.md).
 
 **Stress-trigger replay** (`scripts/replay_trigger_report.py` → [docs/trigger_replay.md](docs/trigger_replay.md), all
-911 real documents in the developer's local capture cache, which is not published; simulated stress): **84 → 59 stress runs** after the false-positive fixes. Systemic runs fell
-from 74 to 50, and runs triggered by social posts fell from 11 to 0. Some of the 26 removed runs were genuine
-single-cue market stories (recall cost).
+911 real documents in the developer's local capture cache, which is not published; simulated stress): **84 → 50 stress runs** after the false-positive fixes. Systemic runs fell
+from 74 to 45, idiosyncratic runs from 10 to 5, and runs triggered by social posts from 11 to 0. Some of the 34
+removed runs were genuine single-cue market stories (recall cost).
 
 Accuracy versus market outcomes, returns and alpha: **not measured**.
 
@@ -232,8 +235,9 @@ Accuracy versus market outcomes, returns and alpha: **not measured**.
 - The evaluation set is small (n = 147), its labels are AI-drafted drafts, and it has no Supply Chain examples.
 - Keyword event rules still produce false positives on real data. We fixed four observed misfires, with regression
   tests: figurative "war on data centres", a fund newsletter and a Cyprus fund story from social media, and "SEC"
-  resolving to the Government of India. Positive court or regulatory news can still fire idiosyncratic stress, and
-  rate-cut headlines map to the rate-hike scenario family. See [docs/trigger_replay.md](docs/trigger_replay.md).
+  resolving to the Government of India. Idiosyncratic stress now needs negative sentiment (≤ −0.25), analyst
+  "verdicts" are not Litigation, and rate cuts run a separate `macro_rate_cut` scenario. Regulatory settlement
+  headlines (e.g. SEBI settlements) can still fire idiosyncratic stress. See [docs/trigger_replay.md](docs/trigger_replay.md).
 
 ## Future work
 
