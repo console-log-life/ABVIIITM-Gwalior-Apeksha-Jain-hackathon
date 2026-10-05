@@ -8,7 +8,7 @@ PY := .venv/bin/python
 BOOT := python3.11
 endif
 
-.PHONY: setup venv install models probe test test-fast lint capture replay ingest-once api dashboard demo demo-offline drill check-dashboard screenshots portfolio evaluate benchmark submission test-model preflight
+.PHONY: setup venv install models probe test test-fast lint capture replay ingest-once api dashboard demo demo-offline drill check-dashboard screenshots portfolio evaluate benchmark submission test-model preflight label-review import-labels
 
 setup: venv install models
 
@@ -82,3 +82,9 @@ benchmark:
 
 submission:
 	"$(PY)" scripts/build_submission.py
+
+label-review:
+	"$(PY)" scripts/build_label_review.py
+
+import-labels:
+	"$(PY)" scripts/import_label_review.py
