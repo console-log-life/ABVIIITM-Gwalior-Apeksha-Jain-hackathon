@@ -116,6 +116,17 @@ def main() -> int:
                      "free" if free else "in use — stop the running server first"))
     story = s.resolve(s.demo_story_path)
     rows.append(("OK" if story.exists() else "FAIL", "demo story present", str(story.relative_to(ROOT))))
+    if story.exists():
+        from risk_engine.ingestion.scenario import load_opening, load_scenario
+
+        try:
+            opening = load_scenario(story).real_opening
+            if opening is not None:
+                n = len(load_opening(opening, ROOT))
+                rows.append(("OK" if n == len(opening.doc_ids) else "WARN", "demo step 0 real headlines",
+                             f"{n}/{len(opening.doc_ids)} found (CACHED_REAL sample)"))
+        except Exception as exc:  # a broken story file must show up here, not during the presentation
+            rows.append(("FAIL", "demo story valid", f"{type(exc).__name__}: {exc}"[:120]))
     pf = s.resolve(s.portfolio_path)
     rows.append(("OK" if pf.exists() else "WARN", "portfolio file present",
                  str(pf.relative_to(ROOT)) if pf.exists() else "missing: it will be generated (seed 42) on start"))

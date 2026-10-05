@@ -64,6 +64,12 @@ class ApiClient:
     def ticker(self, ticker: str) -> dict:
         return self._request("GET", f"/signals/{ticker}")
 
+    def signal(self, signal_id: str) -> dict | None:
+        return self._request("GET", f"/signals/by-id/{signal_id}", allow_404=True)
+
+    def watchlist(self, hours: int | None = None) -> dict:
+        return self._request("GET", "/watchlist", params={"hours": hours})
+
     def portfolio(self) -> dict:
         return self._request("GET", "/portfolio")
 

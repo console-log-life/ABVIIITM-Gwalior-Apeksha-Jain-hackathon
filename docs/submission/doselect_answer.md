@@ -7,9 +7,9 @@ Downgrades, regulatory probes, sanctions and rate shocks surface first in unstru
 ### Solution overview
 
 - **AI/NLP risk engine:** every news item or social post becomes a structured RiskSignal with provenance, entity, sentiment, event type, impact score, a one-line reason and a business implication.
-- **Ingestion from multiple sources:** news (Google News RSS) and social (Reddit subreddit RSS, Mastodon hashtag timelines), with rate limits, retries, backoff and duplicate detection.
-- **Sentiment score:** a continuous score in [−1, 1] from FinBERT, with the class probabilities and model confidence.
-- **Event classification:** an 11-class taxonomy (Geopolitical, Macroeconomic, Credit Event, M&A, Product Launch, Regulatory, Earnings, Supply Chain, Litigation, Management, Other), with the evidence phrases that triggered each class.
+- **Ingestion from multiple sources:** news (Google News RSS) and social (Reddit RSS, Mastodon), with rate limits, retries, backoff and deduplication.
+- **Sentiment score:** a score in [−1, 1] from FinBERT, with class probabilities and confidence.
+- **Event classification:** an 11-class taxonomy (from Geopolitical, Macroeconomic and Credit Event to Management and Other), with the evidence phrases behind each class.
 - **Impact score from 1 to 10:** a transparent weighted formula, explained factor by factor.
 - **Structured output:** a REST API with Swagger, a Server-Sent Events stream of new signals, a JSONL export and a SQLite store.
 
@@ -18,27 +18,29 @@ Downgrades, regulatory probes, sanctions and rate shocks surface first in unstru
 Module B: Strategic Portfolio Stress Testing was implemented. The stress engine subscribes to every new signal on an internal event bus and reads its event type and impact score.
 
 - **Systemic trigger:** a Geopolitical, Macroeconomic or Credit Event that is market-wide or confirmed by at least two independent sources, with impact of at least 7.0, reported by a news source; social posts only add corroboration. It runs a moderate scenario, or a severe one from 8.5.
-- **Idiosyncratic trigger:** a Credit, Regulatory or Litigation event on a held issuer with impact of at least 6.0. It shocks only that issuer's bonds, loans, equity and credit protection.
+- **Idiosyncratic trigger:** a Credit, Regulatory or Litigation event on a held issuer with impact of at least 6.0 and negative sentiment. It shocks only that issuer's bonds, loans, equity and credit protection.
 
 A cooldown prevents repeated runs, and every run stores its triggering signal as an audit trail. Outputs show the value before and after the shock, the loss by asset class, sector, issuer and country, the top-10 positions, the hedge offset, concentration and a red/amber/green status against a 2% risk appetite.
+
+An **early warning watchlist** gives every held issuer a rules-based status (WATCH-NEGATIVE, MONITOR or STABLE) from its last 24 hours of signals, with exposure, rating bucket and the top three signals with their reasons.
 
 ### Technical architecture
 
 Data sources → ingestion → NLP → risk signals → store/API → stress engine → dashboard
 
 - Live polling, replay of captured real data, the scripted demo and direct API calls all pass through one shared NLP pipeline.
-- Adapters handle timeouts, bounded retries, rate limits and per-source health; a failing source never stops the system.
+- Adapters handle timeouts, retries, rate limits and source health; a failing source never stops the system.
 - Signals are stored in SQLite and published on an in-process event bus; FastAPI serves REST, streaming and export.
 - The stress engine is a bus subscriber with simplified pricers for bonds, loans, interest-rate swaps, credit default swaps, FX forwards and equity.
-- A Streamlit dashboard covers all required views via the API; the demo runs offline after a one-time model download.
+- A Streamlit dashboard covers all twelve required views plus the watchlist via the API; the demo runs offline after a one-time model download.
 
 ### AI/NLP methodology
 
 - **Sentiment:** FinBERT (ProsusAI/finbert) with s = P(positive) − P(negative). Labels are read from the model configuration; a finance lexicon is the fallback.
 - **Event classification:** rule-based, with weighted patterns per class, primary and secondary events, evidence phrases and intensifiers. An optional zero-shot tie-breaker was evaluated and left disabled because it lowered macro-F1.
-- **Entity resolution:** cashtags, then an alias dictionary (ambiguous names such as "Apple" need financial context), then spaCy organisation entities, then guarded fuzzy matching, then a market-wide or unresolved label.
+- **Entity resolution:** cashtags, an alias dictionary with context checks for ambiguous names, spaCy organisation entities, guarded fuzzy matching, then a market-wide or unresolved label.
 - **Impact formula:** Impact = 1 + 9 × Q × (0.40 E + 0.25 M + 0.20 X + 0.15 R), clipped to 1–10. E is event severity, M sentiment magnitude, X portfolio exposure, R source credibility plus corroboration, and Q model confidence.
-- **Explainability:** every signal shows its probabilities, evidence phrases, weighted factor contributions, a reason sentence and a business implication.
+- **Explainability:** every signal shows probabilities, evidence phrases, weighted factor contributions, a reason and a business implication.
 
 ### Data sources
 
@@ -56,7 +58,7 @@ Sources used (each passed our source probe): Google News RSS (news), Reddit subr
 - Explainable 1–10 impact score with visible weights.
 - Corroboration across independent sources escalates severity.
 - Event-driven stress tests with an audit trail and cooldown.
-- Twelve-section dashboard, including "analyse your own headline".
+- Early warning watchlist of held issuers, linked to each signal's explanation.
 - Runs offline with graceful fallback when sources fail.
 
 ### Results
@@ -73,7 +75,7 @@ PRELIMINARY: the gold labels were drafted by an AI assistant and are pending hum
 
 ### Business impact
 
-Risk teams get earlier warning and materiality-based triage; credit analysts see why a signal matters; portfolio managers get an immediate, audited view of how an event could move their book. This prototype is a decision-support tool, not investment advice.
+Risk teams get earlier warning and materiality-based triage; credit analysts see which held names need attention and why; portfolio managers get an immediate, audited view of how an event could move their book. This prototype is a decision-support tool, not investment advice.
 
 ### Limitations
 

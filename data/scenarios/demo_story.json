@@ -1,6 +1,16 @@
 {
   "name": "demo_story",
-  "description": "SYNTHETIC scripted demo (spec section 10). Headlines are invented for the demo and are labelled SYNTHETIC everywhere; they imitate the style of real sources only to pick a credibility prior. Sequence: (1) low-risk positive product launch at a small held US issuer, seen on social media -> low impact, no trigger; (2) credit downgrade + regulatory probe at a held issuer -> idiosyncratic stress; (3) market-wide geopolitical shock reported by a news wire and then corroborated by a second, independent source -> systemic stress.",
+  "description": "Step 0 replays four REAL headlines from the committed CACHED_REAL sample (data/cache/sample), unchanged and badged CACHED_REAL with their capture time; they were chosen because none of them triggers a stress run, so the scripted results below are unaffected. Then the SYNTHETIC scripted demo (spec section 10). Headlines are invented for the demo and are labelled SYNTHETIC everywhere; they imitate the style of real sources only to pick a credibility prior. Sequence: (1) low-risk positive product launch at a small held US issuer, seen on social media -> low impact, no trigger; (2) credit downgrade + regulatory probe at a held issuer -> idiosyncratic stress; (3) market-wide geopolitical shock reported by a news wire and then corroborated by a second, independent source -> systemic stress. After step 2 the story holds for 20 s (hold_after_s) so the presenter can show the Early Warning Watchlist (Tata Motors: WATCH-NEGATIVE).",
+  "real_opening": {
+    "path": "data/cache/sample/sample_google_news.jsonl",
+    "delay_s": 4,
+    "doc_ids": [
+      "7eb2261358c3ee27de98a1ed4161f2a33552b272",
+      "7cedd6d7684fb46d3a95c6c9bd8d129d3158b4fd",
+      "398757c81f4d422f608d3ac996e6fcfe41d1c304",
+      "104fbca233e46edf655994fcab924da179ed0c57"
+    ]
+  },
   "steps": [
     {
       "delay_s": 0,
@@ -14,7 +24,8 @@
       "delay_s": 10,
       "imitates": "google_news",
       "title": "Moody's downgrades Tata Motors to junk as SEBI opens probe into accounting",
-      "publisher": "SYNTHETIC demo wire"
+      "publisher": "SYNTHETIC demo wire",
+      "hold_after_s": 20
     },
     {
       "delay_s": 10,

@@ -9,6 +9,7 @@ from __future__ import annotations
 import asyncio
 import time
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 from app.config import AppMode, Settings
@@ -176,7 +177,7 @@ class Runtime:
                 await self.ingest(docs, "scenario")
 
             step = self.settings.demo_step_seconds if step_seconds is None else step_seconds
-            coro = run_scenario(path, sink, step_seconds=step)
+            coro = run_scenario(path, sink, step_seconds=step, root=self.settings.resolve(Path('.')))
         else:
             async def sink(docs):
                 await self.ingest(docs, "replay")

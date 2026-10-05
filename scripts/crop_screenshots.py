@@ -24,6 +24,13 @@ CROPS = {
     "signals_table.png": ("03_signals.png", (419, 470, 1518, 945)),
     "home_kpis.png": ("01_home.png", (410, 205, 1535, 555)),
     "explain_factors.png": ("06_explain.png", (410, 940, 1535, 1300)),
+    "watchlist.png": ("08_watchlist.png", (410, 205, 1525, 700)),
+}
+README_DIR = ROOT / "docs" / "screenshots" / "readme"
+README_CROPS = {  # the three images at the top of README.md
+    "1_watchlist.png": ("08_watchlist.png", (410, 130, 1525, 700)),
+    "2_stress.png": ("05_stress.png", (415, 355, 1515, 1110)),
+    "3_explain.png": ("06_explain.png", (410, 270, 1535, 1300)),
 }
 
 
@@ -46,6 +53,13 @@ def main() -> int:
         sheet.paste(im, (0, y + 25))
         y += im.height + 30
     sheet.save(OUT / "_contact_sheet.png")
+    README_DIR.mkdir(parents=True, exist_ok=True)
+    for name, (src, box) in README_CROPS.items():
+        img = Image.open(SHOTS / src).convert("RGB")
+        img = img.crop((box[0], box[1], min(box[2], img.width), min(box[3], img.height)))
+        img.thumbnail((1100, 1100))
+        img.save(README_DIR / name, optimize=True)
+        print(f"readme/{name}: {img.size}")
     return 0
 
 

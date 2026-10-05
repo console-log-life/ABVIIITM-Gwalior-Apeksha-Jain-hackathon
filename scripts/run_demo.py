@@ -102,7 +102,8 @@ def main() -> int:
         reset = httpx.post(f"{api}/demo/reset", timeout=30).json()
         print(f"[3/5] demo state reset: {reset}")
 
-        print(f"[4/5] playing SYNTHETIC demo story ({step:g} s between steps)")
+        print(f"[4/5] playing the demo: step 0 = REAL headlines (CACHED_REAL sample), then the SYNTHETIC story "
+              f"({step:g} s between steps, 20 s pause after step 2 for the watchlist)")
         httpx.post(f"{api}/demo/start", json={"mode": "SCENARIO", "step_seconds": step}, timeout=30).raise_for_status()
         seen_sig, seen_runs = set(), set()
 
@@ -121,6 +122,9 @@ def main() -> int:
             poll()
             time.sleep(1)
         poll()  # final poll: the last step's signal and stress runs may land after the status flips
+        for row in httpx.get(f"{api}/watchlist", timeout=10).json()["issuers"]:
+            if row["status"] != "STABLE":
+                print(f"      WATCHLIST {row['status']:<15} {row['issuer_name'][:24]:<24} {row['status_reason']}")
 
         if args.replay:
             print(f"      replaying {args.replay} cached real documents (CACHED_REAL)")

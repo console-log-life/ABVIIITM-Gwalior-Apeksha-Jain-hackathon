@@ -79,6 +79,14 @@ class Settings(BaseSettings):
     systemic_trigger_sources: list[str] = ["google_news", "finnhub", "gdelt"]
     risk_appetite_loss_pct: float = Field(default=2.0, gt=0)
 
+    # Early-warning watchlist (GET /watchlist): rules-based status per HELD issuer; see docs/methodology.md
+    watchlist_window_h: int = Field(default=24, ge=1, le=720)
+    watchlist_negative_sentiment: float = Field(default=-0.25, ge=-1, le=0)  # a signal is "negative" at or below
+    watchlist_watch_impact: float = Field(default=7.0, ge=1, le=10)  # one negative signal this strong → WATCH
+    watchlist_watch_count: int = Field(default=2, ge=1)  # ...or this many negative signals
+    watchlist_watch_count_impact: float = Field(default=5.0, ge=1, le=10)  # ...each at least this strong
+    watchlist_monitor_impact: float = Field(default=4.0, ge=1, le=10)  # one negative signal this strong → MONITOR
+
     # Portfolio
     transaction_data_path: Path | None = None
     portfolio_path: Path = Path("./portfolio/portfolio_data.csv")

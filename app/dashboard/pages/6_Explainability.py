@@ -53,11 +53,21 @@ def explain(sig: dict) -> None:
 tab_stored, tab_own = st.tabs(["Explain a stored signal", "Analyse your own headline"])
 with tab_stored:
     rows = guard(client.signals, limit=500)
+    wanted = st.query_params.get("signal_id")  # click-through from the Early Warning Watchlist
+    if wanted and not any(r["signal_id"] == wanted for r in rows):
+        extra = guard(client.signal, wanted)
+        if extra:
+            rows.append(extra)
+        else:
+            st.warning("The signal linked from the watchlist is no longer stored (the demo may have been reset).")
     if not rows:
         st.info("No stored signals yet.")
     else:
         rows = sorted(rows, key=lambda r: (-r["impact_score"], -r["seq"]))
-        pick = st.selectbox("Signal (highest impact first)", range(len(rows)),
+        start = next((i for i, r in enumerate(rows) if r["signal_id"] == wanted), 0)
+        if wanted and rows[start]["signal_id"] == wanted:
+            st.caption("Opened from the Early Warning Watchlist.")
+        pick = st.selectbox("Signal (highest impact first)", range(len(rows)), index=start,
                             format_func=lambda i: f"{rows[i]['impact_score']:.1f} · {rows[i]['company']} · "
                                                   f"{rows[i]['event_type']} · {rows[i]['text_excerpt'][:70]}")
         explain(rows[pick])

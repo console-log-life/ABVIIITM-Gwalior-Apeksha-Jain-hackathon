@@ -21,7 +21,7 @@
             FastAPI: REST · SSE /signals/stream · JSONL export · Swagger /docs
                      │
                      ▼
-            Streamlit dashboard (12 sections, via api_client.py only)
+            Streamlit dashboard (12 sections + watchlist, via api_client.py)
 ```
 
 ## Components

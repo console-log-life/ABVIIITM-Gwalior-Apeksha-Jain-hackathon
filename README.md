@@ -8,6 +8,13 @@ S&P Global × CRISIL "Code to Connect Hackathon 2026" · Phase 3 · Module B (St
 > Decision-support prototype, **not investment advice**. Stress results come from a *simplified, illustrative
 > hackathon stress model; it is not a production or regulatory risk model.*
 
+| Early Warning Watchlist | Event-driven stress test | Explainability |
+|---|---|---|
+| [![Watchlist: Tata Motors flagged WATCH-NEGATIVE after a downgrade signal](docs/screenshots/readme/1_watchlist.png)](docs/screenshots/readme/1_watchlist.png) | [![Stress test: severe geopolitical scenario, 2.45% simulated loss, RED](docs/screenshots/readme/2_stress.png)](docs/screenshots/readme/2_stress.png) | [![Explainability: sentiment probabilities, evidence phrases and weighted impact factors](docs/screenshots/readme/3_explain.png)](docs/screenshots/readme/3_explain.png) |
+
+*Screenshots from the scripted demo: headlines are SYNTHETIC, the portfolio is SYNTHETIC (seed 42) and stress results
+are simulated.*
+
 ---
 
 ## Problem
@@ -25,7 +32,19 @@ An NLP risk engine that:
 3. publishes structured **RiskSignals** via REST, Server-Sent Events, JSONL export and SQLite.
 
 **Module B** subscribes to those signals. When the trigger rules fire, it automatically runs a stress test on a
-loans/bonds/derivatives portfolio and shows the before/after picture.
+loans/bonds/derivatives portfolio and shows the before/after picture. An **Early Warning Watchlist** ranks every
+held issuer by a rules-based watch status built from its recent signals.
+
+## Why this matters for credit risk
+
+- **Earlier attention on held names.** Downgrades, regulatory probes and default rumours usually appear in text
+  before they reach ratings files or spreads. The watchlist flags the held issuer as soon as such a signal arrives, with
+  its exposure and rating bucket next to it.
+- **Triage by materiality, with the reason shown.** Each flag cites the rule that fired and the signals behind it
+  (event type, sentiment, sources, a one-line reason), so an analyst can confirm or dismiss it quickly.
+- **From news to portfolio impact in one step.** The same signal can start a simulated stress test, so the analyst
+  sees which positions and hedges would move. The model is illustrative, and we have not measured any
+  speed-up or loss avoided.
 
 ## Architecture
 
@@ -49,7 +68,11 @@ Details: [docs/architecture.md](docs/architecture.md) · methodology: [docs/meth
   sector × asset-class heatmap, HHI and RAG against risk appetite.
 - **Resilient.** Per-source timeouts, retries and backoff, and a health panel. It runs offline after setup (FinBERT
   from `./models`), with a lexicon fallback if the model cannot load.
-- **Dashboard.** All 12 required sections, an "Analyse your own headline" box, a mode switch and source health.
+- **Early Warning Watchlist** (`GET /watchlist`): for every held issuer, signal count, worst impact, mean
+  sentiment, event types, sources, exposure (% of book), rating bucket and the top-3 signals with reasons. Status
+  WATCH-NEGATIVE / MONITOR / STABLE comes from configurable rules ([methodology](docs/methodology.md)).
+- **Dashboard.** All 12 required sections plus the watchlist (ranked table, status pills, impact sparklines,
+  click-through to explainability), an "Analyse your own headline" box, a mode switch and source health.
 
 ## Tech stack
 
@@ -119,11 +142,17 @@ are exposed at `GET /methodology`.
 - **Cooldown:** 30 minutes, and every run stores its triggering signal_id.
 - **Simulated losses** with the illustrative model (`StressEngine.run`, funded-MV basis): geopolitical severe 2.45%,
   macro rate shock severe 8.06%, systemic credit severe 3.65%.
+- **Early warning watchlist:** within the window (default 24 h, by event time), a held issuer is **WATCH-NEGATIVE**
+  if any negative signal (sentiment ≤ −0.25) has impact ≥ 7, or ≥ 2 negative signals have impact ≥ 5;
+  **MONITOR** if any negative signal has impact ≥ 4; otherwise **STABLE**. It is a flag for analyst attention, not
+  a credit rating or PD estimate.
 
 ## Screenshots
 
 `docs/screenshots/`: `01_home.png` (executive overview) · `02_feed.png` · `03_signals.png` · `04_portfolio.png` ·
-`05_stress.png` (trigger banner, waterfall, top-10, heatmap) · `06_explain.png` · `07_health.png`.
+`05_stress.png` (trigger banner, waterfall, top-10, heatmap) · `06_explain.png` · `07_health.png` ·
+`08_watchlist.png` (Early Warning Watchlist). Refresh with `scripts/screenshot_dashboard.py` and
+`scripts/crop_screenshots.py` while the demo runs.
 
 ## Install
 
@@ -145,6 +174,7 @@ All of them are listed with comments in [.env.example](.env.example). The import
 - `FINNHUB_API_KEY`, `BLUESKY_HANDLE`, `BLUESKY_APP_PASSWORD` (optional)
 - `HF_HUB_OFFLINE` / `TRANSFORMERS_OFFLINE` (offline demo)
 - `TRIGGER_*`, `RISK_APPETITE_LOSS_PCT`
+- `WATCHLIST_*` (watch-status thresholds and window)
 - `DB_PATH`, `MODEL_CACHE_DIR`
 
 ## Run locally
@@ -169,13 +199,18 @@ curl -s  http://127.0.0.1:8000/signals/export.jsonl > signals.jsonl     # one Ri
 curl -s -X POST http://127.0.0.1:8000/portfolio/stress-test -H "content-type: application/json" \
      -d '{"scenario": "geopolitical_severe"}'
 curl -s  http://127.0.0.1:8000/stress-runs                              # audit log (trigger signal_id)
+curl -s "http://127.0.0.1:8000/watchlist?hours=24"                      # early-warning status per held issuer
 ```
 
 ## Demo
 
-See [DEMO.md](DEMO.md) and the timed script in [docs/demo_script.md](docs/demo_script.md). The story has four steps:
+See [DEMO.md](DEMO.md) and the timed script in [docs/demo_script.md](docs/demo_script.md). The story has a real-data
+opening and four scripted steps:
+0. four REAL headlines replayed from the committed CACHED_REAL sample (badged with their capture time; none of them
+   triggers stress);
 1. a low-impact product launch (no trigger);
-2. a Tata Motors downgrade, which runs the idiosyncratic stress;
+2. a Tata Motors downgrade, which runs the idiosyncratic stress and puts Tata Motors on the watchlist as
+   WATCH-NEGATIVE (the story pauses 20 s here);
 3. an invasion headline, which runs moderate systemic stress;
 4. a corroborating second source, which escalates it to severe.
 
@@ -187,10 +222,9 @@ powershell -ExecutionPolicy Bypass -File tasks.ps1 test-fast  # without model-de
 powershell -ExecutionPolicy Bypass -File tasks.ps1 drill      # offline / outage drill against the real API
 ```
 
-- **Test suite:** 180 tests (177 fast + 3 FinBERT model tests, run in a separate process; pytest, no network in
-  unit tests). Coverage on the
-  fast suite is 87% (`pytest -m "not model" --cov`). It includes regression tests for the real headlines that
-  misfired.
+- **Test suite:** 200 tests (196 fast + 4 FinBERT model tests, run in a separate process; pytest, no network in
+  unit tests). Coverage on the fast suite is 88% (`--cov=risk_engine --cov=portfolio --cov=app`). It includes
+  regression tests for the real headlines that misfired, and the watchlist rules and endpoint.
 - **Failure drill:** `scripts/failure_drill.py` passed 7/7 checks with every outbound HTTP request blocked.
 
 ## Measured results (from scripts in this repo)

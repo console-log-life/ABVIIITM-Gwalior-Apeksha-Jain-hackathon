@@ -151,3 +151,36 @@ recalibration was needed.
 - time horizon.
 
 *Simplified, illustrative hackathon stress model. Not a production or regulatory risk model.*
+
+## 7. Early warning watchlist (`portfolio/watchlist.py`, `GET /watchlist`)
+
+A credit-risk view of recent signals: one row per **held** issuer (every issuer_id in the portfolio), including
+issuers with no signals.
+
+**Window.** Signals whose event `timestamp` falls within the last `hours` (query parameter, 1–720; default
+`WATCHLIST_WINDOW_H` = 24). Replayed real documents keep their original publication time, so older CACHED_REAL items
+fall outside a 24 h window. This is deliberate: the watchlist answers "what happened recently".
+
+**Watch status** (thresholds in config, `WATCHLIST_*`; a signal is *negative* when sentiment ≤ −0.25):
+
+| Status | Rule (first match wins) | Config |
+|---|---|---|
+| WATCH-NEGATIVE | any negative signal with impact ≥ 7.0, **or** ≥ 2 negative signals with impact ≥ 5.0 | `WATCHLIST_WATCH_IMPACT`, `WATCHLIST_WATCH_COUNT`, `WATCHLIST_WATCH_COUNT_IMPACT` |
+| MONITOR | any negative signal with impact ≥ 4.0 | `WATCHLIST_MONITOR_IMPACT` |
+| STABLE | otherwise, including no signals | n/a |
+
+The negative-sentiment cut-off is the same −0.25 used by the idiosyncratic stress trigger, so strong positive news
+(a beat, a court win) never puts an issuer on watch. Every row carries `status_reason`, naming the rule and the signal
+that fired it.
+
+**Per issuer:** signal count and negative count, worst impact, mean sentiment, event-type counts, distinct sources
+(the imitated source for SYNTHETIC scenario documents), the maximum corroborating-source count, the top-3 signals
+(highest impact, then newest) with their `reason` text, and the impact series for the sparkline. Exposure is the
+funded market value (loans, bonds, equity) and its % of the funded book. The rating bucket is that of the issuer's
+largest funded position. CDS protection bought is shown as notional.
+
+**Ranking:** status (WATCH-NEGATIVE, then MONITOR, then STABLE), then the strongest negative signal, then exposure.
+
+**What it is not:** the status is a rules-based flag for analyst attention. It is not a credit rating, a PD
+estimate or investment advice, and the thresholds are expert-set, not calibrated. In the demo story, step 2
+(the Tata Motors downgrade, impact 8.7, sentiment −0.90) makes Tata Motors WATCH-NEGATIVE (`tests/test_watchlist.py`).

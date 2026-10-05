@@ -145,6 +145,16 @@ async def export_jsonl(
                              headers={"Content-Disposition": "attachment; filename=signals.jsonl"})
 
 
+@router.get("/signals/by-id/{signal_id}", response_model=SignalView, responses={
+            200: {"content": {"application/json": {"example": EXAMPLE_SIGNAL}}}, 404: {"description": "Unknown id"}},
+            summary="One stored signal by signal_id (dashboard click-through)")
+async def signal_by_id(signal_id: str, rt: Runtime = Depends(get_runtime)) -> SignalView:
+    row = await asyncio.to_thread(rt.store.get_signal, signal_id)
+    if row is None:
+        raise HTTPException(404, f"unknown signal_id {signal_id}")
+    return SignalView(**row)
+
+
 @router.get("/signals/{ticker}", response_model=TickerSignals,
             responses={200: {"content": {"application/json": {"example": {
                 "ticker": "TATAMOTORS.NS", "count": 1, "mean_sentiment": -0.903, "max_impact": 7.4,

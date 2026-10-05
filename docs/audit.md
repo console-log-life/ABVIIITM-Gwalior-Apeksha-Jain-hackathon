@@ -21,12 +21,12 @@
 
 | Dimension | Score | Why not higher |
 |---|---:|---|
-| Technical quality | 78 | Clean modular code, 180 tests, 87% coverage (fast suite), drills. Single process; in-process bus; SQLite |
+| Technical quality | 78 | Clean modular code, 200 tests, 88% coverage (fast suite), drills. Single process; in-process bus; SQLite |
 | NLP | 62 | FinBERT + rules + resolver work, but there's no fine-tuning, keyword false positives, headline-only input, and the evaluation is PRELIMINARY with same-author bias |
 | Financial reasoning | 66 | Correct sign conventions, hedges, triggers, HHI, RAG; but illustrative shocks, no correlations or FX translation, synthetic book |
 | Business relevance | 74 | Clear triage-to-portfolio story with an audit trail; no user validation |
 | Innovation | 68 | Provenance everywhere, corroboration-escalated stress, one pipeline across modes; components are standard |
-| UI/UX | 72 | All 12 sections, readable on a projector, explainability; Streamlit limits polish; light theme only |
+| UI/UX | 72 | All 12 sections plus an early-warning watchlist, readable on a projector, explainability; Streamlit limits polish; light theme only |
 | Reliability | 82 | Offline drill 7/7, source-kill test, backoffs, deterministic demo; a long-running LIVE soak test was not done |
 | Presentation | 60 | Outline, script and Q&A are ready; the deck itself isn't built and there's no recording yet |
 | Demo | 76 | One command, offline, deterministic, with a backup plan; not rehearsed by a human |

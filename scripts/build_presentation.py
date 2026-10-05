@@ -267,7 +267,7 @@ def build(nums: dict) -> Presentation:
              ("NLP pipeline", "Entities, FinBERT, events, impact"),
              ("Signals", "SQLite, bus, REST, SSE, JSONL"),
              ("Stress engine", "Module B triggers and pricers"),
-             ("Dashboard", "12 sections and explanations")]
+             ("Dashboard", "12 sections and a watchlist")]
     bw, gap, y = Inches(1.82), Inches(0.27), Inches(2.25)
     for i, (head, body) in enumerate(boxes):
         x = MARGIN + i * (bw + gap)
@@ -380,19 +380,22 @@ def build(nums: dict) -> Presentation:
     from PIL import Image
 
     avail, gap_i = W - 2 * MARGIN - Inches(0.25), Inches(0.25)
-    ratios = [Image.open(ASSETS / f).size for f in ("home_kpis.png", "signals_charts.png")]
+    ratios = [Image.open(ASSETS / f).size for f in ("home_kpis.png", "watchlist.png")]
     hh = int(avail / sum(w_ / h_ for w_, h_ in ratios))  # common height so both fit the width exactly
     p1 = picture(s, ASSETS / "home_kpis.png", MARGIN, y2, h=hh)
-    picture(s, ASSETS / "signals_charts.png", MARGIN + p1.width + gap_i, y2, h=hh)
-    text(s, MARGIN, y2 + hh + Inches(0.15), Inches(12.1), Inches(0.5),
-         [("Business impact: ", 18, True, NAVY), ("earlier warning, triage by materiality, an audited portfolio view "
-                                                 "in seconds. Decision support, not investment advice.", 18, False,
-                                                 INK)])
+    p2 = picture(s, ASSETS / "watchlist.png", MARGIN + p1.width + gap_i, y2, h=hh)
+    caption(s, MARGIN, y2 + hh + Inches(0.05), p1.width, "Executive overview after the SYNTHETIC demo story")
+    caption(s, p2.left, y2 + hh + Inches(0.05), p2.width,
+            "Watchlist: Tata Motors WATCH-NEGATIVE after the downgrade")
+    text(s, MARGIN, y2 + hh + Inches(0.45), Inches(12.1), Inches(0.8),
+         [("Business impact: ", 18, True, NAVY), ("earlier warning on held names, triage by materiality, an audited "
+                                                 "portfolio view.", 18, False, INK)])
     footer(s, 6)
     notes(s, "State the caveat plainly: the evaluation labels were drafted by an AI assistant and are pending human "
              "review, and the same assistant wrote the rules, so those numbers are a smoke test. Replaying 911 real "
              "captured documents, our false-trigger fixes cut simulated stress runs from 84 to 50 and removed every "
-             "run triggered by social posts alone.")
+             "run triggered by social posts alone. The watchlist is the credit analyst's view: every held issuer "
+             "gets a rules-based status from its recent signals; it is an attention flag, not a rating.")
 
     # 7 ── innovation + limitations + future + takeaway
     s = prs.slides.add_slide(blank)
