@@ -2,9 +2,9 @@
 
 > Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
 
-**Current task:** NIGHT 2 — task 7 (final consistency + report)
-**Last commit:** 8d332b6
-**Next step:** task 7: docs/submission numbers, build_submission, NIGHT2_REPORT, end-of-night capture
+**Current task:** NIGHT 2 — none: night 2 complete
+**Last commit:** a5f466e
+**Next step:** morning checklist in docs/NIGHT2_REPORT.md
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -83,6 +83,15 @@ Rules: no AI attribution in commits; no history rewrite; keep .tmp/backup/pre-re
   (Streamlit render under memory pressure). Acceptable for a silent backup; a narrated recording is still a human task.
 - GitHub: no `origin` remote and no `GITHUB_REMOTE_URL`, so nothing pushed and no repo created; push commands are in
   docs/NIGHT2_REPORT.md.
+
+### Night 2 · Task 7: final consistency + report (DONE)
+- README, methodology, judge_qa, audit, DEMO, slides outline and the DoSelect answer now use the latest outputs:
+  event 0.81 / F1 0.795, entity 0.898, zero-shot 0.795 vs 0.78, replay 84 → 50, 180 tests (177 fast + 3 model),
+  "captured between 2026-10-03 and 2026-10-05". Methodology documents the sentiment gate, verdict guard, rate
+  direction and `macro_rate_cut`. DEMO.md points to preflight and the silent video.
+- `build_submission.py`: 19/19 PASS; only the 3 link placeholders remain (NOT READY until they are filled).
+- End-of-night `capture_cache.py`: +42 docs, local cache 1325 (git-ignored).
+- `docs/NIGHT2_REPORT.md` written. No servers left running. Night 2 complete; stopped.
 
 ## Capture log (CACHED_REAL growth)
 
