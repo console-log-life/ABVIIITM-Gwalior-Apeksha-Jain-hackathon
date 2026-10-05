@@ -61,7 +61,7 @@ async def capture(
     apply_state(adapters, cache_dir)
 
     dedup = Deduplicator(threshold)
-    dedup.seed(load_cached_documents(cache_dir))
+    dedup.seed(load_cached_documents(cache_dir, use_sample=False))  # dedup against real captures only
 
     stamp = datetime.now(UTC)
     results = await asyncio.gather(*(fetch_with_timeout(a) for a in adapters))
@@ -86,7 +86,8 @@ async def _main(only: set[str] | None, show: int) -> int:
     by_type = Counter(d.source_type.value for r in reports for d in r.docs)
     print(f"\nnew documents: {total_new}  (news={by_type.get('news', 0)}, social={by_type.get('social', 0)})")
     print(f"written to:    {path if path else '(nothing new — no file written)'}")
-    print(f"cache total:   {len(load_cached_documents(cache_dir))} documents in {captures_dir(cache_dir)}")
+    total = len(load_cached_documents(cache_dir, use_sample=False))
+    print(f"cache total:   {total} documents in {captures_dir(cache_dir)}")
     working = [r for r in reports if r.status in (SourceStatus.OK, SourceStatus.EMPTY)]
     return 0 if working else 1
 

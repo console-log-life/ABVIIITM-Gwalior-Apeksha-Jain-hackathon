@@ -182,10 +182,13 @@ def main() -> int:
     must = ["expert prior", "illustrative", "unofficial", "headline", "evaluation set"]
     check("Limitations honestly stated (≥ 5, required topics)",
           len(lim_bullets) >= 5 and all(k in lim.lower() for k in must), f"{len(lim_bullets)} bullets")
-    days = sorted({f.name[8:16] for f in (ROOT / "data" / "cache" / "captures").glob("capture_*.jsonl")})
-    fmt = [f"{d[:4]}-{d[4:6]}-{d[6:]}" for d in days]
+    from app.config import get_settings
+    from risk_engine.ingestion.replay import load_cached_documents
+
+    # capture dates of whatever REPLAY uses: local captures, or the committed sample on a fresh clone
+    fmt = sorted({d.captured_at.date().isoformat() for d in load_cached_documents(get_settings().cache_path)})
     expected = (f"captured on {fmt[0]}" if len(fmt) == 1 else f"captured between {fmt[0]} and {fmt[-1]}") if fmt else ""
-    check("Cached-data capture date matches data/cache/captures", bool(expected) and expected in md,
+    check("Cached-data capture date matches the replay cache", bool(expected) and expected in md,
           f"expected phrase: '{expected}'")
     ev = json.loads(EVAL.read_text(encoding="utf-8"))
     check("Unreviewed labels flagged PRELIMINARY", (not ev["preliminary"]) or "PRELIMINARY" in secs.get("Results", ""),

@@ -21,15 +21,34 @@ log = get_logger(__name__)
 CAPTURE_GLOB = "capture_*.jsonl"
 
 
+SAMPLE_FILE = "sample_google_news.jsonl"
+
+
 def captures_dir(cache_dir: Path) -> Path:
+    """Local captures (git-ignored: real social posts and the full news history are not published)."""
     return cache_dir / "captures"
 
 
-def load_cached_documents(cache_dir: Path) -> list[RawDocument]:
-    """All cached docs, oldest first (by published_at, falling back to captured_at). Bad lines are skipped."""
+def sample_dir(cache_dir: Path) -> Path:
+    """Small committed sample (~50 Google News headlines, CACHED_REAL) used when captures/ is empty."""
+    return cache_dir / "sample"
+
+
+def cache_files(cache_dir: Path, use_sample: bool = True) -> list[Path]:
+    files = sorted(captures_dir(cache_dir).glob(CAPTURE_GLOB))
+    if not files and use_sample:
+        files = sorted(sample_dir(cache_dir).glob("*.jsonl"))
+        if files:
+            log.info("replay: no local captures; using the committed sample in %s", sample_dir(cache_dir))
+    return files
+
+
+def load_cached_documents(cache_dir: Path, use_sample: bool = True) -> list[RawDocument]:
+    """All cached docs, oldest first (by published_at, falling back to captured_at). Bad lines are skipped.
+    Falls back to data/cache/sample/ when data/cache/captures/ has no capture files (fresh clone)."""
     docs: list[RawDocument] = []
     seen: set[str] = set()
-    for f in sorted(captures_dir(cache_dir).glob(CAPTURE_GLOB)):
+    for f in cache_files(cache_dir, use_sample):
         with open(f, encoding="utf-8") as fh:
             for lineno, line in enumerate(fh, 1):
                 if not line.strip():

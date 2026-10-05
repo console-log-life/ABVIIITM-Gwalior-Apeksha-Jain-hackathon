@@ -45,6 +45,33 @@ def test_replay_loads_sorted_cached_real_and_skips_bad_lines(tmp_path):
     assert docs[1].captured_at.isoformat().startswith("2026-10-02T12:00")  # capture time preserved
 
 
+def test_replay_falls_back_to_committed_sample_when_no_captures(tmp_path):
+    from risk_engine.ingestion.replay import SAMPLE_FILE, sample_dir
+
+    s = sample_dir(tmp_path)
+    s.mkdir(parents=True)
+    (s / SAMPLE_FILE).write_text(_cached("Sample headline about rates", "2026-10-03T17:22:00Z").model_dump_json()
+                                 + "\n", encoding="utf-8")
+    assert [d.title for d in load_cached_documents(tmp_path)] == ["Sample headline about rates"]
+    assert load_cached_documents(tmp_path, use_sample=False) == []
+    d = captures_dir(tmp_path)
+    d.mkdir(parents=True)
+    (d / "capture_20261004T000000Z.jsonl").write_text(
+        _cached("Local capture wins", "2026-10-04T00:00:00Z").model_dump_json() + "\n", encoding="utf-8")
+    assert [x.title for x in load_cached_documents(tmp_path)] == ["Local capture wins"]  # captures preferred
+
+
+def test_committed_sample_is_news_only_and_cached_real():
+    from app.config import get_settings
+    from risk_engine.ingestion.replay import SAMPLE_FILE, sample_dir
+
+    path = sample_dir(get_settings().cache_path) / SAMPLE_FILE
+    rows = [RawDocument.model_validate_json(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
+    assert 40 <= len(rows) <= 60
+    assert {r.source for r in rows} == {Source.GOOGLE_NEWS} and {r.provenance for r in rows} == {Provenance.CACHED_REAL}
+    assert all(r.captured_at is not None for r in rows)
+
+
 async def test_run_replay_streams_everything(tmp_path):
     d = captures_dir(tmp_path)
     d.mkdir(parents=True)

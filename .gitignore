@@ -32,3 +32,4 @@ data/cache/captures/*.tmp
 *.log
 .tmp/
 coverage.xml
+data/cache/captures/
