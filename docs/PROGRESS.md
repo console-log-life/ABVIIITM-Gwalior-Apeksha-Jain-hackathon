@@ -2,9 +2,9 @@
 
 > Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
 
-**Current task:** NIGHT 2 — task 6 (demo video + GitHub)
-**Last commit:** 173e674
-**Next step:** task 6: Playwright (Edge channel) silent recording; no remote, so write push commands
+**Current task:** NIGHT 2 — task 7 (final consistency + report)
+**Last commit:** 8d332b6
+**Next step:** task 7: docs/submission numbers, build_submission, NIGHT2_REPORT, end-of-night capture
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -73,6 +73,16 @@ Rules: no AI attribution in commits; no history rewrite; keep .tmp/backup/pre-re
 - Rendered with PowerPoint COM (`scripts/render_slides.ps1`, LibreOffice not installed) to `docs/presentation/preview/slide-1..7.png`
   and inspected. Fixed over 3 passes: mid-word breaks in chevrons → boxes + arrows; image overflowing slide 6; rounded
   numbers → exact script values; sub-18 pt body text raised; label wrap; shape shadows. `tasks.ps1 deck` rebuilds all.
+
+### Night 2 · Task 6: silent demo video + GitHub (DONE)
+- `scripts/record_demo_video.py` (`tasks.ps1 video`): starts the API (offline) + dashboard, resets, plays the SYNTHETIC story with
+  15 s steps, and drives the INSTALLED Microsoft Edge via Playwright (channel msedge, no browser download) with on-screen
+  captions. Playwright's ffmpeg (needed for video) was installed into `.tmp/ms-playwright` (git-ignored), not the user profile.
+- Output `docs/demo/demo_walkthrough.webm`: 3:30, 1600×900, VP8, 18.1 MB (< 20 MB, so committed). Spot-checked frames:
+  explainability, stress banner + waterfall with caption, portfolio. One sampled frame (0:20) shows a page still loading
+  (Streamlit render under memory pressure). Acceptable for a silent backup; a narrated recording is still a human task.
+- GitHub: no `origin` remote and no `GITHUB_REMOTE_URL`, so nothing pushed and no repo created; push commands are in
+  docs/NIGHT2_REPORT.md.
 
 ## Capture log (CACHED_REAL growth)
 
