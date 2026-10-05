@@ -46,6 +46,9 @@ Rotation position, last request time and backoffs are saved in `data/cache/state
 
 `scripts/capture_cache.py` fetches every live source once and writes only new documents to
 `data/cache/captures/capture_<UTC timestamp>.jsonl` with `provenance=CACHED_REAL` and the real `captured_at`.
+That directory is **git-ignored**: it holds real social posts and is not published. The repository ships
+`data/cache/sample/sample_google_news.jsonl` instead: 50 news headlines built by `scripts/build_cache_sample.py`.
+REPLAY falls back to that sample when no local captures exist.
 Documents are deduplicated against the whole existing cache (exact plus same-source near-duplicates).
 
 ## Excluded by design

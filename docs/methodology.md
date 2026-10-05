@@ -19,7 +19,9 @@ All modes call the same function, `risk_engine.pipeline.process_batch()`. Prepro
 - removes near-duplicates with rapidfuzz ratio ≥ 92 on normalised titles. Near-duplicates from the *same* source are
   dropped. Near-duplicates from *different* sources are kept, because they are the corroboration signal.
 
-Social adapters never store author handles. The `publisher` field holds the channel, e.g. `r/stocks`, `#stocks`,
+The local capture cache (`data/cache/captures/`) is git-ignored. Only a 50-headline Google News sample
+(`data/cache/sample/`) is published, and REPLAY uses it when the local cache is empty. Social adapters never store
+author handles. The `publisher` field holds the channel, e.g. `r/stocks`, `#stocks`,
 `$AAPL stream`.
 
 ## 2. Entity resolution (`risk_engine/entity_resolution/`)

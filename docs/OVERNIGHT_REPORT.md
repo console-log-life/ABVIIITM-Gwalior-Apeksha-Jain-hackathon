@@ -1,5 +1,7 @@
 # Overnight report: 2026-10-03 → 04
 
+> **Update 2026-10-05:** git history was rewritten (captures removed, attribution lines stripped), so the commit hashes below are the new ones. Since this report: trigger false positives were fixed (`docs/trigger_replay.md`), evaluation numbers changed (`docs/evaluation.md`), and the test count is now 158. Action item 2's privacy question is resolved, because social captures are no longer published. Current state: `docs/PROGRESS.md`.
+
 All milestones M2–M8 are done and committed locally; nothing was pushed. The DoSelect answer passes its quality
 check, but **it is not ready to submit** until you supply the 3 links.
 
@@ -7,15 +9,15 @@ check, but **it is not ready to submit** until you supply the 3 links.
 
 | Milestone | Commit | Result |
 |---|---|---|
-| M0 Skeleton (confirmed by you) | `4736c1f` | config, schemas, probe, model setup |
-| M1 Ingestion (confirmed by you) | `ca7bc1d` | adapters, dedup, capture, replay, scheduler |
-| M2 NLP core | `e45da31` | resolver, FinBERT + lexicon fallback, event rules, impact scorer, pipeline CLI; privacy scrub |
-| M3 Store / bus / API | `182f953` (+ `bc3f94d` stray-log removal) | SQLite, event bus, all §7.3 endpoints, SSE, JSONL, Swagger examples |
-| M4 Stress engine | `e25a7cc` | synthetic portfolio, pricers, scenarios, triggers, end-to-end headline → stress |
-| M5 Dashboard | `336f29b` | 12 sections, headline box, health panel, mode switch; 7/7 pages verified; screenshots |
-| M6 Demo + drills | `387fffa` | one-command demo (deterministic, offline), outage drill 7/7, source-kill test |
-| M7 Evaluation + docs | `b5f382b`, `4b39202` | PRELIMINARY metrics, latency benchmark, README and all docs; fresh-clone verified |
-| M8 Submission pack | `8dac506` | answer md + paste-ready html; `build_submission.py` 19/19 PASS |
+| M0 Skeleton (confirmed by you) | `a0e1670` | config, schemas, probe, model setup |
+| M1 Ingestion (confirmed by you) | `68fc716` | adapters, dedup, capture, replay, scheduler |
+| M2 NLP core | `d54ab4e` | resolver, FinBERT + lexicon fallback, event rules, impact scorer, pipeline CLI; privacy scrub |
+| M3 Store / bus / API | `6d7a1bb` (+ `e1c070e` stray-log removal) | SQLite, event bus, all §7.3 endpoints, SSE, JSONL, Swagger examples |
+| M4 Stress engine | `c628ee3` | synthetic portfolio, pricers, scenarios, triggers, end-to-end headline → stress |
+| M5 Dashboard | `41ecea4` | 12 sections, headline box, health panel, mode switch; 7/7 pages verified; screenshots |
+| M6 Demo + drills | `aeed53a` | one-command demo (deterministic, offline), outage drill 7/7, source-kill test |
+| M7 Evaluation + docs | `ade9714`, `fd66b4e` | PRELIMINARY metrics, latency benchmark, README and all docs; fresh-clone verified |
+| M8 Submission pack | `b38c3eb` | answer md + paste-ready html; `build_submission.py` 19/19 PASS |
 
 ## Final state
 
@@ -74,7 +76,7 @@ These are listed in full, with D-numbers, in `docs/PROGRESS.md` → "Blockers / 
 1. **Review the 147 draft eval labels.** They are in `data/eval/labelled_headlines.csv` (`label_status=draft_agent`).
    For each row, fix the label if needed and set `label_status=human_reviewed`. Then run `tasks.ps1 evaluate` and
    `tasks.ps1 submission`. Until then, every accuracy number is PRELIMINARY.
-2. **Create the GitHub repo and push.** Decide first on publishing cached social data. `data/cache/captures/` holds
+2. **Create the GitHub repo and push.** ~~Decide first on publishing cached social data.~~ Resolved 2026-10-05: captures are git-ignored and removed from history. `data/cache/captures/` holds
    real Reddit and Mastodon posts with author handles removed; post URLs remain, and those URLs still contain handles.
    If you'd rather not publish them, exclude the social rows or the cache before pushing.
 3. **Build the 7 slides** from `docs/slides_outline.md`, with screenshots from `docs/screenshots/`.

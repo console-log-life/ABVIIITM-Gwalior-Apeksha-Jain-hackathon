@@ -78,8 +78,12 @@ Sources are claimed as working only after `scripts/probe_sources.py` passed on t
 | `SYNTHETIC` | scripted demo story, the generated portfolio, or user-typed text |
 | simulated | every stress-test result (illustrative model) |
 
-The cache holds real headlines and posts captured 2026-10-03. Social posts are stored **without author handles**;
-`scripts/scrub_cache.py` scrubbed older captures.
+**What is published:** the repository ships `data/cache/sample/sample_google_news.jsonl`, 50 real Google News
+headlines (CACHED_REAL, captured 2026-10-03). REPLAY uses it when no local captures exist.
+
+**What stays local:** the full capture cache in `data/cache/captures/`, including real Reddit and Mastodon posts,
+is git-ignored and was never published. Social posts are stored without author handles. Run `tasks.ps1 capture`
+to build your own cache.
 
 ## NLP methodology (short)
 
@@ -182,8 +186,9 @@ powershell -ExecutionPolicy Bypass -File tasks.ps1 test-fast  # without model-de
 powershell -ExecutionPolicy Bypass -File tasks.ps1 drill      # offline / outage drill against the real API
 ```
 
-- **Test suite:** 142 tests (pytest; no network in unit tests). Coverage is reported by `tasks.ps1 test` (88% at the
-  M6 run).
+- **Test suite:** 158 tests (157 fast + 1 FinBERT model test; pytest, no network in unit tests). Coverage on the
+  fast suite is 87% (`pytest -m "not model" --cov`). It includes regression tests for the real headlines that
+  misfired.
 - **Failure drill:** `scripts/failure_drill.py` passed 7/7 checks with every outbound HTTP request blocked.
 
 ## Measured results (from scripts in this repo)
@@ -210,7 +215,7 @@ Event and entity accuracy fell from 0.803 / 0.891 (the earlier `scripts/evaluate
 geopolitical call needs ≥ 2 distinct cues). The guard trades classification recall for fewer false stress triggers.
 
 **Stress-trigger replay** (`scripts/replay_trigger_report.py` → [docs/trigger_replay.md](docs/trigger_replay.md), all
-911 cached real documents, simulated stress): **84 → 59 stress runs** after the false-positive fixes. Systemic runs fell
+911 real documents in the developer's local capture cache, which is not published; simulated stress): **84 → 59 stress runs** after the false-positive fixes. Systemic runs fell
 from 74 to 50, and runs triggered by social posts fell from 11 to 0. Some of the 26 removed runs were genuine
 single-cue market stories (recall cost).
 
@@ -244,7 +249,8 @@ Accuracy versus market outcomes, returns and alpha: **not measured**.
 
 This is a decision-support prototype, not investment advice:
 - Signals can be wrong (see Limitations), and every score is explained so a human can check it.
-- No personal data is stored. Social author handles are removed, and post URLs remain.
+- No personal data is published. Social posts stay in the local, git-ignored cache, without author handles; the
+  repository only ships a news-headline sample.
 - Synthetic, cached and live data are always labelled, and stress losses are labelled as simulated.
 
 ## Project layout

@@ -34,7 +34,7 @@
    Rules give transparent evidence phrases and need no training data. We tested a zero-shot tie-breaker and it
    lowered macro-F1 (0.768 → 0.751), so it's off.
 9. **⚠️ False positives?**
-   Yes, and we measured them. Replaying all 911 cached real documents produced 84 stress runs. Misfires included
+   Yes, and we measured them. Replaying all 911 real documents in our local capture cache produced 84 stress runs. Misfires included
    "The war on data centres" (read as Geopolitical), a fund newsletter and a Cyprus fund story from Mastodon (read as
    market-wide macro), and "SEC" resolving to the Government of India.
 
@@ -92,7 +92,8 @@
     X has had no free API tier since Feb 2026. StockTwits returns HTTP 403 on our network, so the adapter exists but
     skips cleanly.
 22. **Privacy?**
-    Author handles are never stored. A scrub script cleaned earlier captures. Only the post URL and channel remain.
+    Author handles are never stored. The full capture cache, including social posts, is git-ignored and was
+    never published. The repository ships only 50 Google News headlines for REPLAY.
 
 ## Accuracy / evaluation
 

@@ -4,7 +4,7 @@
 
 **Current milestone:** post-M8 user tasks (2026-10-04/05): 1 trigger false positives (DONE), 2 repo hygiene, 3 docs consistency
 **Last commit:** see `git log -1`
-**Next step:** task 3 (README / docs / submission consistency)
+**Next step:** user actions: review eval labels, create GitHub repo + push, slides, rehearsal, 3 links
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -191,6 +191,13 @@ the draft labels call MARKET Macroeconomic.
 - A pre-rewrite bundle of the old history is at `.tmp/backup/pre-rewrite.bundle` (local only; it still contains the
   old captures and attribution lines). Delete it once you are happy.
 - Coverage (fast suite, `--cov`): 87%.
+
+### Post-M8 task 3: docs consistency (DONE)
+README, DEMO.md, docs/{data_sources,methodology,architecture,judge_qa,slides_outline,audit,OVERNIGHT_REPORT}.md and the
+DoSelect answer now state: news-only systemic triggers; the 84 → 59 replay figure comes from the LOCAL (unpublished)
+capture cache; only a 50-headline news sample is published; tests 158 (157 fast + 1 model); coverage 87% (fast suite);
+evaluation numbers from the latest PRELIMINARY run. OVERNIGHT_REPORT hashes were updated to the rewritten history.
+build_submission 19/19 (1,068 words; 3 link placeholders remain).
 
 ## User overrides / decisions given (2026-10-03, before overnight run)
 - Portfolio: synthetic, seed 42, labelled SYNTHETIC.

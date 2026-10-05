@@ -37,7 +37,7 @@
 | API | `app/main.py`, `app/api/` | `/health /methodology /analyze /analyze/batch /signals /signals/{ticker} /signals/stream /signals/export.jsonl /portfolio /portfolio/scenarios /portfolio/stress-test /stress-runs /demo/* /mode` |
 | Module B | `portfolio/` | generator, loader, pricers, scenarios, triggers, stress engine |
 | Dashboard | `app/dashboard/` | Streamlit + Plotly, talks only to the API |
-| Tooling | `scripts/` | probe, setup_models, capture_cache, scrub_cache, evaluate, benchmark_latency, run_demo, failure_drill, check_dashboard, screenshot_dashboard |
+| Tooling | `scripts/` | probe, setup_models, capture_cache, build_cache_sample, scrub_cache, replay_trigger_report, evaluate, benchmark_latency, run_demo, failure_drill, check_dashboard, screenshot_dashboard |
 
 ## Reliability design
 

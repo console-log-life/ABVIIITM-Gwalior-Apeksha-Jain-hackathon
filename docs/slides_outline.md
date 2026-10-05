@@ -73,9 +73,9 @@ secondary, impact 8.7.
 ## Slide 6: Results, dashboard and business impact
 - **PRELIMINARY evaluation** (n = 147 real headlines; labels AI-drafted, pending review): sentiment accuracy 0.653;
   event accuracy 0.762; entity accuracy 0.857.
-- **False-trigger fixes on all 911 cached real documents:** stress runs 84 → 59; triggered by social posts 11 → 0.
+- **False-trigger fixes, replayed on 911 locally captured real documents:** stress runs 84 → 59; triggered by social posts 11 → 0.
 - **Latency on a CPU laptop** (n = 200): median 204.7 ms, p95 1085.2 ms per document.
-- **Reliability:** 142 automated tests; offline/outage drill 7/7.
+- **Reliability:** 158 automated tests; offline/outage drill 7/7.
 - **Dashboard:** 12 sections plus "analyse your own headline".
 - **Impact:** faster triage, prioritisation by materiality, instant portfolio view. A decision-support tool, not
   investment advice.

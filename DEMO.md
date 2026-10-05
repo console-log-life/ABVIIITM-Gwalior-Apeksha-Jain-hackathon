@@ -32,6 +32,7 @@ risk model.
 ## Other modes (sidebar → "Mode & demo control")
 
 - **REPLAY** streams real articles captured earlier by `scripts/capture_cache.py` (badge: CACHED_REAL, with the capture time).
+  On a fresh clone it uses the published 50-headline Google News sample.
 - **LIVE** polls the real sources (Google News, Reddit RSS, Mastodon; GDELT, StockTwits, Finnhub and Bluesky are
   best-effort or optional).
 - **⟲ Reset** clears demo, replay and API signals and all stress runs.

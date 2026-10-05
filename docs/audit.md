@@ -13,7 +13,7 @@
 | R9 | Mix of loans, bonds, derivatives | Yes | 49 positions: Loan/Bond/IRS/CDS/FX/Equity | Composition chart | Mix measured on gross exposure | Documented (D8) |
 | R10 | High-impact event triggers stress | Yes | `triggers.py`, bus subscription | Alert banner + audit log with trigger signal_id | False positives from real data (84 runs on replay) | News-only systemic triggers, ≥ 2-cue rule → 59 runs (`docs/trigger_replay.md`); cooldown |
 | R11 | Before vs after visualisation | Yes | Waterfall, top-10, heatmap | Stress page | — | — |
-| R12 | Public repo, runnable | Local git only (no remote yet) | README quickstart | Fresh-clone check (M7) | User must create the GitHub repo | Listed in OVERNIGHT_REPORT |
+| R12 | Public repo, runnable | Local git only (no remote yet); history cleaned (no captures, no attribution lines) | README quickstart | Fresh-clone check (M7) | User must create the GitHub repo | Listed in OVERNIGHT_REPORT |
 | R13 | ≤ 5-min demo | Yes | `DEMO.md`, `scripts/run_demo.py`, `docs/demo_script.md` | Deterministic offline run | Not yet rehearsed by a human | Rehearse twice |
 | R14 | ≤ 7 slides | Outline only | `docs/slides_outline.md` (exactly 7) | — | Slides not yet built | User builds the deck from the outline |
 
@@ -21,7 +21,7 @@
 
 | Dimension | Score | Why not higher |
 |---|---:|---|
-| Technical quality | 78 | Clean modular code, 142 tests, 88% coverage, drills. Single process; in-process bus; SQLite |
+| Technical quality | 78 | Clean modular code, 158 tests, 87% coverage (fast suite), drills. Single process; in-process bus; SQLite |
 | NLP | 62 | FinBERT + rules + resolver work, but there's no fine-tuning, keyword false positives, headline-only input, and the evaluation is PRELIMINARY with same-author bias |
 | Financial reasoning | 66 | Correct sign conventions, hedges, triggers, HHI, RAG; but illustrative shocks, no correlations or FX translation, synthetic book |
 | Business relevance | 74 | Clear triage-to-portfolio story with an audit trail; no user validation |
