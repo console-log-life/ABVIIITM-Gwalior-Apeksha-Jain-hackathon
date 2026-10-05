@@ -8,7 +8,7 @@ PY := .venv/bin/python
 BOOT := python3.11
 endif
 
-.PHONY: setup venv install models probe test test-fast lint capture replay ingest-once api dashboard demo demo-offline drill check-dashboard screenshots portfolio evaluate benchmark submission
+.PHONY: setup venv install models probe test test-fast lint capture replay ingest-once api dashboard demo demo-offline drill check-dashboard screenshots portfolio evaluate benchmark submission test-model preflight
 
 setup: venv install models
 
@@ -25,8 +25,15 @@ models:
 probe:
 	"$(PY)" scripts/probe_sources.py
 
-test:
-	"$(PY)" -m pytest -q --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing --cov-report=xml
+test:  # fast suite with coverage, then FinBERT tests in a separate process
+	"$(PY)" -m pytest -q -m "not model" --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing --cov-report=xml
+	"$(PY)" -m pytest -q -m model
+
+test-model:
+	"$(PY)" -m pytest -q -m model
+
+preflight:
+	"$(PY)" scripts/preflight.py
 
 test-fast:
 	"$(PY)" -m pytest -q -m "not model"

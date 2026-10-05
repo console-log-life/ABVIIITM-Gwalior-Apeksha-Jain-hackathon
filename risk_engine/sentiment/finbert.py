@@ -13,6 +13,7 @@ from __future__ import annotations
 import os
 import re
 import threading
+import time
 from dataclasses import dataclass
 from functools import lru_cache
 
@@ -73,12 +74,30 @@ def aggregate(prob_rows: list[dict[str, float]], weights: list[float]) -> dict[s
     return {k: sum(p[k] * e for p, e in zip(prob_rows, eff, strict=True)) / total for k in REQUIRED_LABELS}
 
 
+_MODEL_CACHE: dict[tuple[str, str], _FinBertModel] = {}
+_MODEL_CACHE_LOCK = threading.Lock()
+
+
+def load_finbert(settings: Settings) -> _FinBertModel:
+    """Process-wide singleton: FinBERT is loaded at most ONCE per process, however many engines are created."""
+    key = (settings.finbert_model, str(settings.models_dir))
+    with _MODEL_CACHE_LOCK:
+        if key not in _MODEL_CACHE:
+            t0 = time.perf_counter()
+            log.info("Loading FinBERT %s from %s (once per process; torch threads=%d) ...", key[0], key[1],
+                     settings.torch_threads)
+            _MODEL_CACHE[key] = _FinBertModel(settings)
+            log.info("FinBERT ready in %.1f s", time.perf_counter() - t0)
+        return _MODEL_CACHE[key]
+
+
 class _FinBertModel:
     def __init__(self, settings: Settings):
         os.environ.setdefault("HF_HOME", str(settings.models_dir / ".hf_home"))
         import torch
         from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
+        torch.set_num_threads(settings.torch_threads)  # keep the laptop responsive (API + dashboard + browser)
         cache = str(settings.models_dir)
         name = settings.finbert_model
         try:  # local first: no network round-trip when weights are already cached
@@ -122,9 +141,9 @@ class SentimentEngine:
             self.fallback_reason = "SENTIMENT_BACKEND=lexicon"
             return
         try:
-            self._model = _FinBertModel(self.settings)
+            self._model = load_finbert(self.settings)
             self.backend = "finbert"
-            log.info("FinBERT loaded (%s); labels %s", self.settings.finbert_model, self._model.id2label)
+            log.info("FinBERT in use (%s); labels %s", self.settings.finbert_model, self._model.id2label)
         except Exception as exc:
             if choice == "finbert":
                 raise

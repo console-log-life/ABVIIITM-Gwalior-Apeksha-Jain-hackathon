@@ -2,7 +2,7 @@
 param([Parameter(Mandatory = $true)][ValidateSet(
         "setup", "install", "models", "probe", "test", "test-fast", "lint", "capture", "replay", "ingest-once",
         "api", "dashboard", "demo", "demo-offline", "drill", "check-dashboard", "screenshots", "portfolio",
-        "evaluate", "benchmark", "submission")]
+        "evaluate", "benchmark", "submission", "test-model", "preflight")]
     [string]$Target)
 
 $ErrorActionPreference = "Stop"
@@ -20,7 +20,14 @@ switch ($Target) {
     "install" { Invoke-Install }
     "models" { & $py scripts/setup_models.py }
     "probe" { & $py scripts/probe_sources.py }
-    "test" { & $py -m pytest -q --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing --cov-report=xml }
+    "test" {
+        # fast suite first (with coverage), then the FinBERT tests in a SEPARATE process (one model load, less RAM)
+        & $py -m pytest -q -m "not model" --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing --cov-report=xml
+        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+        & $py -m pytest -q -m model
+    }
+    "test-model" { & $py -m pytest -q -m model }
+    "preflight" { & $py scripts/preflight.py }
     "test-fast" { & $py -m pytest -q -m "not model" }
     "lint" { & $py -m ruff check . }
     "capture" { & $py scripts/capture_cache.py }

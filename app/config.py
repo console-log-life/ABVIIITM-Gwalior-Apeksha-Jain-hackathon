@@ -57,6 +57,8 @@ class Settings(BaseSettings):
     finbert_model: str = "ProsusAI/finbert"
     # auto = FinBERT, falling back to the lexicon if the model cannot load; finbert | lexicon force one backend
     sentiment_backend: str = Field(default="auto", pattern="^(auto|finbert|lexicon)$")
+    # CPU threads for torch (FinBERT). 2 keeps API + dashboard + browser responsive on a 4-core laptop.
+    torch_threads: int = Field(default=2, ge=1, le=32)
     enable_zero_shot: bool = False
     zero_shot_model: str = "typeform/distilbert-base-uncased-mnli"
 

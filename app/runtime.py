@@ -30,6 +30,7 @@ from risk_engine.store import Store
 log = get_logger(__name__)
 INGEST_CHUNK = 32
 HEALTH_PERSIST_S = 30.0
+WARMUP_TEXT = "Warm-up: markets steady ahead of central bank meeting"
 
 
 class Runtime:
@@ -88,6 +89,10 @@ class Runtime:
         """Load models off the event loop so startup stays responsive."""
         try:
             await asyncio.to_thread(lambda: self.pipeline)
+            t0 = time.perf_counter()  # warm-up inference: the first real request should not pay the JIT/alloc cost
+            await asyncio.to_thread(self.pipeline.sentiment.analyze, WARMUP_TEXT)
+            log.info("pipeline warm-up inference done in %.2f s (backend=%s)", time.perf_counter() - t0,
+                     self.pipeline.sentiment.backend)
         except Exception as exc:  # never crash the API; /health reports it
             self._pipeline_error = f"{type(exc).__name__}: {exc}"
             log.exception("pipeline warm-up failed")
