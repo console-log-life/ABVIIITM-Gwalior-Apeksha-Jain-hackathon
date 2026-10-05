@@ -53,3 +53,11 @@ class Recorder:
 @pytest.fixture
 def recorder_factory() -> Callable[[Callable[[httpx.Request], httpx.Response]], Recorder]:
     return Recorder
+
+
+@pytest.fixture(scope="session")
+def finbert_engine():
+    """ONE FinBERT load per test process (memory: this laptop has ~7.7 GB RAM). Only model-marked tests use it."""
+    from risk_engine.sentiment.finbert import SentimentEngine
+
+    return SentimentEngine(Settings(sentiment_backend="finbert"))

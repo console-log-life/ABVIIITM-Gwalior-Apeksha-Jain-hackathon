@@ -8,8 +8,11 @@ Systemic:      event in {Geopolitical, Macroeconomic, Credit Event} AND (entity 
                Market evidence rule: a MARKET-wide Geopolitical/Macroeconomic signal needs >= 2 distinct evidence
                cues of that class (taxonomy.yaml market_min_distinct_patterns). One keyword ("war", "inflation") is
                not enough to stress the whole book. This rule lives HERE, not in classification.
-Idiosyncratic: event in {Credit Event, Regulatory, Litigation} on a HELD issuer AND impact >= 6.0
-               ->  idiosyncratic_credit for that issuer only.
+               Rate direction (Macroeconomic): a rate CUT maps to macro_rate_cut, a HIKE to
+               macro_rate_shock_<severity>; an unclear direction (no rate verb, a hold, or both) -> no systemic run.
+Idiosyncratic: event in {Credit Event, Regulatory, Litigation} on a HELD issuer AND impact >= 6.0 AND sentiment
+               <= -0.25 (TRIGGER_IDIOSYNCRATIC_MAX_SENTIMENT): positive court/regulator news (a dismissed case,
+               an approval) must not stress the issuer  ->  idiosyncratic_credit for that issuer only.
 Cooldown:      the same scenario + same scope (issuer or MARKET) is not re-run within TRIGGER_COOLDOWN_MIN minutes;
                suppressed triggers are logged and kept for display.
 """
@@ -23,6 +26,7 @@ from collections.abc import Callable
 from dataclasses import asdict, dataclass
 
 from app.config import Settings
+from risk_engine.event_classifier.rate_direction import rate_direction
 from risk_engine.event_classifier.rules import RuleEventClassifier
 from risk_engine.logging_setup import get_logger
 from risk_engine.schemas import RiskSignal
@@ -49,8 +53,10 @@ class TriggerDecision:
 
 class TriggerEngine:
     def __init__(self, settings: Settings, held_issuers: set[str], systemic_family: dict[str, str],
-                 clock: Callable[[], float] = time.time, classifier: RuleEventClassifier | None = None):
+                 clock: Callable[[], float] = time.time, classifier: RuleEventClassifier | None = None,
+                 rate_cut_scenario: str | None = "macro_rate_cut"):
         self.s = settings
+        self.rate_cut_scenario = rate_cut_scenario
         self.held = set(held_issuers)
         self.family = systemic_family
         self.clock = clock
@@ -81,20 +87,31 @@ class TriggerEngine:
                 and sig.impact_score >= s.trigger_systemic_min_impact):
             severity = "severe" if sig.impact_score >= s.trigger_systemic_severe_impact else "moderate"
             why = "entity MARKET" if sig.company == "MARKET" else f"{sig.corroborating_sources} corroborating sources"
-            out.append(TriggerDecision(
-                scenario=f"{self.family[sig.event_type]}_{severity}", scope_issuer_id=None, signal_id=sig.signal_id,
-                kind="systemic",
-                rule=(f"Systemic: {sig.event_type} from news source {src} with {why} and impact {sig.impact_score} >= "
-                      f"{s.trigger_systemic_min_impact} → {severity} "
-                      f"(severe at >= {s.trigger_systemic_severe_impact})"),
-            ))
+            scenario, direction_note = f"{self.family[sig.event_type]}_{severity}", ""
+            if sig.event_type == "Macroeconomic":
+                direction = rate_direction(sig.text_excerpt)
+                if direction == "cut" and self.rate_cut_scenario:
+                    scenario, direction_note = self.rate_cut_scenario, ", rate CUT detected"
+                elif direction == "hike":
+                    direction_note = ", rate HIKE detected"
+                else:
+                    scenario = None  # unclear direction: keep the signal, run no systemic rate scenario
+            if scenario:
+                out.append(TriggerDecision(
+                    scenario=scenario, scope_issuer_id=None, signal_id=sig.signal_id, kind="systemic",
+                    rule=(f"Systemic: {sig.event_type} from news source {src} with {why}{direction_note} and impact "
+                          f"{sig.impact_score} >= {s.trigger_systemic_min_impact} → {scenario} "
+                          f"(severe at >= {s.trigger_systemic_severe_impact})"),
+                ))
         if (sig.event_type in IDIOSYNCRATIC_EVENTS and sig.issuer_id in self.held
-                and sig.impact_score >= s.trigger_idiosyncratic_min_impact):
+                and sig.impact_score >= s.trigger_idiosyncratic_min_impact
+                and sig.sentiment_score <= s.trigger_idiosyncratic_max_sentiment):
             out.append(TriggerDecision(
                 scenario="idiosyncratic_credit", scope_issuer_id=sig.issuer_id, signal_id=sig.signal_id,
                 kind="idiosyncratic",
                 rule=(f"Idiosyncratic: {sig.event_type} on held issuer {sig.company} with impact "
-                      f"{sig.impact_score} >= {s.trigger_idiosyncratic_min_impact}"),
+                      f"{sig.impact_score} >= {s.trigger_idiosyncratic_min_impact} and sentiment "
+                      f"{sig.sentiment_score:+.2f} <= {s.trigger_idiosyncratic_max_sentiment}"),
             ))
         return out
 

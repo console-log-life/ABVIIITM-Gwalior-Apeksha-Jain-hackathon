@@ -134,3 +134,66 @@ def test_api_social_signal_does_not_start_systemic_run(tmp_path):
                                  "text": "Invasion confirmed as troops cross border; sweeping sanctions imposed"})
         runs = c.get("/stress-runs").json()["runs"]
         assert len(runs) == 1 and runs[0]["scenario"].startswith("geopolitical_")
+
+
+# ---------------------------------------------------------------- night 2, task 2 (real headlines from trigger_replay)
+
+ADANI_COURT_RELIEF = ("Adani Energy to Adani Ports: Adani Group shares rise as the US Court dismisses criminal case "
+                      "against Gautam Adani")
+JIO_SEBI_CLEARS = "Jio IPO nears launch: DRHP filed, SEBI clears path"
+MS_VERDICT = "Morgan Stanley Has Strong Verdict for Apple Stock Investors"
+RATE_HEADLINES = {
+    "RBI May Hike Repo Rate To 5.50% In October As Oil Tops $100": "hike",
+    "Federal Reserve hikes interest rates for first time since 2023 amid stubborn inflation": "hike",
+    "Russia central bank gingerly cuts rates , caught between business complaints and inflation": "cut",
+    "Rate cuts transmission moderated in May 2026: RBI": "cut",
+    "RBI keeps repo rate unchanged at 5.25%, Reduces GDP growth projection to 6.6%": None,
+    "RBI projects GDP growth to 6.7% in this fiscal year": None,
+}
+
+
+@pytest.mark.parametrize("text", [ADANI_COURT_RELIEF, JIO_SEBI_CLEARS])
+def test_positive_court_or_regulator_news_does_not_stress_the_issuer(pipe, settings, text):
+    sig = pipe.process(_doc(text, Source.GOOGLE_NEWS)).model_copy(update={"impact_score": 9.0})
+    t = TriggerEngine(settings, {"IN-ADANIENT", "IN-RELIANCE"}, FAMILY)
+    assert sig.sentiment_score > settings.trigger_idiosyncratic_max_sentiment
+    assert [d for d in t.candidates(sig, "google_news") if d.kind == "idiosyncratic"] == []
+
+
+def test_negative_issuer_news_still_triggers_idiosyncratic(pipe, settings):
+    sig = pipe.process(_doc("SEBI fines Adani Enterprises and widens fraud probe; shares plunge",
+                            Source.GOOGLE_NEWS)).model_copy(update={"impact_score": 9.0})
+    t = TriggerEngine(settings, {"IN-ADANIENT"}, FAMILY)
+    assert sig.sentiment_score <= -0.25
+    idio = [d.scenario for d in t.candidates(sig, "google_news") if d.kind == "idiosyncratic"]
+    assert idio == ["idiosyncratic_credit"]
+
+
+@pytest.mark.parametrize("text,litigation", [
+    (MS_VERDICT, False), ("Analyst verdict: buy the dip in Tata Motors", False),
+    ("Our verdict on the stock after Q2", False), ("Jury verdict against Bayer in Roundup case", True),
+    ("Court delivers verdict in Adani fraud case", True),
+])
+def test_opinion_verdict_is_not_litigation(text, litigation):
+    assert (RuleEventClassifier().classify(text).primary == "Litigation") is litigation
+
+
+@pytest.mark.parametrize("text,direction", list(RATE_HEADLINES.items()))
+def test_rate_direction_on_real_headlines(text, direction):
+    from risk_engine.event_classifier.rate_direction import rate_direction
+
+    assert rate_direction(text) == direction
+
+
+def test_rate_cut_headline_maps_to_rate_cut_scenario_not_hike(pipe, settings):
+    sig = pipe.process(_doc("Russia central bank gingerly cuts rates , caught between business complaints and "
+                            "inflation", Source.GDELT)).model_copy(update={"impact_score": 9.0})
+    assert sig.company == "MARKET" and sig.event_type == "Macroeconomic"
+    assert [d.scenario for d in _systemic(settings, sig, "gdelt")] == ["macro_rate_cut"]
+
+
+@pytest.mark.model
+@pytest.mark.parametrize("text", [ADANI_COURT_RELIEF, JIO_SEBI_CLEARS])
+def test_finbert_scores_positive_court_regulator_news_above_gate(finbert_engine, settings, text):
+    """With the REAL model: these two headlines must not pass the idiosyncratic sentiment gate."""
+    assert finbert_engine.analyze(text).score > settings.trigger_idiosyncratic_max_sentiment

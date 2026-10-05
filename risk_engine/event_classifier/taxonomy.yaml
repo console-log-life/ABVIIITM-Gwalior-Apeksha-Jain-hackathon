@@ -83,7 +83,9 @@ classes:
     - {p: "lawsuits?|sues|sued|suing", w: 3}
     - {p: "class action", w: 3}
     - {p: "litigation", w: 3}
-    - {p: "verdict|patent infringement", w: 3}
+    # analyst/opinion 'verdict' ("analyst verdict", "our verdict", "strong verdict for X stock", "verdict on the
+    # stock") is not litigation; "jury verdict" / "verdict against" still is
+    - {p: "(?<!analyst )(?<!analysts )(?<!analyst's )(?<!analysts' )(?<!our )(?<!my )(?<!strong )(?<!final )(?<!market )(?<!investor )(?<!street )(?<!street's )verdict(?! (?:on|for) (?:the |its |this |our |[a-z]+ )?(?:stock|shares|valuation|investors|rally|results))|patent infringement", w: 3}
     - {p: "indict(?:ed|ment)", w: 3}
     - {p: "ruling|jury|judge|damages", w: 2}
     - {p: "settle(?:s|d|ment)? (?:a |the )?(?:lawsuit|case|claims?|charges)|settlement", w: 2}

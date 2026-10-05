@@ -43,6 +43,10 @@ scenarios:
     label: Systemic credit event (moderate)
     rationale: "Credit scare without a default wave: roughly half the severe spread and PD moves."
     shocks: {rates_bp: 0, ig_spread_bp: 75, hy_spread_bp: 250, equity_pct: -0.04, em_fx_pct: -0.01, pd_multiplier: 1.5}
+  macro_rate_cut:            # added night 2: rate CUT headlines used to map to the rate-HIKE scenarios
+    label: Macro rate cut (easing)
+    rationale: "Policy easing: lower rates and slightly tighter spreads lift bonds, loans and equities; pay-fixed swaps and bought protection lose."
+    shocks: {rates_bp: -50, ig_spread_bp: -10, hy_spread_bp: -25, equity_pct: 0.02, em_fx_pct: 0.0, pd_multiplier: 0.95}
   idiosyncratic_credit:
     label: Idiosyncratic credit event (single issuer)
     rationale: "Issuer-specific downgrade/default risk: only the named issuer's bonds, loans, equity and CDS move."
@@ -52,5 +56,9 @@ scenarios:
 # Trigger -> scenario family mapping (triggers.py); severity suffix _moderate / _severe from the impact score.
 systemic_family:
   Geopolitical: geopolitical
-  Macroeconomic: macro_rate_shock
+  Macroeconomic: macro_rate_shock   # HIKE direction only
   Credit Event: systemic_credit
+
+# Rate direction (triggers.py): Macroeconomic systemic signals map by detected direction.
+#   cut -> macro_rate_cut · hike -> macro_rate_shock_<severity> · unclear -> no systemic rate run
+rate_cut_scenario: macro_rate_cut

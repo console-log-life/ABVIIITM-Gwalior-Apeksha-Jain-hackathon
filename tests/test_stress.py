@@ -155,8 +155,15 @@ def test_systemic_trigger_severity(trig):
     assert [d.scenario for d in sev] == ["geopolitical_severe"]
     assert [d.scenario for d in mod] == ["geopolitical_moderate"]
     assert none == []
-    macro = t.candidates(_sig(**MARKET, event_type="Macroeconomic", secondary_event_type=None, impact_score=8.6))
-    assert macro[0].scenario == "macro_rate_shock_severe" and "MARKET" in macro[0].rule
+    hike = t.candidates(_sig(**MARKET, event_type="Macroeconomic", secondary_event_type=None, impact_score=8.6,
+                             text_excerpt="Fed raises interest rates as inflation stays hot"))
+    assert hike[0].scenario == "macro_rate_shock_severe" and "HIKE" in hike[0].rule and "MARKET" in hike[0].rule
+    cut = t.candidates(_sig(**MARKET, event_type="Macroeconomic", secondary_event_type=None, impact_score=8.6,
+                            text_excerpt="Fed cuts interest rates as inflation cools"))
+    assert cut[0].scenario == "macro_rate_cut" and "CUT" in cut[0].rule
+    unclear = t.candidates(_sig(**MARKET, event_type="Macroeconomic", secondary_event_type=None, impact_score=8.6,
+                                text_excerpt="Inflation report due on Thursday; GDP growth steady"))
+    assert unclear == []  # unclear rate direction: signal only, no systemic rate scenario
 
 
 def test_corroborated_issuer_credit_event_triggers_both(trig):
@@ -238,3 +245,44 @@ def test_portfolio_and_manual_runs(client):
     one = client.get(f"/stress-runs/{runs[0]['run_id']}").json()
     assert one["run_id"] == runs[0]["run_id"] and one["positions"]
     assert client.post("/demo/reset").json()["stress_runs_deleted"] == 2
+
+
+# ---------------------------------------------------------------- macro_rate_cut scenario (night 2)
+
+def test_macro_rate_cut_scenario_signs_for_every_pricer(engine):
+    """Easing: rates -50 bp, IG -10 bp, HY -25 bp, equity +2%, PD x0.95. Expected sign of each instrument's P&L."""
+    sc = engine.scenarios["macro_rate_cut"]["shocks"]
+    assert (sc["rates_bp"], sc["ig_spread_bp"], sc["hy_spread_bp"], sc["equity_pct"], sc["pd_multiplier"]) == \
+        (-50, -10, -25, 0.02, 0.95)
+    summary, positions = engine.run("macro_rate_cut")
+    by = {p["asset_id"]: p for p in positions}
+    rows = engine.portfolio.positions()
+    for r in rows:
+        pnl = by[r["asset_id"]]["pnl"]
+        t, side = r["asset_type"], r["side"]
+        if t == "Bond":
+            assert pnl > 0, r["asset_id"]  # lower yields -> bond prices up
+        elif t == "Loan":
+            assert pnl > 0, r["asset_id"]  # PD falls (x0.95) and fixed-rate loans gain on lower rates
+        elif t == "Equity":
+            assert pnl > 0, r["asset_id"]
+        elif t == "IRS":
+            assert (pnl < 0) if side == "pay_fixed" else (pnl > 0), r["asset_id"]
+        elif t == "CDS":
+            assert pnl < 0, r["asset_id"]  # spreads tighten -> bought protection loses
+        elif t == "FXForward":
+            assert pnl == 0, r["asset_id"]  # no FX shock in this scenario
+    assert summary["loss"] < 0 and summary["rag"] == "GREEN"  # a net gain on this book
+
+
+def test_macro_rate_cut_pricer_units():
+    s = Shock(rates_bp=-50, spread_bp=-10, equity_pct=0.02, pd_multiplier=0.95)
+    assert price_bond(100e6, 5, 30, 5, s) > 0
+    assert price_bond(100e6, 5, 30, 0, s) > 0  # treasury: rates only
+    assert price_loan(100e6, 0.4, 0.01, True, 0.25, 100e6, s) == pytest.approx(100e6 * 0.4 * 0.01 * 0.05)
+    assert price_loan(100e6, 0.4, 0.01, False, 3, 100e6, s) > price_loan(100e6, 0.4, 0.01, True, 0.25, 100e6, s)
+    assert price_irs(5_000, "pay_fixed", s) == pytest.approx(-250_000)
+    assert price_irs(5_000, "receive_fixed", s) == pytest.approx(250_000)
+    assert price_cds(10e6, 4.5, "protection_bought", s) == pytest.approx(-45_000)
+    assert price_equity(10e6, 1.2, "long", s) == pytest.approx(240_000)
+    assert price_fx_forward(10e6, "short", s) == 0

@@ -44,7 +44,8 @@ class StressEngine:
         self.cfg = yaml.safe_load(Path(path).read_text(encoding="utf-8"))
         self.scenarios: dict[str, dict] = self.cfg["scenarios"]
         held = set(issuer_exposures(self.portfolio))
-        self.triggers = TriggerEngine(settings, held, self.cfg["systemic_family"])
+        self.triggers = TriggerEngine(settings, held, self.cfg["systemic_family"],
+                                      rate_cut_scenario=self.cfg.get("rate_cut_scenario"))
 
     # ------------------------------------------------------------------ shocks
     def position_shock(self, pos: dict, shocks: dict[str, float], scope_issuer_id: str | None) -> Shock:

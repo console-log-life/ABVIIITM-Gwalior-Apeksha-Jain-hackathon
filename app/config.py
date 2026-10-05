@@ -70,6 +70,8 @@ class Settings(BaseSettings):
     trigger_systemic_min_impact: float = Field(default=7.0, ge=1, le=10)
     trigger_systemic_severe_impact: float = Field(default=8.5, ge=1, le=10)
     trigger_idiosyncratic_min_impact: float = Field(default=6.0, ge=1, le=10)
+    # idiosyncratic (issuer) stress only for negative news: positive court/regulator news must not trigger
+    trigger_idiosyncratic_max_sentiment: float = Field(default=-0.25, ge=-1, le=1)
     trigger_cooldown_min: int = Field(default=30, ge=0)
     # Only signals from these NEWS sources may trigger systemic (market-level) stress; social only corroborates.
     systemic_trigger_sources: list[str] = ["google_news", "finnhub", "gdelt"]

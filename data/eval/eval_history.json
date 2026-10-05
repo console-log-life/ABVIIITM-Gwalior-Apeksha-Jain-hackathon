@@ -34,5 +34,17 @@
     "event_f1": 0.795,
     "entity_acc": 0.898,
     "preliminary": true
+  },
+  {
+    "label": "night-2 task 2: sentiment gate, verdict guard, rate direction",
+    "generated_at": "2026-10-05T19:41:38.440782+00:00",
+    "git_commit": "88a61c9",
+    "n": 147,
+    "sentiment_acc": 0.653,
+    "sentiment_f1": 0.648,
+    "event_acc": 0.81,
+    "event_f1": 0.795,
+    "entity_acc": 0.898,
+    "preliminary": true
   }
 ]

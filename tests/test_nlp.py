@@ -277,8 +277,8 @@ def test_pipeline_rejects_empty_and_non_english(pipe):
 # ---------------------------------------------------------------- real FinBERT (needs weights)
 
 @pytest.mark.model
-def test_finbert_real_model():
-    eng = SentimentEngine(Settings(sentiment_backend="finbert"))
+def test_finbert_real_model(finbert_engine):
+    eng = finbert_engine
     assert set(eng._model.id2label.values()) == {"positive", "negative", "neutral"}
     pos, neg, neu = eng.analyze_many([("Company profit soars, beating all estimates", None),
                                       ("Company shares plunge after accounting fraud is revealed", None),
