@@ -71,7 +71,9 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="http://127.0.0.1:8501")
     ap.add_argument("--wait", type=float, default=12.0)
+    ap.add_argument("--pages", default="", help="comma-separated subset of page keys, e.g. 02_feed,03_signals")
     args = ap.parse_args()
+    wanted = {p.strip() for p in args.pages.split(",") if p.strip()}
     browser = find_browser()
     if not browser:
         print("no Edge/Chrome found; skipping screenshots")
@@ -94,6 +96,8 @@ def main() -> int:
             print("browser DevTools endpoint did not come up")
             return 1
         for name, path in PAGES.items():
+            if wanted and name not in wanted:
+                continue
             out = OUT / f"{name}.png"
             asyncio.run(shoot(page["webSocketDebuggerUrl"], f"{args.base}/{path}", out, args.wait))
             print(f"{name}: {out.stat().st_size:,} bytes")
