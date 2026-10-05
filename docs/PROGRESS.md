@@ -2,9 +2,9 @@
 
 > Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
 
-**Current task:** NIGHT 2 (2026-10-05/06, deadline 2026-10-10) — task 1 (2-pattern rule: classification → triggers)
-**Last commit:** 55e0efe
-**Next step:** tasks 1→7 of the night-2 brief (see '## Night 2' below); capture again at the end of the night
+**Current task:** NIGHT 2 — task 2 (remaining false positives)
+**Last commit:** c1ced3e
+**Next step:** task 2: sentiment gate, verdict guard, rate direction + macro_rate_cut
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -14,6 +14,15 @@ plus overrides recorded below. No pushes, no remotes, no `git reset --hard`, not
 
 Brief: 1 restore classification / 2-pattern rule only in triggers · 2 remaining false positives (idiosyncratic needs s <= -0.25, verdict guard, rate cut vs hike + macro_rate_cut scenario) · 3 demo stability (FinBERT threads, warm-up, test split, preflight) · 4 label-review xlsx + import · 5 7-slide pptx · 6 silent demo video + GitHub (push only if a remote exists) · 7 final consistency + NIGHT2_REPORT.
 Rules: no AI attribution in commits; no history rewrite; keep .tmp/backup/pre-rewrite.bundle; FinBERT once per process, 2 torch threads, never two model processes at once.
+
+### Night 2 · Task 1: classification restored, 2-cue rule only in triggers (DONE)
+- `classify_and_resolve` no longer demotes. `TriggerEngine` blocks a SYSTEMIC run when a MARKET-wide Geo/Macro signal
+  has < 2 evidence cues of its class (`RuleEventClassifier.class_evidence_count` over the stored `event_evidence`).
+- Evaluate (PRELIMINARY, n=147): event acc/F1 0.762/0.768 → **0.81/0.795**; entity 0.857 → **0.898**; sentiment
+  0.653/0.648 unchanged; zero-shot 0.795 vs 0.78 → off. History table in docs/evaluation.md (`data/eval/eval_history.json`).
+- Trigger replay on the fixed 911-doc set (`--captured-before 2026-10-04`): 84 (before) → 59 (night 1) → **59** (task 1);
+  systemic 50, idiosyncratic 9, social-triggered 0. `trigger_replay_after.json` renamed `trigger_replay_night1.json`.
+- Tests: 157 fast passed; ruff clean.
 
 ## Capture log (CACHED_REAL growth)
 
