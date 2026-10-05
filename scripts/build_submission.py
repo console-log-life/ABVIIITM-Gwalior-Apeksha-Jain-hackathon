@@ -146,8 +146,11 @@ def main() -> int:
           f"tags {sorted(tags)}")
 
     # 16.4 items
-    probe = json.loads(PROBE.read_text(encoding="utf-8"))
+    # data/probe_results.json is machine-specific (git-ignored): claims must match a probe run on THIS machine
+    probe = json.loads(PROBE.read_text(encoding="utf-8")) if PROBE.exists() else {"results": []}
     passed = {r["source"].split("[")[0] for r in probe["results"] if r["status"] == "PASS"}
+    if not PROBE.exists():
+        print("note: data/probe_results.json missing — run `python scripts/probe_sources.py` first")
     ds = secs.get("Data sources", "")
     claimed = {k for k, v in SOURCE_FAMILIES.items() if v.lower() in ds.split("\n- ")[0].lower()}
     check("≥ 2 data sources, matching probe PASS results", len(claimed) >= 2 and claimed <= passed,

@@ -1,8 +1,10 @@
 # PROGRESS (build memory — read this first after any restart)
 
+> Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
+
 **Current milestone:** post-M8 user tasks (2026-10-04/05): 1 trigger false positives (DONE), 2 repo hygiene, 3 docs consistency
 **Last commit:** see `git log -1`
-**Next step:** task 2 (history rewrite: drop captures/, strip attribution lines; data/cache/sample)
+**Next step:** task 3 (README / docs / submission consistency)
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -171,6 +173,24 @@ the draft labels call MARKET Macroeconomic.
 **Environment note:** a full pytest run segfaulted inside torch while loading FinBERT (Windows access violation) with
 0.7–1.0 GB RAM free (other applications holding memory); the model test passed when run alone. No code fault found.
 **Tests:** 155 fast passed + 1 model test passed (separate processes); ruff clean; build_submission 19/19 (1,064 words).
+
+### Post-M8 task 2: public-repo data hygiene (DONE)
+- `data/cache/captures/` removed from ALL history (`git filter-branch --index-filter`) and git-ignored; the 10 local
+  capture files are kept on disk (backup also in `.tmp/backup/`, git-ignored).
+- `data/cache/sample/sample_google_news.jsonl`: 50 Google News headlines (news only, CACHED_REAL, real capture
+  timestamps 2026-10-03), built by `scripts/build_cache_sample.py`. REPLAY falls back to it when captures/ is empty;
+  capture dedup and the cache count use captures only.
+- Every `Co-Authored-By` line removed from all commit messages (`--msg-filter`); no attribution lines are added any more.
+- Purged `refs/original`, expired the reflog, `gc --prune=now --aggressive`: only `refs/heads/main` remains.
+- **Verification:** `git log --all --format=%B | findstr /i "co-authored"` printed nothing (exit 1); 0 `captures/` paths
+  in `git log --all --name-only`; 0 `captures` objects in `git rev-list --all --objects`; no "generated with",
+  "claude", "anthropic" or "noreply@" in any message.
+- **Fresh clone** (`.tmp/clone2`, deleted afterwards): 0 capture files, 50-line sample; 157 fast tests + 1 FinBERT test passed
+  (existing venv, identical pinned deps); REPLAY streamed from the sample. `build_submission.py` now reports a clear FAIL
+  (not a crash) when `data/probe_results.json` is missing, since the probe is machine-specific.
+- A pre-rewrite bundle of the old history is at `.tmp/backup/pre-rewrite.bundle` (local only; it still contains the
+  old captures and attribution lines). Delete it once you are happy.
+- Coverage (fast suite, `--cov`): 87%.
 
 ## User overrides / decisions given (2026-10-03, before overnight run)
 - Portfolio: synthetic, seed 42, labelled SYNTHETIC.
