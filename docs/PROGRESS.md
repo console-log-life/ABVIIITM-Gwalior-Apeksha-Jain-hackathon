@@ -2,9 +2,9 @@
 
 > Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
 
-**Current task:** NIGHT 2 — task 2 (remaining false positives)
-**Last commit:** c1ced3e
-**Next step:** task 2: sentiment gate, verdict guard, rate direction + macro_rate_cut
+**Current task:** NIGHT 2 — task 3 (demo stability)
+**Last commit:** 105b949
+**Next step:** task 3: FinBERT threads/warm-up, test split, preflight, two demo runs
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -23,6 +23,20 @@ Rules: no AI attribution in commits; no history rewrite; keep .tmp/backup/pre-re
 - Trigger replay on the fixed 911-doc set (`--captured-before 2026-10-04`): 84 (before) → 59 (night 1) → **59** (task 1);
   systemic 50, idiosyncratic 9, social-triggered 0. `trigger_replay_after.json` renamed `trigger_replay_night1.json`.
 - Tests: 157 fast passed; ruff clean.
+
+### Night 2 · Task 2: remaining false positives (DONE)
+- (a) Idiosyncratic stress needs sentiment <= -0.25 (`TRIGGER_IDIOSYNCRATIC_MAX_SENTIMENT`). The real model scores the
+  Adani court relief and the Jio SEBI clearance above the gate (model-marked test).
+- (b) Litigation 'verdict' ignores analyst/opinion phrasing ("strong verdict for X stock", "analyst verdict", "our verdict",
+  "verdict on the stock"); "jury verdict", "court delivers verdict" stay Litigation.
+- (c) `risk_engine/event_classifier/rate_direction.py`: cut → new `macro_rate_cut` scenario (rates −50 bp, IG −10, HY −25,
+  equity +2%, PD ×0.95, EM FX 0 since the brief gave no value); hike → macro_rate_shock_<severity>; unclear (no verb, a hold,
+  or both) → no systemic run. Every pricer's sign is tested under the new scenario (net GAIN on this book, GREEN).
+  Known limits: "little chance of a rate hike", "investors cut bets on rate rises" read as hikes.
+- (d) Replay, fixed 911-doc set: 84 → 59 → 59 → **50** (systemic 45, idiosyncratic 5, social 0; scenarios:
+  geopolitical_moderate 29, geopolitical_severe 5, macro_rate_shock_moderate 7, macro_rate_shock_severe 2, macro_rate_cut 2,
+  idiosyncratic 5).
+- Evaluate unchanged (0.653/0.648 · 0.81/0.795 · 0.898). Tests: 174 fast + 3 model (one shared FinBERT load per process).
 
 ## Capture log (CACHED_REAL growth)
 
