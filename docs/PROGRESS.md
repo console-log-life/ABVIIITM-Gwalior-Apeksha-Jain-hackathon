@@ -2,9 +2,9 @@
 
 > Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
 
-**Current task:** NIGHT 2 — task 5 (7-slide deck)
-**Last commit:** 704579d
-**Next step:** task 5: refresh screenshots, build pptx with python-pptx, render via PowerPoint COM, inspect
+**Current task:** NIGHT 2 — task 6 (demo video + GitHub)
+**Last commit:** 173e674
+**Next step:** task 6: Playwright (Edge channel) silent recording; no remote, so write push commands
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -61,6 +61,18 @@ Rules: no AI attribution in commits; no history rewrite; keep .tmp/backup/pre-re
 - Round trip: unchanged import on a copy reproduces the CSV byte-for-byte; tests cover corrections, status,
   invalid values and the absence of predictions (skipped when openpyxl is absent). Excel (COM) opens the file cleanly
   with the dropdowns intact. Tests: 177 fast passed.
+
+### Night 2 · Task 5: 7-slide deck (DONE)
+- `docs/presentation/Risk_Signal_Engine.pptx`, built by `scripts/build_presentation.py` (python-pptx, in requirements-dev.txt):
+  EXACTLY 7 slides, 16:9, white background, navy + teal accent, risk colours only on RAG items, body text ≥ 18 pt, ≤ 5 bullets,
+  speaker notes on every slide. Architecture drawn as native shapes. Real dashboard crops (`scripts/crop_screenshots.py`
+  from refreshed `docs/screenshots/`, demo story then REPLAY 40).
+- Every number is read at build time from script outputs (eval_results.json, benchmark_results.json,
+  trigger_replay_{before,n2_task2}.json, StressEngine.run, weights.yaml). Accuracy is labelled "Preliminary (labels pending
+  human review)"; stress figures are labelled "Illustrative model, synthetic portfolio".
+- Rendered with PowerPoint COM (`scripts/render_slides.ps1`, LibreOffice not installed) to `docs/presentation/preview/slide-1..7.png`
+  and inspected. Fixed over 3 passes: mid-word breaks in chevrons → boxes + arrows; image overflowing slide 6; rounded
+  numbers → exact script values; sub-18 pt body text raised; label wrap; shape shadows. `tasks.ps1 deck` rebuilds all.
 
 ## Capture log (CACHED_REAL growth)
 
