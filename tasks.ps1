@@ -2,7 +2,7 @@
 param([Parameter(Mandatory = $true)][ValidateSet(
         "setup", "install", "models", "probe", "test", "test-fast", "lint", "capture", "replay", "ingest-once",
         "api", "dashboard", "demo", "demo-offline", "drill", "check-dashboard", "screenshots", "portfolio",
-        "evaluate", "benchmark", "submission", "test-model", "preflight", "label-review", "import-labels", "deck")]
+        "evaluate", "benchmark", "submission", "test-model", "preflight", "label-review", "import-labels", "deck", "video")]
     [string]$Target)
 
 $ErrorActionPreference = "Stop"
@@ -30,6 +30,7 @@ switch ($Target) {
     "preflight" { & $py scripts/preflight.py }
     "label-review" { & $py scripts/build_label_review.py }
     "import-labels" { & $py scripts/import_label_review.py }
+    "video" { & $py scripts/record_demo_video.py }
     "deck" {
         & $py scripts/crop_screenshots.py
         & $py scripts/build_presentation.py
