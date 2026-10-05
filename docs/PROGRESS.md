@@ -2,9 +2,9 @@
 
 > Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
 
-**Current task:** NIGHT 2 — task 4 (label review spreadsheet)
-**Last commit:** 32b8c55
-**Next step:** task 4: label_review.xlsx + import_label_review.py + round-trip test
+**Current task:** NIGHT 2 — task 5 (7-slide deck)
+**Last commit:** 704579d
+**Next step:** task 5: refresh screenshots, build pptx with python-pptx, render via PowerPoint COM, inspect
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -49,6 +49,18 @@ Rules: no AI attribution in commits; no history rewrite; keep .tmp/backup/pre-re
 - Demo end-to-end twice (`run_demo.py --exit-after-story`, then `--offline --exit-after-story`, both with the
   dashboard): identical to before: 3.6 Low · 8.7 → idiosyncratic 0.41% GREEN · 7.0 → moderate 1.32% AMBER ·
   9.1 (2 sources) → severe 2.45% RED. No demo numbers changed, so DEMO.md / demo_script / submission are unaffected.
+
+### Night 2 · Task 4: label review spreadsheet (DONE)
+- `data/eval/label_review.xlsx` (`scripts/build_label_review.py`, `tasks.ps1 label-review`): sheet "Review" has 147 rows
+  with id, text, source, source_type, draft sentiment/event/ticker (grey), yellow input columns sentiment_corrected
+  (dropdown Negative/Neutral/Positive), event_corrected (dropdown, the 11 classes), ticker_corrected (free text),
+  label_status (dropdown draft_agent/human_reviewed), reviewer_notes, and agent_notes. Header + id/text frozen,
+  wrapped text, Arial. A "How to review" sheet has the legend and an example row (never imported). NO model predictions.
+- `scripts/import_label_review.py` (`tasks.ps1 import-labels`): corrected-or-draft per row, validates everything
+  (nothing written on any error), keeps CSV text/metadata, then runs evaluate.py with a history label.
+- Round trip: unchanged import on a copy reproduces the CSV byte-for-byte; tests cover corrections, status,
+  invalid values and the absence of predictions (skipped when openpyxl is absent). Excel (COM) opens the file cleanly
+  with the dropdowns intact. Tests: 177 fast passed.
 
 ## Capture log (CACHED_REAL growth)
 
