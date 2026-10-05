@@ -2,9 +2,9 @@
 
 > Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
 
-**Current task:** NIGHT 2 — none: night 2 complete
-**Last commit:** a5f466e
-**Next step:** morning checklist in docs/NIGHT2_REPORT.md
+**Current task:** NIGHT 2 — none: watchlist + polish done
+**Last commit:** 7442656
+**Next step:** decide on WAL history before pushing; re-record video
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -92,6 +92,20 @@ Rules: no AI attribution in commits; no history rewrite; keep .tmp/backup/pre-re
 - `build_submission.py`: 19/19 PASS; only the 3 link placeholders remain (NOT READY until they are filled).
 - End-of-night `capture_cache.py`: +42 docs, local cache 1325 (git-ignored).
 - `docs/NIGHT2_REPORT.md` written. No servers left running. Night 2 complete; stopped.
+
+### Watchlist + polish (2026-10-06, commits eafe9d1, 7442656)
+- Early Warning Watchlist: `portfolio/watchlist.py` + `GET /watchlist?hours=24` (1–720) + `GET /signals/by-id/{id}`.
+  Status WATCH-NEGATIVE / MONITOR / STABLE from `WATCHLIST_*` config (methodology §7). Dashboard page
+  "Early Warning Watchlist" right after Home (pages renumbered): ranked HTML table, status pills, SVG impact sparkline,
+  Explain → click-through (`Explainability?signal_id=`; verified with Playwright, same tab).
+- Demo: step 0 replays 4 real CACHED_REAL headlines from the committed sample (none triggers stress); 20 s hold after
+  step 2. Demo run: 3.6 → 8.7 idiosyncratic 0.41% GREEN (Tata WATCH-NEGATIVE) → 7.0 1.32% AMBER → 9.1 2.45% RED.
+- README: 3 screenshots on top + "Why this matters for credit risk". Deck slide 6 shows the watchlist (re-rendered,
+  no overflow). DoSelect answer: 1097 words, 19/19.
+- Tests: 196 fast + 4 model = 200, coverage 88%. Preflight GO (1 RAM warning) incl. new step-0 check.
+- Found: `data/risk_engine.db-wal/-shm` were tracked since M3; WAL history holds real Reddit/Mastodon posts in 5
+  commits. Untracked now; history NOT rewritten (needs the user's decision before any push).
+- Silent video predates the watchlist (not re-recorded).
 
 ## Capture log (CACHED_REAL growth)
 
