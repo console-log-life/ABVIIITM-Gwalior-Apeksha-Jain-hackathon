@@ -19,6 +19,8 @@ logs/
 models/
 data/*.db
 data/*.db-journal
+data/*.db-wal
+data/*.db-shm
 data/probe_results.json
 
 # editors / OS
