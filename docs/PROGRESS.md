@@ -2,9 +2,9 @@
 
 > Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
 
-**Current task:** NIGHT 2 — none: watchlist + polish done
-**Last commit:** 7442656
-**Next step:** decide on WAL history before pushing; re-record video
+**Current task:** NIGHT 2 — none: rewrite 2 + video done
+**Last commit:** 9979307
+**Next step:** user: decide on trigger_replay.md social excerpts; push
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -106,6 +106,22 @@ Rules: no AI attribution in commits; no history rewrite; keep .tmp/backup/pre-re
 - Found: `data/risk_engine.db-wal/-shm` were tracked since M3; WAL history holds real Reddit/Mastodon posts in 5
   commits. Untracked now; history NOT rewritten (needs the user's decision before any push).
 - Silent video predates the watchlist (not re-recorded).
+
+### History rewrite 2 + video (2026-10-06)
+- Backup first: `.tmp/backup/pre-rewrite-2.bundle` (verified okay; old HEAD 20344d3; still contains the DB files).
+- `git filter-branch --index-filter` over all refs removed every `*.db`, `*.db-wal`, `*.db-shm`, `*.db-journal`, `*.sqlite*`
+  path (only data/risk_engine.db-wal/-shm had ever been committed); refs/original deleted, reflog expired,
+  `gc --prune=now --aggressive`. 35 commits; new hashes (e.g. feature commit 089b7d5, progress c0f1525).
+- Verified: 0 db/wal/shm paths in `git log --all --name-only` and 0 such objects; 0 "co-authored", "claude",
+  "anthropic", "generated with", "noreply@" in messages; 0 data/cache/captures paths/objects; ruff clean; 196 fast + 4
+  model passed in the repo AND in a fresh clone (.tmp/clone3, deleted).
+- History scan (reddit.com / mastodon / "/u/" outside data/eval and tests): only code/docs naming the sources, plus a
+  "/u/name" placeholder in clean.py. FOUND, not deleted: docs/trigger_replay.md (current file and 22 commits) quotes
+  the opening ~140 characters of 11 real social posts (10 Mastodon, 1 Reddit) in its "runs that no longer trigger"
+  table (no author names or post URLs). Binary files (png/pptx/xlsx/webm) were not text-scanned.
+- Video re-recorded (`tasks.ps1 video`, commit 9979307): 3:04, 16.6 MB, 13 scenes; story-synced via API polling, sidebar
+  navigation, waits for Streamlit idle + expected text, unrecorded warm-up of every page. Mid-scene frames checked:
+  every caption matches the screen. Caption timings: docs/demo/demo_walkthrough_captions.json.
 
 ## Capture log (CACHED_REAL growth)
 
