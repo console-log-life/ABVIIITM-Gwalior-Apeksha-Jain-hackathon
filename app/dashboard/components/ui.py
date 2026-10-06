@@ -286,13 +286,16 @@ def time_machine(client: ApiClient, sb) -> None:
         ss["tm_follow"], ss["tm_value"] = False, val
         follow = False
     c1, c2 = sb.columns([3, 2])
-    c1.markdown(f'<div class="note">{"● LIVE · latest" if follow else f"◷ as of {val:%b %d, %H:%M}"}</div>',
+    c1.markdown(f'<div class="note">{f"● latest data · {hi:%b %d, %H:%M}" if follow else f"◷ as of {val:%b %d, %H:%M}"}'
+                '</div>',
                 unsafe_allow_html=True)
     if not follow and c2.button("Latest", use_container_width=True):
         ss["tm_follow"] = True
         ss.pop("tm_value", None)
         st.rerun()
-    ss["as_of"] = None if follow else val.replace(tzinfo=UTC).isoformat()
+    # "latest" = the newest event time in the data (not the wall clock), so the windows stay full of real data on
+    # any day after the last capture; new LIVE/SYNTHETIC signals move it forward automatically.
+    ss["as_of"] = (hi if follow else val).replace(tzinfo=UTC).isoformat()
 
 
 def as_of() -> str | None:

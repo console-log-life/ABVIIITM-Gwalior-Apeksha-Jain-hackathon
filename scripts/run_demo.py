@@ -1,9 +1,12 @@
-"""One-command demo: start the API + dashboard, reset demo state, play the scripted SYNTHETIC story.
+"""One-command demo: start the API + dashboard, load the REAL history, reset demo state, then either wait for the
+presenter (default) or play the scripted SYNTHETIC story.
 
-  python scripts/run_demo.py                  # API :8000 + dashboard :8501, story with 10 s steps, then keep running
+  python scripts/run_demo.py                  # API :8000 + dashboard :8501 on REAL data; presenter starts the story
+                                              # from the sidebar (▶ Scenario demo) at ~2:30 of the 5-minute flow
   python scripts/run_demo.py --offline        # same, with HF_HUB_OFFLINE=1 / TRANSFORMERS_OFFLINE=1 (no network needed)
+  python scripts/run_demo.py --play-story     # also play the story now (step 0 real headlines + steps 1-4)
   python scripts/run_demo.py --replay 30      # after the story, stream the 30 most recent CACHED_REAL documents
-  python scripts/run_demo.py --exit-after-story --no-dashboard   # automation / drills
+  python scripts/run_demo.py --exit-after-story --no-dashboard   # automation / drills (implies --play-story)
 
 Deterministic: the same story and the same portfolio (seed 42) give the same signals and stress results every run.
 Press Ctrl+C to stop both servers.
@@ -56,6 +59,7 @@ def main() -> int:
     ap.add_argument("--step-seconds", type=float, default=None, help="seconds between story steps (default config)")
     ap.add_argument("--replay", type=int, default=0, help="after the story, replay N cached real documents")
     ap.add_argument("--exit-after-story", action="store_true", help="stop servers when the story has finished")
+    ap.add_argument("--play-story", action="store_true", help="play the scripted story right away")
     ap.add_argument("--api-port", type=int, default=8000)
     ap.add_argument("--ui-port", type=int, default=8501)
     args = ap.parse_args()
@@ -101,6 +105,33 @@ def main() -> int:
 
         reset = httpx.post(f"{api}/demo/reset", timeout=30).json()
         print(f"[3/5] demo state reset: {reset}")
+        t0, last = time.time(), None
+        while time.time() - t0 < 1200:  # the REAL history (CACHED_REAL) is loaded or built by the API at start-up
+            hist = httpx.get(f"{api}/history", timeout=10).json()
+            st = hist["status"]
+            if st.get("state") in ("ready", "error"):
+                break
+            if st.get("progress") and st["progress"] != last:
+                last = st["progress"]
+                print(f"      building the REAL history: {last[0]}/{last[1]} documents")
+            time.sleep(2)
+        meta = hist.get("meta") or {}
+        if st.get("state") == "ready":
+            print(f"      REAL history: {meta.get('signals')} CACHED_REAL signals, {meta.get('stress_runs')} simulated "
+                  f"stress runs; event time up to {str(hist.get('event_to'))[:16]} ({meta.get('source')})")
+        else:
+            print(f"      REAL history not available: {st.get('error') or st}")
+
+        if not (args.play_story or args.exit_after_story):
+            print("[4/5] ready on REAL data. 5-minute flow (DEMO.md): Home + time machine → Watchlist → Explainability "
+                  "→ Risk Propagation → sidebar ▶ Scenario demo (SYNTHETIC) → What-if → Credit brief")
+            print(f"      * {STRESS_DISCLAIMER}")
+            print(f"      Dashboard: http://127.0.0.1:{args.ui_port}   API docs: {api}/docs")
+            print("      servers keep running — press Ctrl+C to stop")
+            while all(p.poll() is None for p in procs):
+                time.sleep(1)
+            print("a server exited unexpectedly — see logs/")
+            return 1
 
         print(f"[4/5] playing the demo: step 0 = REAL headlines (CACHED_REAL sample), then the SYNTHETIC story "
               f"({step:g} s between steps, 20 s pause after step 2 for the watchlist)")

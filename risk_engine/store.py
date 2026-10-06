@@ -16,7 +16,7 @@ from __future__ import annotations
 import json
 import threading
 from collections.abc import Iterator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -44,6 +44,10 @@ from sqlalchemy import (
 from sqlalchemy.engine import Engine
 
 from risk_engine.schemas import RawDocument, RiskSignal
+
+# A live stress run is saved a moment AFTER its triggering signal's event time; "as of T" includes runs saved up to
+# this long after T (REAL-history runs are stamped exactly at their signal's event time).
+RUN_SAVE_TOLERANCE = timedelta(minutes=5)
 
 metadata = MetaData()
 
@@ -279,7 +283,7 @@ class Store:
                    stress_runs.c.scenario, stress_runs.c.scope_issuer_id, stress_runs.c.rule, stress_runs.c.loss,
                    stress_runs.c.loss_pct, stress_runs.c.rag, stress_runs.c.demo)
         if as_of is not None:
-            q = q.where(stress_runs.c.created_at <= _utc(as_of))
+            q = q.where(stress_runs.c.created_at <= _utc(as_of) + RUN_SAVE_TOLERANCE)
         q = q.order_by(stress_runs.c.created_at.desc()).limit(limit)
         with self.engine.connect() as c:
             rows = c.execute(q).mappings().all()
@@ -288,7 +292,7 @@ class Store:
     def latest_stress_run(self, as_of: datetime | None = None) -> dict[str, Any] | None:
         q = select(stress_runs.c.summary, stress_runs.c.created_at)
         if as_of is not None:
-            q = q.where(stress_runs.c.created_at <= _utc(as_of))
+            q = q.where(stress_runs.c.created_at <= _utc(as_of) + RUN_SAVE_TOLERANCE)
         with self.engine.connect() as c:
             r = c.execute(q.order_by(stress_runs.c.created_at.desc()).limit(1)).first()
         return {**json.loads(r.summary), "created_at": _utc(r.created_at).isoformat()} if r else None

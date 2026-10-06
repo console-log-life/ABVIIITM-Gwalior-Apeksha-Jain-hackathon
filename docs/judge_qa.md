@@ -131,3 +131,28 @@
 29. **⚠️ Security?**
     It's a prototype: no authentication on the API, local only. Secrets come from `.env`, which is git-ignored, and
     API keys are sent in headers, never URLs. Authentication and role-based access are future work.
+
+## Real data, propagation, what-if, credit brief
+
+30. **⚠️ Is the dashboard data real?**
+    The default view is the REAL history: every document our capture runs collected (Google News, Reddit,
+    Mastodon, GDELT), processed through the same pipeline and trigger rules, badged CACHED_REAL with the capture time.
+    Its stress runs are simulated with our illustrative model on a synthetic portfolio. The Tata Motors / invasion
+    story is SYNTHETIC and labelled that way; it is the only scripted part.
+31. **⚠️ Is the time machine what you would have seen live?**
+    No, and we say so on screen. It replays the captured news by publication time. The documents were collected in
+    bursts on 3 and 5 October, so "as of 2 October" is a reconstruction from later captures, not a recording of a live
+    feed.
+32. **⚠️ Where do the propagation links come from?**
+    We wrote them by hand from well-known public relationships (Nvidia as GPU supplier to the cloud majors, the Indian
+    government as SBI's majority owner, automaker and bank peers): 16 links, documented in `universe.yaml`. They are
+    not inferred from data and not exhaustive; Apple has no supplier link because its key suppliers are not in our
+    universe.
+33. **⚠️ Is propagated exposure a contagion model?**
+    No. It is decay-weighted exposure to linked names (0.5 for supplier/parent, 0.3 for peers, configurable) to tell an
+    analyst what else in the book is connected. There are no correlations or default probabilities behind the
+    weights, and they are not calibrated. Each issuer is counted once, and cycles are handled; that is tested.
+34. **Does the credit brief use an LLM?**
+    No. It is a template filled from stored data: status and rule, exposure, the last signals with their reasons, the
+    stress impact on the issuer's positions and the hedges. Every sentence can be traced to a field in the API
+    response, and there is nothing generated that we cannot explain.

@@ -41,12 +41,12 @@ CAPTION_LOG = OUT_DIR / "demo_walkthrough_captions.json"
 API, UI = "http://127.0.0.1:8000", "http://127.0.0.1:8501"
 STEP_S = 20  # seconds between story steps while recording (the story adds its own 20 s hold after step 2)
 SIZE = {"width": 1600, "height": 900}
-NAV = {"home": "Home", "watchlist": "Early Warning Watchlist", "feed": "News Social Feed",
-       "signals": "NLP Risk Signals", "portfolio": "Portfolio", "stress": "Stress Test",
+NAV = {"home": "Home", "watchlist": "Early Warning Watchlist", "propagation": "Risk Propagation",
+       "feed": "News Social Feed", "signals": "NLP Risk Signals", "portfolio": "Portfolio", "stress": "Stress Test",
        "explain": "Explainability"}
 
-WARM_PATHS = ["", "Early_Warning_Watchlist", "News_Social_Feed", "NLP_Risk_Signals", "Portfolio", "Stress_Test",
-              "Explainability"]
+WARM_PATHS = ["", "Early_Warning_Watchlist", "Risk_Propagation", "News_Social_Feed", "NLP_Risk_Signals", "Portfolio",
+              "Stress_Test", "Explainability"]
 
 CAPTION_JS = """(t) => {
   let d = document.getElementById('demo-caption');
@@ -125,12 +125,29 @@ def wait_api(cond, what: str, timeout: float = 120) -> None:
     raise RuntimeError(f"timed out waiting for {what}")
 
 
-def n_signals() -> int:
-    return len(httpx.get(f"{API}/signals", params={"limit": 50}, timeout=10).json())
+def n_synthetic() -> int:
+    """SYNTHETIC story signals stored so far (the REAL history is CACHED_REAL and does not count)."""
+    return len(httpx.get(f"{API}/signals", params={"limit": 50, "provenance": "SYNTHETIC"}, timeout=10).json())
 
 
 def n_runs() -> int:
-    return len(httpx.get(f"{API}/stress-runs", timeout=10).json()["runs"])
+    """Stress runs of this session (the REAL history's simulated runs have ids starting with 'real-')."""
+    runs = httpx.get(f"{API}/stress-runs", params={"limit": 500}, timeout=10).json()["runs"]
+    return sum(1 for r in runs if not r["run_id"].startswith("real-"))
+
+
+def press(page: Page, locator, key: str, times: int) -> bool:
+    """Move a Streamlit slider with the keyboard (best effort: the recording continues if it fails)."""
+    try:
+        locator.focus()
+        for _ in range(times):
+            page.keyboard.press(key)
+            page.wait_for_timeout(40)
+        page.wait_for_timeout(1500)
+        page.wait_for_function(IDLE_JS, timeout=60_000)
+        return True
+    except Exception:
+        return False
 
 
 def wait_http(url: str, timeout: float) -> None:
@@ -175,40 +192,64 @@ def main() -> int:
             rec = Recorder(ctx.new_page())
             rec.page.goto(UI)
             rec.ready("Executive Risk Overview")
-            rec.scene(None, "Risk Signal Engine: demo walkthrough (silent backup recording)", 5)
+            hist = httpx.get(f"{API}/history", timeout=10).json()
+            meta = hist.get("meta") or {}
+            wl = httpx.get(f"{API}/watchlist", params={"as_of": hist.get("event_to")}, timeout=30).json()
+            top = wl["issuers"][0]
+            rec.scene(None, f"REAL data: {meta.get('signals')} captured headlines and posts (CACHED_REAL), same "
+                      "pipeline; KPIs over the last 24 h with trends", 10)
+            slider = rec.page.locator('[data-testid="stSidebar"] [role="slider"]').first
+            if press(rec.page, slider, "ArrowLeft", 48):
+                rec.scene(None, "Time machine: the same dashboard 24 hours earlier (replayed by publication time)", 8)
+                try:
+                    rec.page.get_by_role("button", name="Latest").click()
+                    rec.page.wait_for_timeout(800)
+                    rec.ready("Executive Risk Overview")
+                except Exception:
+                    pass
+            rec.scene("watchlist", f"Early Warning Watchlist on real news: {top['issuer_name']} is {top['status']} "
+                      "(rule shown in the row)", 10, expect="Early Warning Watchlist")
+            rec.scene(None, "Click-through: which words and factors drove the score", 9,
+                      expect="Opened from the Early Warning Watchlist", click_text="Explain →")
+            rec.page.goto(f"{UI}/Risk_Propagation?issuer_id={top['issuer_id']}")
+            rec.current = "propagation"
+            rec.ready("Second-order contributions")
+            rec.scene(None, f"Risk propagation: direct vs second-order exposure of {top['issuer_name']} over curated "
+                      "links", 11)
 
             httpx.post(f"{API}/demo/start", json={"mode": "SCENARIO", "step_seconds": STEP_S}, timeout=30)
-            wait_api(lambda: n_signals() >= 4, "step 0 (4 real headlines)")
-            rec.scene("feed", "Step 0: four REAL headlines from the published sample, badged CACHED_REAL with "
-                      "capture time", 9, expect="4 of 4 documents")
-            rec.scene("signals", "Real data, same pipeline: Harley-Davidson junk downgrade scores 7.3, but it is not "
-                      "held, so no stress run", 7, expect="NLP Risk Signals")
-
-            wait_api(lambda: n_signals() >= 5, "step 1")
-            rec.scene("signals", "Step 1 (SYNTHETIC from here on): Nvidia product launch on social media, "
-                      "impact 3.6 Low, no trigger", 6, expect="NLP Risk Signals")
-
-            wait_api(lambda: n_signals() >= 6 and n_runs() >= 1, "step 2 and its issuer stress run")
-            rec.scene("stress", "Step 2: Moody's downgrade + SEBI probe at Tata Motors (held issuer), impact 8.7 → "
-                      "issuer-only stress 0.41% GREEN", 9, expect="Idiosyncratic credit event")
-            rec.scene("watchlist", "Early Warning Watchlist: Tata Motors is WATCH-NEGATIVE, ranked first "
-                      "(the story pauses here)", 10, expect="WATCH-NEGATIVE")
-            rec.scene(None, "Click-through: why the signal scored 8.7 (probabilities, evidence, weighted "
-                      "factors)", 9, expect="Opened from the Early Warning Watchlist", click_text="Explain →")
-
-            wait_api(lambda: n_signals() >= 7 and n_runs() >= 2, "step 3 and its systemic stress run", 90)
-            rec.scene("stress", "Step 3: invasion headline from a news wire (market-wide, impact 7.0) → systemic "
-                      "stress, moderate, 1.32% AMBER", 8, expect="Geopolitical shock (moderate)")
-
-            wait_api(lambda: n_signals() >= 8 and n_runs() >= 3, "step 4 and the severe run", 90)
-            rec.scene("stress", "Step 4: a second independent source corroborates: severe, 2.45% RED, above the "
-                      "2% risk appetite", 10, expect="Geopolitical shock (severe)")
-            rec.scene(None, "Waterfall, top-10 positions (hedges green) and sector × asset heatmap", 10,
+            wait_api(lambda: n_synthetic() >= 1, "story step 1", 120)
+            rec.scene("signals", "Scenario demo (SYNTHETIC, labelled everywhere): a scripted story for the stress "
+                      "climax", 6, expect="NLP Risk Signals")
+            wait_api(lambda: n_synthetic() >= 2 and n_runs() >= 1, "step 2 and its issuer stress run")
+            rec.scene("stress", "Moody's downgrade + SEBI probe at Tata Motors (held), impact 8.7 → issuer-only "
+                      "stress 0.41% GREEN", 9, expect="Idiosyncratic credit event")
+            rec.scene("watchlist", "Watchlist: Tata Motors WATCH-NEGATIVE; its peers Ford and Tesla flagged by "
+                      "propagation (⇄)", 10, expect="WATCH-NEGATIVE")
+            wait_api(lambda: n_synthetic() >= 3 and n_runs() >= 2, "step 3 and its systemic stress run", 120)
+            rec.scene("stress", "Invasion headline from a news wire (market-wide, impact 7.0) → geopolitical "
+                      "moderate, 1.32% AMBER", 8, expect="Geopolitical shock (moderate)")
+            wait_api(lambda: n_synthetic() >= 4 and n_runs() >= 3, "step 4 and the severe run", 120)
+            rec.scene("stress", "A second independent source corroborates: severe, 2.45% RED, above the 2% risk "
+                      "appetite", 10, expect="Geopolitical shock (severe)")
+            rec.scene(None, "Waterfall, top-10 positions (hedges green) and sector × asset heatmap", 8,
                       expect="Geopolitical shock (severe)", scroll_to="Top-10")
-            rec.scene(None, "Audit log: every run stores the signal that triggered it", 8,
-                      expect="Geopolitical shock (severe)", scroll_to="Audit log")
-            rec.scene("portfolio", "Portfolio: 49 SYNTHETIC positions (seed 42): loans, bonds, IRS, CDS, FX, "
-                      "equity", 8, expect="Portfolio Overview")
+            rec.scene(None, "What-if builder: start from any scenario and move the shocks; repriced instantly, "
+                      "nothing saved", 6, expect="What-if scenario builder", scroll_to="What-if scenario builder")
+            hy = rec.page.locator('[data-testid="stMain"] [role="slider"]').nth(2)
+            if press(rec.page, hy, "ArrowRight", 30):
+                rec.scene(None, "What-if: HY spreads +300 bp more than the severe scenario, compared side by side", 9,
+                          expect="What-if scenario builder")
+            rec.scene("watchlist", "One-click credit brief: status and rule, exposure, signals, stress on the "
+                      "issuer's positions, hedges", 4, expect="WATCH-NEGATIVE")
+            try:
+                rec.page.get_by_text("Credit brief", exact=True).first.click()
+                rec.page.wait_for_timeout(800)
+                rec.ready("Credit brief ·")
+                rec.page.get_by_text("Credit brief ·", exact=False).first.scroll_into_view_if_needed(timeout=5000)
+                rec.scene(None, "Credit brief (template-based, no language model), downloadable as PDF", 10)
+            except Exception:
+                pass
             rec.scene("home", "Executive overview. Simplified, illustrative stress model; not investment advice",
                       8, expect="Executive Risk Overview")
             video_path = rec.page.video.path()

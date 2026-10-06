@@ -3,54 +3,61 @@
 **One command** (after `tasks.ps1 setup` has been run once):
 
 ```powershell
-powershell -ExecutionPolicy Bypass -File tasks.ps1 demo          # or: .venv\Scripts\python.exe scripts\run_demo.py
-powershell -ExecutionPolicy Bypass -File tasks.ps1 demo-offline  # same, network not needed (models from ./models)
+powershell -ExecutionPolicy Bypass -File tasks.ps1 preflight     # GO / NO-GO: RAM, models, DB, ports, REAL history
+powershell -ExecutionPolicy Bypass -File tasks.ps1 demo-offline  # API + dashboard on REAL data, no network needed
 ```
 
-Then open:
+Then open the dashboard at <http://127.0.0.1:8501> (API docs: <http://127.0.0.1:8000/docs>).
 
-- Dashboard: <http://127.0.0.1:8501>
-- API docs (Swagger): <http://127.0.0.1:8000/docs>
+`run_demo.py` starts the API and the dashboard, resets the demo state and waits until the **REAL history** is loaded:
+every document in the local capture cache (1,325 real headlines and posts, CACHED_REAL), processed through the same
+pipeline and trigger rules (`tasks.ps1 real-history` builds the cache ahead of time; otherwise the API builds it at
+start-up, about 7 minutes on the demo laptop). Then it waits for the presenter. The scripted story is started from the
+sidebar (**Mode & demo control → ▶ Scenario demo**). `--play-story` plays it immediately (automation).
 
-`run_demo.py` starts the API and the dashboard, resets the demo state, and plays `data/scenarios/demo_story.json`:
-first a **real-data opening (step 0)**, then the scripted story with one step every 10 s and a **20 s pause after
-step 2** for the watchlist. The step 0 headlines are REAL and unchanged from the committed sample
-`data/cache/sample/sample_google_news.jsonl` (badge **CACHED_REAL**, with capture time). They were chosen because none
-of them triggers a stress run, so the scripted results below are unaffected. Steps 1–4 are **SYNTHETIC** and labelled
-that way everywhere. Everything goes through exactly the same NLP pipeline as live data.
+## What is real and what is synthetic
 
-| Step | Headline | Expected outcome |
+| Part of the demo | Provenance |
+|---|---|
+| Home, Watchlist, Feed, Signals, Explainability, Propagation before the scenario | **CACHED_REAL**: real captured documents (capture time on every badge). Time machine = replay by publication time |
+| Stress runs in the REAL history (54) | Triggered by CACHED_REAL signals; **simulated** with the illustrative model on the SYNTHETIC portfolio |
+| Scenario demo: step 0 | 4 real headlines from the committed sample (CACHED_REAL), none triggers stress |
+| Scenario demo: steps 1–4 (Nvidia launch, Tata Motors downgrade, invasion ×2) | **SYNTHETIC** scripted headlines |
+| Portfolio (49 positions, seed 42), what-if results, credit-brief stress figures | **SYNTHETIC** portfolio, **simulated** results |
+
+## The 5-minute flow (timed script with talking points: `docs/demo_script.md`)
+
+| Time | Screen | What happens |
 |---|---|---|
-| 0 | REAL (CACHED_REAL, captured 2026-10-03), 4 s apart: "India's HDFC Bank appoints outsider Anup Bagchi as CEO" · "Tesla Q3 Deliveries Top Expectations; The Stock Is Rising" · "Harley-Davidson's Credit Rating Downgraded to Junk Status by S&P" · "Infosys, Wipro shares slump to six year lows; brokerages flag muted Q2 growth outlook" | Management 4.9 · Other 5.5 · Credit Event 7.3 (Harley-Davidson is not held) · Earnings 7.6. **No stress run.** These are dated by their original publication, so they sit outside the watchlist's 24 h window |
-| 1 | Nvidia unveils new GPU lineup for gamers (social) | Product Launch, impact 3.6 **Low**: no trigger |
-| 2 | Moody's downgrades Tata Motors to junk as SEBI opens probe | Credit Event, 8.7 **Critical** → idiosyncratic stress on Tata Motors (0.41%, GREEN; the CDS hedge offsets). **Early Warning Watchlist: Tata Motors WATCH-NEGATIVE, rank 1** (impact 8.7 ≥ 7 with sentiment −0.90; 4.94% of the funded book, rating bucket BB). Story pauses 20 s: show the watchlist |
-| 3 | Russia launches invasion of neighbouring state; West readies sweeping sanctions | Geopolitical / MARKET, 7.0 **High** → `geopolitical_moderate` (1.32%, AMBER) |
-| 4 | Invasion confirmed as troops cross border; sanctions and market sell-off spread worldwide (second source) | 2 corroborating sources, 9.1 **Critical** → `geopolitical_severe` (2.45%, RED) |
+| 0:00 | Home (REAL) | KPIs over the last 24 h of real news (as of 5 Oct 20:03 UTC on the current cache: 326 signals, 18 held issuers on watch, 7 WATCH-NEGATIVE, ▲ vs the previous 24 h). Drag the **time machine** back a day, then **Latest**. The latest real-triggered run (rate shock, 4.24% RED) came from an opinion headline: a known false-positive type, shown openly |
+| 0:45 | Early Warning Watchlist → Explainability | Top real issuer: **HDFC Bank** (WATCH-NEGATIVE, worst impact 8.1, sentiment −0.95). Sparkline = impact over 24 h + 6 h rolling max. **Explain →** opens the signal: probabilities, evidence, weighted factors |
+| 1:45 | Risk Propagation | HDFC Bank: direct vs propagated exposure over curated links (peer SBI); graph sized by exposure, coloured by status; click a node for its positions |
+| 2:30 | Sidebar **▶ Scenario demo** (SYNTHETIC) | Tata Motors downgrade 8.7 → issuer stress 0.41% GREEN (CDS hedge) → watchlist WATCH-NEGATIVE, Ford/Tesla flagged by propagation (⇄) → invasion 7.0 → 1.32% AMBER → second source 9.1 → **2.45% RED**. The story pauses 20 s after the downgrade |
+| 3:45 | Stress Test → **What-if** | A judge picks a shock (start from "Geopolitical severe", push HY spreads); compare with the triggered run side by side; nothing is saved |
+| 4:20 | Watchlist → Tata Motors → **Credit brief** | One-page, template-based brief; **Download PDF** (`credit_brief_TATAMOTORS_NS_<date>.pdf`). Close |
 
-Steps 1–4 are SYNTHETIC; the step 0 headlines are real. The outcomes above are the outputs of `scripts/run_demo.py`
-on the developer laptop. They are deterministic: the same
-story and the same seed-42 portfolio give the same results every run.
+Scenario outcomes (deterministic: same story, same seed-42 portfolio):
+
+| Step | Headline | Outcome |
+|---|---|---|
+| 0 | 4 REAL headlines (HDFC CEO, Tesla deliveries, Harley-Davidson junk, Infosys/Wipro slump) | 4.9 · 5.5 · 7.3 · 7.6; **no stress run** |
+| 1 | Nvidia unveils new GPU lineup for gamers (social) | Product Launch 3.6 **Low**: no trigger |
+| 2 | Moody's downgrades Tata Motors to junk as SEBI opens probe | Credit Event 8.7 **Critical** → idiosyncratic stress 0.41% GREEN; Tata Motors WATCH-NEGATIVE |
+| 3 | Russia launches invasion of neighbouring state; West readies sweeping sanctions | Geopolitical / MARKET 7.0 → `geopolitical_moderate` 1.32% AMBER |
+| 4 | Invasion confirmed as troops cross border; sanctions and market sell-off spread worldwide | 2 sources, 9.1 → `geopolitical_severe` 2.45% RED |
 
 Stress results come from a simplified, illustrative hackathon stress model. They are not a production or regulatory
 risk model.
 
 ## Other modes (sidebar → "Mode & demo control")
 
-- **REPLAY** streams real articles captured earlier by `scripts/capture_cache.py` (badge: CACHED_REAL, with the capture time).
-  On a fresh clone it uses the published 50-headline Google News sample.
-- **LIVE** polls the real sources (Google News, Reddit RSS, Mastodon; GDELT, StockTwits, Finnhub and Bluesky are
-  best-effort or optional).
-- **⟲ Reset** clears demo, replay and API signals and all stress runs.
+- **REPLAY** streams the captured real articles again (CACHED_REAL); **LIVE** polls the real sources. The REAL history
+  stays loaded in every mode.
+- **⟲ Reset** clears scenario, replay and API signals and their stress runs; the REAL history is kept.
 
 ## Backup plan
 
-If the network or API fails during a presentation, see `docs/demo_script.md` → "Backup plan". In short: `tasks.ps1 demo-offline`
-works without any network, REPLAY shows real cached data, and `docs/screenshots/` holds static images of every page.
-
-Before presenting, run `tasks.ps1 preflight` (GO / NO-GO: RAM, model files, DB, free ports, demo data).
-
-A **silent backup recording** of the whole demo (step 0 real headlines, steps 1–4, the watchlist and the
-click-through to explainability) is in `docs/demo/demo_walkthrough.webm` (3:04, 1600×900, captions on screen). Each
-caption's start and end time is in `docs/demo/demo_walkthrough_captions.json`. Re-record with `tasks.ps1 video`. The
-recorder waits for each story step via the API and for each page to finish rendering before it shows a caption. A
-narrated recording still has to be made by a person.
+`tasks.ps1 demo-offline` needs no network. `docs/screenshots/1366x768/` and `1920x1080/` hold every page at projector
+sizes. A **silent backup recording** of this flow is in `docs/demo/demo_walkthrough.webm` (captions on screen; caption
+times in `docs/demo/demo_walkthrough_captions.json`; re-record with `tasks.ps1 video`). A narrated recording still has
+to be made by a person.

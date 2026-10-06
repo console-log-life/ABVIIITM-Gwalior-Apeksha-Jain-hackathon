@@ -96,7 +96,8 @@ def summary_lines(b: dict) -> list[str]:
         f"We hold {_m(e['direct'])} ({e['direct_pct']:.2f}% of the funded book) across {e['positions']} positions, "
         f"rating bucket {b['rating_bucket']}. Linked issuers add {_m(e['propagated'])} of decay-weighted exposure "
         f"({e['propagated_pct']:.2f}%), {e['total_pct']:.2f}% in total.",
-        f"An issuer-only shock ({s['scenario_label']}) would change these positions by {_m(s['issuer_pnl'])}"
+        f"Under the issuer-only scenario \"{s['scenario_label']}\", these positions would change by "
+        f"{_m(s['issuer_pnl'])}"
         + (f", with CDS hedges offsetting {_m(s['hedge_pnl'])} (net {_m(s['net_pnl'])})" if s["hedge_pnl"] else
            ", with no CDS protection on this name") + f": {s['loss_pct_book']:.2f}% of the book.",
     ]

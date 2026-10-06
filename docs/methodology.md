@@ -157,9 +157,9 @@ recalibration was needed.
 A credit-risk view of recent signals: one row per **held** issuer (every issuer_id in the portfolio), including
 issuers with no signals.
 
-**Window.** Signals whose event `timestamp` falls within the last `hours` (query parameter, 1–720; default
-`WATCHLIST_WINDOW_H` = 24). Replayed real documents keep their original publication time, so older CACHED_REAL items
-fall outside a 24 h window. This is deliberate: the watchlist answers "what happened recently".
+**Window.** Signals whose event `timestamp` falls within the `hours` (query parameter, 1–720; default
+`WATCHLIST_WINDOW_H` = 24) before `as_of` (the time machine, §9; default: now via the API, the latest data time in
+the dashboard). The watchlist answers "what happened recently" at any point of the REAL history.
 
 **Watch status** (thresholds in config, `WATCHLIST_*`; a signal is *negative* when sentiment ≤ −0.25):
 
@@ -167,6 +167,7 @@ fall outside a 24 h window. This is deliberate: the watchlist answers "what happ
 |---|---|---|
 | WATCH-NEGATIVE | any negative signal with impact ≥ 7.0, **or** ≥ 2 negative signals with impact ≥ 5.0 | `WATCHLIST_WATCH_IMPACT`, `WATCHLIST_WATCH_COUNT`, `WATCHLIST_WATCH_COUNT_IMPACT` |
 | MONITOR | any negative signal with impact ≥ 4.0 | `WATCHLIST_MONITOR_IMPACT` |
+| MONITOR (propagated, ⇄) | a STABLE issuer linked by a curated link with weight ≥ 0.3 to a WATCH-NEGATIVE issuer (§10) | `WATCHLIST_PROPAGATION_MIN_WEIGHT` (0 disables) |
 | STABLE | otherwise, including no signals | n/a |
 
 The negative-sentiment cut-off is the same −0.25 used by the idiosyncratic stress trigger, so strong positive news
@@ -215,3 +216,52 @@ is not used to evaluate FinBERT, because FinBERT was trained on it.
 
 Credit events in the strict sense (defaults, downgrades), Supply Chain and Litigation have no clean public labels.
 For those three classes the rule engine stays authoritative (hybrid classifier, below).
+
+## 9. REAL history and the time machine (`risk_engine/history.py`, `GET /history`, `as_of` everywhere)
+
+The whole local CACHED_REAL capture cache is processed **once** through the same pipeline (FinBERT, events, entities,
+corroboration, impact) and the same stress trigger rules, in event-time order, with the trigger clock set to each
+signal's event time (the convention of `scripts/replay_trigger_report.py`). Triggered stress runs are simulated with
+the illustrative model on the synthetic portfolio, stored at the event time with ids `real-…`. The result is cached in
+`data/real_history.db` (git-ignored) with a fingerprint of the capture files, taxonomy, weights, scenarios, portfolio,
+issuer universe and active models; the API loads it at start-up in about a second, or rebuilds it (minutes, reusing
+its own FinBERT) when an input changed. On a fresh clone the committed 50-headline sample is used.
+
+**Time machine:** every view can be shown "as of" a time T on the **event (publication) time** axis: signals with
+`timestamp ≤ T`, watch status over the 24 h before T, the latest stress run at or before T. We chose event time
+because our captures are bursts (3 Oct and 5 Oct) while publication times are continuous; the time machine therefore
+replays the real news timeline as published. The documents were collected at their capture times, which every
+CACHED_REAL badge shows: an "as of" view is a reconstruction, not what a live system saw at T.
+
+Demo resets keep the REAL history. The corroboration window ignores it, so the scripted SYNTHETIC story always gives
+the same results.
+
+## 10. Risk propagation (`portfolio/propagation.py`, `GET /propagation`)
+
+16 issuer links in `universe.yaml` (`supplier_of`, `parent_of`, `peer_of`), **curated by hand** from well-known public
+relationships, not inferred from data and not exhaustive. Examples: Nvidia supplier of Microsoft, Meta, Amazon and
+Alphabet (data-centre GPUs); Government of India parent of SBI (majority owner); Tata Motors, Ford and Tesla peers;
+HDFC Bank and SBI peers. "Jaguar Land Rover" and "Adani Group" are aliases of Tata Motors and Adani Enterprises, so
+their news already lands on those issuers.
+
+For an issuer i: **direct exposure** = funded MV held in i; **propagated exposure** = Σ_j w_ij × exposure_j over the
+linked issuers j, with w = decay of the relation (`PROPAGATION_DECAY`: supplier/parent 0.5, peer 0.3) and products of
+decays along longer paths when `PROPAGATION_MAX_HOPS` > 1 (default 1 = second order). Links are two-way for contagion.
+Each issuer is counted once, at its strongest path; the start issuer is never counted, so cycles cannot inflate the
+total (`tests/test_propagation.py`). The figure is an attention measure, not a loss estimate: there are no
+correlations or default-contagion probabilities behind it.
+
+## 11. What-if scenario builder (`POST /portfolio/what-if`)
+
+Six shocks (rates, IG and HY spreads, equity, EM FX, PD multiplier) priced instantly with the same pricers as the
+named scenarios. Nothing is saved: no audit-log entry, no "latest run", no bus event. Starting from a named scenario
+reproduces it exactly (e.g. geopolitical severe = 2.45%). Tests check monotonic responses: wider spreads lose more on
+bonds and loans and gain more on bought CDS protection; higher PD multipliers lose more; higher rates lose on bonds.
+
+## 12. Credit brief (`portfolio/credit_brief.py`, `GET /credit-brief/{issuer}?format=json|html|pdf`)
+
+A one-page issuer brief built from **templates** (no language model): issuer and illustrative rating bucket; watch
+status and the rule that fired; direct and propagated exposure; the last six signals with their reason text; the
+issuer-only shock priced now (not saved) and the latest systemic run's P&L on this issuer; CDS hedges; the stress
+disclaimer. Every sentence is filled from stored data. The PDF (`credit_brief_<ticker>_<date>.pdf`) uses fpdf2's
+core fonts, so non-Latin symbols are replaced (→ becomes ->, ₹ becomes Rs).
