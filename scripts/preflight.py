@@ -127,6 +127,16 @@ def main() -> int:
                              f"{n}/{len(opening.doc_ids)} found (CACHED_REAL sample)"))
         except Exception as exc:  # a broken story file must show up here, not during the presentation
             rows.append(("FAIL", "demo story valid", f"{type(exc).__name__}: {exc}"[:120]))
+    from risk_engine import history
+
+    hp = history.history_path(s)
+    if history.is_fresh(s):
+        meta = history.read_meta(hp) or {}
+        rows.append(("OK", "REAL history cache", f"{meta.get('signals')} signals, {meta.get('stress_runs')} simulated "
+                     f"runs ({meta.get('source')})"))
+    else:
+        rows.append(("WARN", "REAL history cache", "missing or stale: run tasks.ps1 real-history before the demo "
+                     "(otherwise the API builds it at start-up, which takes minutes)"))
     pf = s.resolve(s.portfolio_path)
     rows.append(("OK" if pf.exists() else "WARN", "portfolio file present",
                  str(pf.relative_to(ROOT)) if pf.exists() else "missing: it will be generated (seed 42) on start"))

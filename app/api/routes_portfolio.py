@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from datetime import datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -100,8 +101,9 @@ async def scenarios(rt: Runtime = Depends(get_runtime)) -> dict[str, Any]:
 @router.get("/portfolio/stress-test", summary="Latest stress run (full result incl. per-position P&L)",
             responses={200: {"content": {"application/json": {"example": STRESS_EXAMPLE}}},
                        404: {"description": "No stress run yet"}})
-async def latest_stress(rt: Runtime = Depends(get_runtime)) -> dict[str, Any]:
-    latest = await asyncio.to_thread(rt.store.latest_stress_run)
+async def latest_stress(as_of: datetime | None = Query(None, description="Time machine: latest run at/before this"),
+                        rt: Runtime = Depends(get_runtime)) -> dict[str, Any]:
+    latest = await asyncio.to_thread(rt.store.latest_stress_run, as_of)
     if latest is None:
         raise HTTPException(404, "no stress run yet")
     latest["positions"] = await asyncio.to_thread(rt.store.stress_positions, latest["run_id"])
@@ -128,8 +130,10 @@ async def run_stress(req: StressRequest, rt: Runtime = Depends(get_runtime)) -> 
             responses={200: {"content": {"application/json": {"example": {"runs": [{
                 "run_id": "5f1c2b9e-...", "trigger_signal_id": "0b9d3c55-...", "scenario": "geopolitical_severe",
                 "loss": 23000000.0, "loss_pct": 2.5, "rag": "RED"}], "suppressed": []}}}}})
-async def stress_runs(limit: int = Query(50, ge=1, le=500), rt: Runtime = Depends(get_runtime)) -> dict[str, Any]:
-    runs = await asyncio.to_thread(rt.store.list_stress_runs, limit)
+async def stress_runs(limit: int = Query(50, ge=1, le=500),
+                      as_of: datetime | None = Query(None, description="Time machine: runs at/before this time"),
+                      rt: Runtime = Depends(get_runtime)) -> dict[str, Any]:
+    runs = await asyncio.to_thread(rt.store.list_stress_runs, limit, as_of)
     suppressed = list(rt.stress.triggers.suppressed) if rt.stress is not None else []
     return {"runs": runs, "suppressed": suppressed, "disclaimer": STRESS_DISCLAIMER}
 

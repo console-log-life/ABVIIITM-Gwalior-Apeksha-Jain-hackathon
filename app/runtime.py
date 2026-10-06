@@ -54,6 +54,8 @@ class Runtime:
         self.demo_status: dict[str, Any] = {"running": False}
         self.stress = None  # set by attach_stress_engine (Module B)
         self.exposures: dict[str, float] | None = None  # issuer_id -> funded exposure, set with the stress engine
+        self.history_status: dict[str, Any] = {"state": "not loaded"}
+        self._history_task: asyncio.Task | None = None
 
     # ------------------------------------------------------------------ pipeline
     @property
@@ -76,6 +78,8 @@ class Runtime:
         since = datetime.now(UTC) - timedelta(hours=self.settings.corroboration_window_h)
         obs = []
         for r in self.store.recent_for_corroboration(since):
+            if r.get("origin") == "real":  # bulk-loaded history was corroborated when it was built; keeps demos stable
+                continue
             kind = "MARKET" if r["company"] == "MARKET" else ("ISSUER" if r.get("issuer_id") else
                                                                ("EXTERNAL_TICKER" if r.get("ticker") else "UNRESOLVED"))
             key = tracker.entity_key(kind, r.get("issuer_id"), r.get("ticker"))
@@ -97,6 +101,38 @@ class Runtime:
         except Exception as exc:  # never crash the API; /health reports it
             self._pipeline_error = f"{type(exc).__name__}: {exc}"
             log.exception("pipeline warm-up failed")
+
+    # ------------------------------------------------------------------ REAL history (risk_engine/history.py)
+    async def load_history(self, rebuild: bool = False) -> dict[str, Any]:
+        """Load the processed CACHED_REAL history into the store; build it first if missing/stale (minutes on a
+        CPU: the API's already-loaded FinBERT is reused, so no second model process is started)."""
+        from risk_engine import history
+
+        st = self.history_status = {"state": "checking", "started_at": datetime.now(UTC).isoformat()}
+
+        def progress(done: int, total: int) -> None:
+            st.update(state="building", progress=[done, total])
+
+        try:
+            path = history.history_path(self.settings)
+            if rebuild or not await asyncio.to_thread(history.is_fresh, self.settings):
+                st["state"] = "building"
+                await asyncio.to_thread(lambda: self.pipeline)  # make sure FinBERT is loaded once
+                await asyncio.to_thread(history.build_history, self.settings, self.pipeline.sentiment, progress)
+            st["state"] = "loading"
+            loaded = await asyncio.to_thread(history.load_into, self.store, path)
+            st.update(state="ready", loaded=loaded, meta=history.read_meta(path),
+                      finished_at=datetime.now(UTC).isoformat())
+            log.info("REAL history loaded: %s", loaded)
+        except Exception as exc:  # the API keeps running; /history and the dashboard show why
+            st.update(state="error", error=f"{type(exc).__name__}: {exc}"[:300])
+            log.exception("REAL history could not be loaded")
+        return st
+
+    def start_history_load(self, rebuild: bool = False) -> dict[str, Any]:
+        if self._history_task is None or self._history_task.done():
+            self._history_task = asyncio.create_task(self.load_history(rebuild), name="real-history")
+        return self.history_status
 
     # ------------------------------------------------------------------ ingestion
     async def ingest(self, docs: list[RawDocument], origin: str) -> list[RiskSignal]:
@@ -268,12 +304,14 @@ class Runtime:
         self._health_task = asyncio.create_task(self._persist_health_loop(), name="health-persist")
         if warm:
             await self.warm_up()
+        if self.settings.real_history_autoload:
+            self.start_history_load()
         if self.mode is AppMode.LIVE:
             await self.start_live()
 
     async def shutdown(self) -> None:
         await self.stop_live()
-        for t in (self._demo_task, self._health_task):
+        for t in (self._demo_task, self._health_task, self._history_task):
             if t is not None and not t.done():
                 t.cancel()
         snap = HEALTH.snapshot()

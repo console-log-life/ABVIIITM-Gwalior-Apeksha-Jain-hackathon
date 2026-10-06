@@ -41,3 +41,4 @@ data/external/*
 !data/external/DATASETS.md
 models/finetuned/
 trained_models.zip
+data/real_history.db*

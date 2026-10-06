@@ -3,7 +3,11 @@
 Tables: documents, signals, stress_runs, stress_results, source_health.
 Indexes: signals(ticker, timestamp), signals(event_type).
 `signals.seq` is an autoincrement integer giving a stable order for `since_id` paging and SSE catch-up.
-`origin` records which path produced a signal: live | replay | scenario | api (used by /demo/reset).
+`origin` records which path produced a signal: live | replay | scenario | api | real (used by /demo/reset).
+`real` = the CACHED_REAL history loaded from the processed-history cache (risk_engine/history.py); it is kept by
+/demo/reset, and its stress runs have run_ids starting with "real-".
+"Known time" = documents.captured_at: when the system learned of a document. The dashboard's time machine filters on
+it (`known_before` / `known_after`), so the view "as of T" shows exactly what had been captured by T.
 """
 
 from __future__ import annotations
@@ -212,8 +216,9 @@ class Store:
 
     def list_signals(self, *, ticker: str | None = None, event_type: str | None = None,
                      min_impact: float | None = None, provenance: str | None = None, since_seq: int | None = None,
-                     limit: int = 50, ascending: bool = False,
-                     since_ts: datetime | None = None) -> list[dict[str, Any]]:
+                     limit: int = 50, ascending: bool = False, since_ts: datetime | None = None,
+                     known_before: datetime | None = None, known_after: datetime | None = None,
+                     origins: list[str] | None = None) -> list[dict[str, Any]]:
         q = self._base_select()
         if ticker:
             q = q.where(func.upper(signals.c.ticker) == ticker.upper())
@@ -227,6 +232,12 @@ class Store:
             q = q.where(signals.c.seq > since_seq)
         if since_ts is not None:
             q = q.where(signals.c.timestamp >= _utc(since_ts))
+        if known_before is not None:
+            q = q.where(documents.c.captured_at <= _utc(known_before))
+        if known_after is not None:
+            q = q.where(documents.c.captured_at > _utc(known_after))
+        if origins is not None:
+            q = q.where(signals.c.origin.in_(origins))
         q = q.order_by(signals.c.seq.asc() if ascending else signals.c.seq.desc()).limit(limit)
         return self._signal_rows(q)
 
@@ -247,10 +258,12 @@ class Store:
         return self.list_signals(since_ts=since, limit=50_000, ascending=True)
 
     # ------------------------------------------------------------------ stress
-    def save_stress_run(self, run: dict[str, Any], positions: list[dict[str, Any]], demo: bool) -> None:
+    def save_stress_run(self, run: dict[str, Any], positions: list[dict[str, Any]], demo: bool,
+                        created_at: datetime | None = None) -> None:
         with self._lock, self.engine.begin() as c:
             c.execute(insert(stress_runs).values(
-                run_id=run["run_id"], created_at=datetime.now(UTC), trigger_signal_id=run.get("trigger_signal_id"),
+                run_id=run["run_id"], created_at=_utc(created_at) or datetime.now(UTC),
+                trigger_signal_id=run.get("trigger_signal_id"),
                 scenario=run["scenario"], scope_issuer_id=run.get("scope_issuer_id"), rule=run.get("rule"),
                 before_value=run["before_value"], after_value=run["after_value"], loss=run["loss"],
                 loss_pct=run["loss_pct"], rag=run["rag"], demo=demo, summary=json.dumps(run, default=str),
@@ -263,19 +276,32 @@ class Store:
                     for p in positions
                 ])
 
-    def list_stress_runs(self, limit: int = 50) -> list[dict[str, Any]]:
+    def list_stress_runs(self, limit: int = 50, as_of: datetime | None = None) -> list[dict[str, Any]]:
         q = select(stress_runs.c.run_id, stress_runs.c.created_at, stress_runs.c.trigger_signal_id,
                    stress_runs.c.scenario, stress_runs.c.scope_issuer_id, stress_runs.c.rule, stress_runs.c.loss,
-                   stress_runs.c.loss_pct, stress_runs.c.rag, stress_runs.c.demo
-                   ).order_by(stress_runs.c.created_at.desc()).limit(limit)
+                   stress_runs.c.loss_pct, stress_runs.c.rag, stress_runs.c.demo)
+        if as_of is not None:
+            q = q.where(stress_runs.c.created_at <= _utc(as_of))
+        q = q.order_by(stress_runs.c.created_at.desc()).limit(limit)
         with self.engine.connect() as c:
             rows = c.execute(q).mappings().all()
         return [{**dict(r), "created_at": _utc(r["created_at"]).isoformat()} for r in rows]
 
-    def latest_stress_run(self) -> dict[str, Any] | None:
+    def latest_stress_run(self, as_of: datetime | None = None) -> dict[str, Any] | None:
+        q = select(stress_runs.c.summary, stress_runs.c.created_at)
+        if as_of is not None:
+            q = q.where(stress_runs.c.created_at <= _utc(as_of))
         with self.engine.connect() as c:
-            r = c.execute(select(stress_runs.c.summary).order_by(stress_runs.c.created_at.desc()).limit(1)).first()
-        return json.loads(r.summary) if r else None
+            r = c.execute(q.order_by(stress_runs.c.created_at.desc()).limit(1)).first()
+        return {**json.loads(r.summary), "created_at": _utc(r.created_at).isoformat()} if r else None
+
+    def known_time_range(self) -> tuple[datetime | None, datetime | None]:
+        """First and last known time (documents.captured_at) over stored signals."""
+        j = signals.join(documents, signals.c.doc_id == documents.c.doc_id)
+        with self.engine.connect() as c:
+            lo, hi = c.execute(select(func.min(documents.c.captured_at), func.max(documents.c.captured_at))
+                               .select_from(j)).one()
+        return _utc(lo), _utc(hi)
 
     def get_stress_run(self, run_id: str) -> dict[str, Any] | None:
         with self.engine.connect() as c:
@@ -304,11 +330,14 @@ class Store:
 
     # ------------------------------------------------------------------ demo reset
     def reset_demo(self) -> dict[str, int]:
-        """Delete demo-path signals (scenario, replay, api) and ALL stress runs. LIVE signals are kept."""
+        """Delete demo-path signals (scenario, replay, api) and their stress runs. LIVE signals and the loaded
+        CACHED_REAL history (origin "real", runs "real-*") are kept."""
         with self._lock, self.engine.begin() as c:
             demo_docs = select(signals.c.doc_id).where(signals.c.origin.in_(["scenario", "replay", "api"]))
             n_docs = c.execute(delete(documents).where(documents.c.doc_id.in_(demo_docs))).rowcount
             n_sig = c.execute(delete(signals).where(signals.c.origin.in_(["scenario", "replay", "api"]))).rowcount
-            c.execute(delete(stress_results))
-            n_runs = c.execute(delete(stress_runs)).rowcount
+            keep = stress_runs.c.run_id.like("real-%")
+            c.execute(delete(stress_results).where(stress_results.c.run_id.in_(
+                select(stress_runs.c.run_id).where(~keep))))
+            n_runs = c.execute(delete(stress_runs).where(~keep)).rowcount
         return {"signals_deleted": n_sig, "documents_deleted": n_docs, "stress_runs_deleted": n_runs}

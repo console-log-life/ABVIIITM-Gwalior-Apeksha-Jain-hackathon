@@ -1,6 +1,6 @@
 """Early-warning watchlist: a credit-risk view of recent signals, one row per HELD issuer.
 
-For every issuer in the portfolio, the signals inside the window (by event timestamp) are aggregated and a
+For every issuer in the portfolio, the signals inside the window (by KNOWN time = capture time) are aggregated and a
 rules-based watch status is assigned (thresholds from config; documented in docs/methodology.md):
 
   WATCH-NEGATIVE  any negative signal with impact >= watch_impact,
@@ -72,7 +72,8 @@ def watch_status(signals: list[dict[str, Any]], rules: WatchRules) -> tuple[str,
 
 
 def _ts(sig: dict[str, Any]) -> datetime:
-    return datetime.fromisoformat(str(sig["timestamp"]).replace("Z", "+00:00"))
+    """Known time (when the document was captured); falls back to the event timestamp."""
+    return datetime.fromisoformat(str(sig.get("captured_at") or sig["timestamp"]).replace("Z", "+00:00"))
 
 
 def _source(sig: dict[str, Any]) -> str:
@@ -130,7 +131,8 @@ def build_watchlist(portfolio: Portfolio, signals: list[dict[str, Any]], rules: 
             "sources": sorted({_source(s) for s in sigs}),
             "max_corroborating_sources": max((s["corroborating_sources"] for s in sigs), default=0),
             "top_signals": [_brief(s) for s in top],
-            "impact_series": [{"timestamp": s["timestamp"], "impact_score": s["impact_score"]} for s in sigs],
+            "impact_series": [{"timestamp": _ts(s).isoformat(), "impact_score": s["impact_score"],
+                               "sentiment_score": s["sentiment_score"]} for s in sigs],
         })
     rows.sort(key=lambda r: (-STATUS_RANK[r["status"]],
                              -max((s["impact_score"] for s in by_issuer[r["issuer_id"]]

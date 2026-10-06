@@ -106,6 +106,9 @@ class Settings(BaseSettings):
     demo_story_path: Path = Path("./data/scenarios/demo_story.json")
     replay_limit: int = Field(default=120, ge=1)
     replay_delay_s: float = Field(default=0.5, ge=0)
+    # REAL history: the CACHED_REAL cache processed through the pipeline once, cached here, loaded at API start
+    real_history_path: Path = Path("./data/real_history.db")
+    real_history_autoload: bool = True
 
     @field_validator("transaction_data_path", mode="before")
     @classmethod

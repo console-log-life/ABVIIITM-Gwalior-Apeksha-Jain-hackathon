@@ -61,3 +61,9 @@ def finbert_engine():
     from risk_engine.sentiment.finbert import SentimentEngine
 
     return SentimentEngine(Settings(sentiment_backend="finbert"))
+
+
+@pytest.fixture(autouse=True)
+def _no_history_autoload(monkeypatch):
+    """Tests start with an empty store; the REAL history is exercised explicitly in tests/test_history.py."""
+    monkeypatch.setenv("REAL_HISTORY_AUTOLOAD", "false")

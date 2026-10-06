@@ -120,17 +120,19 @@ def test_watchlist_endpoint_covers_every_held_issuer(client):
 
 
 def test_watchlist_endpoint_status_window_and_click_through(client):
-    old = (datetime.now(UTC) - timedelta(hours=72)).isoformat()
     a = client.post("/analyze", json={"text": "Moody's downgrades Tata Motors to junk as SEBI opens fraud probe",
                                       "ticker": "TATAMOTORS.NS"}).json()
     b = client.post("/analyze", json={"text": "Tata Motors faces default fears after rating cut",
-                                      "ticker": "TATAMOTORS.NS", "timestamp": old}).json()
+                                      "ticker": "TATAMOTORS.NS"}).json()
     tata = next(r for r in client.get("/watchlist").json()["issuers"] if r["issuer_id"] == "IN-TATAMOTORS")
-    assert tata["signal_count"] == 1 and tata["top_signals"][0]["signal_id"] == a["signal_id"]
-    assert tata["status"] == watch_status([a], RULES)[0]  # endpoint applies exactly the configured rules
-    wide = next(r for r in client.get("/watchlist", params={"hours": 96}).json()["issuers"]
+    assert tata["signal_count"] == 2 and {t["signal_id"] for t in tata["top_signals"]} == {a["signal_id"],
+                                                                                            b["signal_id"]}
+    assert tata["status"] == watch_status([a, b], RULES)[0]  # endpoint applies exactly the configured rules
+    # time machine: as of one hour ago nothing was known yet (window = known/capture time)
+    past = (datetime.now(UTC) - timedelta(hours=1)).isoformat()
+    then = next(r for r in client.get("/watchlist", params={"as_of": past}).json()["issuers"]
                 if r["issuer_id"] == "IN-TATAMOTORS")
-    assert wide["signal_count"] == 2 and b["signal_id"] in {t["signal_id"] for t in wide["top_signals"]}
+    assert then["signal_count"] == 0 and then["status"] == STABLE
     assert client.get(f"/signals/by-id/{a['signal_id']}").json()["reason"] == a["reason"]
     assert client.get("/signals/by-id/nope").status_code == 404
 
