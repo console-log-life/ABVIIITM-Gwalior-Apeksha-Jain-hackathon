@@ -16,6 +16,8 @@ markers = [
 [tool.ruff]
 line-length = 120
 target-version = "py311"
+# generated for Kaggle/Colab (Python 3.10); smoke-tested by running it (see scripts/build_training_notebook.py)
+extend-exclude = ["notebooks"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
