@@ -2,9 +2,9 @@
 
 > Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
 
-**Current task:** UPGRADE — Task A (real data + time machine)
-**Last commit:** e8873f1
-**Next step:** user runs notebooks/train_models.ipynb on Kaggle; I continue A→B→D→C→E→F
+**Current task:** UPGRADE — Task C (risk propagation)
+**Last commit:** 3f1c51d
+**Next step:** C → E → F; T4 when trained_models.zip arrives
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -148,6 +148,25 @@ Rules: no AI attribution in commits; no history rewrite; keep .tmp/backup/pre-re
   MODEL_QUANTIZE_INT8 flag. `scripts/import_trained_models.py` (safe unzip, offline load, label checks, 200-row
   agreement with the notebook's own test predictions, smoke test); on the smoke zip agreement was 1.0/1.0.
   13 tests with tiny random models. T3 commit verified alone in a clean worktree: 216 fast tests passed.
+
+### Upgrade · Tasks A, B, D (DONE)
+- A (`89eb31c` backend, `b164ec6` UI): REAL history = the whole local CACHED_REAL cache (1,325 docs, captured 3 Oct
+  17:22 → 5 Oct 20:14 UTC) through the same pipeline + trigger rules, cached in git-ignored data/real_history.db
+  (fingerprint incl. inputs/models/version), loaded into the store at API start (built in-process with the API's own
+  FinBERT when missing: 7.3 min on this laptop; fresh clone → the 50-headline sample). 1,325 signals, 54 simulated
+  stress runs (event-time clock, like the trigger replay). Time machine = EVENT (publication) time, because captures
+  are two bursts (3 Oct, 5 Oct) with a 48 h gap while publication times are continuous (27 Sep → 5 Oct); stated on
+  screen. `as_of` on /signals, /watchlist, /stress-runs, /portfolio/stress-test; /overview KPIs with the previous
+  window; /history. Example: as of 2 Oct 12:00 → 121 signals in 24 h, 8 issuers on watch, HDFC WATCH-NEGATIVE with a
+  13-point sparkline. Demo resets keep the history; corroboration ignores it (story numbers unchanged).
+- B (`1b9f94d`): dark risk-terminal theme (.streamlit/config.toml + components/theme.css, Barlow Semi Condensed + IBM
+  Plex Sans/Mono, tabular numbers, hidden chrome), ticker tape (pauses on hover, static with reduced motion), compact
+  KPI tiles with tooltips, themed Plotly (data-mix donuts, sentiment band), sidebar brand/mode/time machine/health
+  dots with "Not configured" collapsed. Playwright viewport screenshots at 1366x768 and 1920x1080
+  (docs/screenshots/<size>/), inspected, fixed (sidebar overflow artefact, filter chips), re-shot.
+- D (`3f1c51d`): what-if builder on the Stress page (6 sliders, start from any systemic scenario, compare with the
+  selected triggered run); POST /portfolio/what-if never saves a run. Starting from geopolitical_severe reproduces the
+  triggered 2.45% exactly. 7 tests (monotonic in spreads/PD/rates/equity, endpoint saves nothing).
 
 ## Capture log (CACHED_REAL growth)
 
