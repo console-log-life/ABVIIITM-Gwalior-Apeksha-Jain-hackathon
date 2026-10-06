@@ -144,6 +144,17 @@ def pnl_bar(pnl: dict[str, float], title: str, height: int | None = None) -> go.
     return _layout(fig, title, height=height or max(260, 30 * len(items) + 90))
 
 
+def exposure_bar(values: dict[str, float], title: str) -> go.Figure:
+    """Horizontal bars of USD exposure (accent colour), largest at the top."""
+    items = sorted(values.items(), key=lambda kv: -kv[1])
+    fig = go.Figure(go.Bar(x=[v / 1e6 for _, v in items], y=[k for k, _ in items], orientation="h",
+                           marker={"color": ACCENT, "cornerradius": 3}, text=[f"${v / 1e6:,.1f}m" for _, v in items],
+                           textposition="auto", hovertemplate="%{y}: $%{x:,.2f}m<extra></extra>"))
+    fig.update_yaxes(autorange="reversed")
+    fig.update_xaxes(title="USD m")
+    return _layout(fig, title, height=max(220, 34 * len(items) + 90))
+
+
 def top_positions(summary: dict) -> go.Figure:
     rows = sorted(summary["top_contributors"], key=lambda r: r["pnl"])
     labels = [f"{r['asset_id']} · {r['issuer_name'] or r['asset_type']}" + (" (hedge)" if r["is_hedge"] else "")
@@ -196,3 +207,119 @@ def factor_contributions(factors: dict, weights: dict) -> go.Figure:
     fig.update_yaxes(autorange="reversed")
     fig.update_xaxes(range=[0, 0.55], title="weight × factor")
     return _layout(fig, "Impact factors (weighted contributions)", height=300)
+
+
+STATUS = {"WATCH-NEGATIVE": "#ef4444", "MONITOR": "#f5b841", "STABLE": "#22c55e"}
+
+
+def network_layout(graph: dict, center: str) -> dict[str, tuple[float, float]]:
+    """Deterministic radial layout: centre issuer, hop-1 issuers on a ring, hop-2 near their parent, sectors outside,
+    positions as small satellites around their issuer."""
+    import math
+
+    pos: dict[str, tuple[float, float]] = {center: (0.0, 0.0)}
+    hop1 = sorted([n for n in graph["nodes"] if n["kind"] == "issuer" and n.get("hop") == 1],
+                  key=lambda n: -n.get("exposure", 0))
+    if len(hop1) == 1:
+        angles = [math.pi / 2]
+    elif len(hop1) == 2:  # upper-left / upper-right: a link between them never crosses the centre node
+        angles = [5 * math.pi / 6, math.pi / 6]
+    else:
+        angles = [math.pi / 2 + 2 * math.pi * i / len(hop1) for i in range(len(hop1))]
+    for n, a in zip(hop1, angles, strict=True):
+        pos[n["id"]] = (1.0 * math.cos(a), 1.0 * math.sin(a))
+    adj = {}
+    for e in graph["edges"]:
+        adj.setdefault(e["a"], []).append(e["b"])
+        adj.setdefault(e["b"], []).append(e["a"])
+    hop2 = [n for n in graph["nodes"] if n["kind"] == "issuer" and n.get("hop", 0) >= 2]
+    for i, n in enumerate(hop2):
+        parent = next((p for p in adj.get(n["id"], []) if p in pos and p != center), None)
+        base = math.atan2(*reversed(pos[parent])) if parent else 2 * math.pi * i / max(len(hop2), 1)
+        a = base + (i % 3 - 1) * 0.35
+        pos[n["id"]] = (1.85 * math.cos(a), 1.85 * math.sin(a))
+    sectors = [n for n in graph["nodes"] if n["kind"] == "sector"]
+    for n in sectors:
+        members = [m for m in adj.get(n["id"], []) if m in pos]
+        if center in members or not members:  # the centre issuer's own sector: just below it
+            pos[n["id"]] = (0.0, -0.8)
+            continue
+        ax = sum(pos[m][0] for m in members) / len(members)
+        ay = sum(pos[m][1] for m in members) / len(members)
+        a = math.atan2(ay, ax)
+        pos[n["id"]] = (ax + 0.75 * math.cos(a), ay + 0.75 * math.sin(a))
+    for n in graph["nodes"]:
+        if n["kind"] != "issuer" or n["id"] not in pos:
+            continue
+        cx, cy = pos[n["id"]]
+        k = len(n.get("positions", []))
+        for j, p in enumerate(n.get("positions", [])):
+            a = 2 * math.pi * j / max(k, 1) + 0.4
+            r = 0.26 if n["id"] == center else 0.2
+            pos[f"pos:{p['asset_id']}"] = (cx + r * math.cos(a), cy + r * math.sin(a))
+    return pos
+
+
+def network(graph: dict, center: str, height: int = 560) -> go.Figure:
+    """Exposure graph: issuers (size = exposure, colour = watch status), sectors (grey squares), positions (dots),
+    issuer links labelled with the relation (width = decay weight)."""
+    pos = network_layout(graph, center)
+    nodes = {n["id"]: n for n in graph["nodes"]}
+    fig = go.Figure()
+    for e in graph["edges"]:
+        if e["a"] not in pos or e["b"] not in pos:
+            continue
+        (x0, y0), (x1, y1) = pos[e["a"]], pos[e["b"]]
+        is_sector = e["relation"] == "sector"
+        fig.add_trace(go.Scatter(x=[x0, x1], y=[y0, y1], mode="lines", hoverinfo="skip", showlegend=False,
+                                 line={"color": LINE if is_sector else ACCENT, "dash": "dot" if is_sector else
+                                       ("dash" if e["relation"] == "peer_of" else "solid"),
+                                       "width": 1 if is_sector else 1 + 4 * float(e.get("weight") or 0)}))
+        if not is_sector:
+            fx = 0.6 if e["a"] == center else (0.4 if e["b"] == center else 0.5)  # keep labels off the centre node
+            fig.add_annotation(x=x0 + fx * (x1 - x0), y=y0 + fx * (y1 - y0),
+                               text=f"{e['relation']} · {e.get('weight')}",
+                               showarrow=False, font={"size": 11, "color": ACCENT, "family": MONO},
+                               bgcolor="rgba(11,18,32,0.85)")
+    px, py, ptext, pcol = [], [], [], []
+    for n in graph["nodes"]:
+        for p in n.get("positions", []):
+            key = f"pos:{p['asset_id']}"
+            if key in pos:
+                fig.add_trace(go.Scatter(x=[pos[n["id"]][0], pos[key][0]], y=[pos[n["id"]][1], pos[key][1]],
+                                         mode="lines", line={"color": "#24324f", "width": 1}, hoverinfo="skip",
+                                         showlegend=False))
+                px.append(pos[key][0])
+                py.append(pos[key][1])
+                val = p["market_value"] or p["notional"]
+                ptext.append(f"{p['asset_id']} · {p['asset_type']} {p['side']}<br>${val / 1e6:,.1f}m "
+                             f"({'MV' if p['market_value'] else 'notional'}) · {p['rating_bucket']}")
+                pcol.append(HEDGE if p["side"] == "protection_bought" else "#64748b")
+    fig.add_trace(go.Scatter(x=px, y=py, mode="markers", marker={"size": 7, "color": pcol}, hovertext=ptext,
+                             hoverinfo="text", name="positions", showlegend=False))
+    sx = [pos[n] for n in nodes if nodes[n]["kind"] == "sector" and n in pos]
+    fig.add_trace(go.Scatter(x=[p[0] for p in sx], y=[p[1] for p in sx], mode="markers+text",
+                             marker={"symbol": "square", "size": 12, "color": "#334155"},
+                             text=[nodes[n]["name"] for n in nodes if nodes[n]["kind"] == "sector" and n in pos],
+                             textposition="bottom center", textfont={"size": 11, "color": MUTED}, hoverinfo="text",
+                             hovertext=[f"sector: {nodes[n]['name']}" for n in nodes
+                                        if nodes[n]["kind"] == "sector" and n in pos], showlegend=False))
+    iss = [n for n in graph["nodes"] if n["kind"] == "issuer" and n["id"] in pos]
+    mx = max((n["exposure"] for n in iss), default=1) or 1
+    fig.add_trace(go.Scatter(
+        x=[pos[n["id"]][0] for n in iss], y=[pos[n["id"]][1] for n in iss], mode="markers+text",
+        marker={"size": [18 + 34 * (n["exposure"] / mx) ** 0.5 for n in iss],
+                "color": [STATUS.get(n["status"], "#64748b") for n in iss],
+                "line": {"width": [3 if n["id"] == center else 1 for n in iss], "color": TEXT}},
+        text=[n["name"].replace(" Ltd.", "").replace(" Inc.", "").replace(" Corp.", "") for n in iss],
+        textposition="top center", textfont={"size": 12, "color": TEXT, "family": FONT},
+        customdata=[n["id"] for n in iss],
+        hovertext=[f"<b>{n['name']}</b> · {n['status']}<br>exposure ${n['exposure'] / 1e6:,.1f}m "
+                   f"({n['exposure_pct']:.2f}% of book)<br>hop {n['hop']} · weight {n['weight']:g}" for n in iss],
+        hoverinfo="text", name="issuers", showlegend=False))
+    xs = [p[0] for p in pos.values()]
+    ys = [p[1] for p in pos.values()]
+    fig.update_xaxes(visible=False, range=[min(xs) - 0.55, max(xs) + 0.55])
+    fig.update_yaxes(visible=False, range=[min(ys) - 0.45, max(ys) + 0.45], scaleanchor="x")
+    return _layout(fig, "Exposure graph: curated links, size = exposure, colour = watch status", height=height,
+                   clickmode="event+select", dragmode=False)

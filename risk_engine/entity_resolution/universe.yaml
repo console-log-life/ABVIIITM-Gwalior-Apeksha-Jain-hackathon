@@ -95,3 +95,28 @@ issuers:
                Indian sovereign bonds], ambiguous_aliases: [], context: [bond yields, sovereign]}
   - {issuer_id: GB-HSBC, name: HSBC Holdings plc, ticker: HSBC, sector: Financials, country: GB,
      rating_bucket: A, type: bank, aliases: [HSBC, HSBC Holdings], ambiguous_aliases: [], context: [bank, lender]}
+
+# ---------------- Curated issuer links (risk propagation, portfolio/propagation.py) ----------------
+# CURATED BY HAND from well-known public relationships; NOT inferred from data and not exhaustive. Used only for the
+# second-order ("propagated") exposure view and the watchlist propagation rule. Links are treated as two-way for
+# contagion (a supplier's disruption hits its customers; a customer's distress hits its supplier's revenue).
+# Decay factors per relation are in config (PROPAGATION_DECAY). Related names that are not separate issuers in this
+# universe are covered by aliases instead: "Jaguar Land Rover"/"JLR" resolve to Tata Motors, "Adani Group" to Adani
+# Enterprises. Apple's main suppliers (TSMC, Foxconn) are not in the universe, so Apple has no supplier link.
+links:
+  - {a: US-NVDA, b: US-MSFT, relation: supplier_of, note: "Nvidia data-centre GPUs for Microsoft Azure AI capacity"}
+  - {a: US-NVDA, b: US-META, relation: supplier_of, note: "Nvidia GPUs in Meta's AI training clusters"}
+  - {a: US-NVDA, b: US-AMZN, relation: supplier_of, note: "Nvidia GPUs in AWS instances"}
+  - {a: US-NVDA, b: US-GOOGL, relation: supplier_of, note: "Nvidia GPUs in Google Cloud instances"}
+  - {a: SOV-IN, b: IN-SBIN, relation: parent_of, note: "Government of India is the majority shareholder of SBI"}
+  - {a: IN-HDFCBANK, b: IN-SBIN, relation: peer_of, note: "largest Indian banks (private / public sector)"}
+  - {a: US-JPM, b: US-BAC, relation: peer_of, note: "US money-centre banks"}
+  - {a: US-JPM, b: US-GS, relation: peer_of, note: "US bank holding companies with large investment banks"}
+  - {a: US-BAC, b: US-GS, relation: peer_of, note: "US systemically important banks"}
+  - {a: GB-HSBC, b: US-JPM, relation: peer_of, note: "global systemically important banks"}
+  - {a: IN-TATAMOTORS, b: US-F, relation: peer_of, note: "automakers (incl. JLR / Ford premium segments)"}
+  - {a: US-TSLA, b: US-F, relation: peer_of, note: "US automakers, EV programmes"}
+  - {a: US-TSLA, b: IN-TATAMOTORS, relation: peer_of, note: "EV makers"}
+  - {a: IN-RELIANCE, b: US-XOM, relation: peer_of, note: "integrated energy / refining majors"}
+  - {a: US-NVDA, b: US-INTC, relation: peer_of, note: "semiconductor makers"}
+  - {a: IN-INFY, b: US-MSFT, relation: peer_of, note: "enterprise software and IT services"}

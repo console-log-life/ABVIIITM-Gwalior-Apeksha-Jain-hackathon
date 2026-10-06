@@ -23,7 +23,7 @@ ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "docs" / "screenshots"
 PAGES = {"01_home": "", "02_feed": "News_Social_Feed", "03_signals": "NLP_Risk_Signals", "04_portfolio": "Portfolio",
          "05_stress": "Stress_Test", "06_explain": "Explainability", "07_health": "Source_Health",
-         "08_watchlist": "Early_Warning_Watchlist"}
+         "08_watchlist": "Early_Warning_Watchlist", "09_propagation": "Risk_Propagation"}
 CANDIDATES = [r"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe",
               r"C:\Program Files\Microsoft\Edge\Application\msedge.exe",
               r"C:\Program Files\Google\Chrome\Application\chrome.exe", "msedge", "google-chrome", "chromium"]

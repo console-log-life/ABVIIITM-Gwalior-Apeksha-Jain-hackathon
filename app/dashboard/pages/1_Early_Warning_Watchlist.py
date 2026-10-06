@@ -92,7 +92,9 @@ def body() -> None:
                 "(after step 2, Tata Motors moves to WATCH-NEGATIVE), or tick **Show all held issuers**.")
     else:
         head = ("<tr><th>#</th><th>Status</th><th>Issuer</th><th>Rating</th><th class='num'>Exposure</th>"
-                "<th class='num'>% book</th><th class='num'>Signals (neg.)</th><th class='num'>Worst impact</th>"
+                "<th class='num'>% book</th>"
+                "<th class='num' title='Decay-weighted exposure of issuers linked to this one "
+                "(curated links)'>Propagated</th><th class='num'>Signals (neg.)</th><th class='num'>Worst impact</th>"
                 "<th class='num'>Mean sent.</th><th>Events · sources</th><th>Impact over time</th><th></th></tr>")
         body_rows = []
         for r in shown:
@@ -102,12 +104,17 @@ def body() -> None:
             srcs = ", ".join(html.escape(s) for s in r["sources"])
             link = explain_link(r["top_signals"][0]["signal_id"]) if r["top_signals"] else ""
             worst = "—" if r["worst_impact"] is None else f"{r['worst_impact']:.1f}"
+            prop = (f"<a href='Risk_Propagation?issuer_id={html.escape(r['issuer_id'])}' target='_self' "
+                    f"title='open the exposure graph'>{money(r['propagated_exposure'])}</a>"
+                    if r.get("propagated_exposure") else "—")
             mean = "—" if r["mean_sentiment"] is None else f"{r['mean_sentiment']:+.2f}"
             body_rows.append(
                 f"<tr><td>{r['rank']}</td><td>{pill(r['status'])}</td><td><b>{name}</b><br>"
-                f"<span style='color:{MUTED};font-size:0.85rem'>{html.escape(r['status_reason'])}</span></td>"
+                f"<span style='color:{MUTED};font-size:0.85rem'>{'⇄ ' if r.get('via_propagation') else ''}"
+                f"{html.escape(r['status_reason'])}</span></td>"
                 f"<td>{html.escape(r['rating_bucket'])}</td><td class='num'>{money(r['exposure_mv'])}</td>"
                 f"<td class='num'>{r['exposure_pct']:.2f}%</td>"
+                f"<td class='num'>{prop}</td>"
                 f"<td class='num'>{r['signal_count']} ({r['negative_count']})</td>"
                 f"<td class='num'>{worst}</td><td class='num'>{mean}</td>"
                 f"<td>{events}<br><span style='color:{MUTED};font-size:0.85rem'>{srcs}</span></td>"

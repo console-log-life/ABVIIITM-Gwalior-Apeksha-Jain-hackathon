@@ -12,7 +12,15 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
-from app.api import routes_demo, routes_health, routes_history, routes_portfolio, routes_signals, routes_watchlist
+from app.api import (
+    routes_demo,
+    routes_health,
+    routes_history,
+    routes_portfolio,
+    routes_propagation,
+    routes_signals,
+    routes_watchlist,
+)
 from app.config import STRESS_DISCLAIMER, Settings, get_settings
 from app.runtime import Runtime
 from portfolio.stress_engine import attach_stress_engine
@@ -66,6 +74,7 @@ def create_app(settings: Settings | None = None, runtime: Runtime | None = None,
     app.include_router(routes_portfolio.router)
     app.include_router(routes_watchlist.router)
     app.include_router(routes_history.router)
+    app.include_router(routes_propagation.router)
     return app
 
 

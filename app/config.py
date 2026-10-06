@@ -95,6 +95,11 @@ class Settings(BaseSettings):
     watchlist_watch_count: int = Field(default=2, ge=1)  # ...or this many negative signals
     watchlist_watch_count_impact: float = Field(default=5.0, ge=1, le=10)  # ...each at least this strong
     watchlist_monitor_impact: float = Field(default=4.0, ge=1, le=10)  # one negative signal this strong → MONITOR
+    # Risk propagation over the curated links in universe.yaml (portfolio/propagation.py)
+    propagation_decay: dict[str, float] = {"supplier_of": 0.5, "parent_of": 0.5, "peer_of": 0.3}
+    propagation_max_hops: int = Field(default=1, ge=1, le=3)  # 1 = second-order exposure (direct links only)
+    # a STABLE issuer linked (weight >= this) to a WATCH-NEGATIVE issuer becomes MONITOR; 0 disables the rule
+    watchlist_propagation_min_weight: float = Field(default=0.3, ge=0, le=1)
 
     # Portfolio
     transaction_data_path: Path | None = None

@@ -71,7 +71,7 @@ async def overview(as_of: datetime | None = Query(None, description="Event-time 
     for name, end in (("current", t), ("previous", t - timedelta(hours=hours))):
         rows = await asyncio.to_thread(rt.store.list_signals, since_ts=end - timedelta(hours=hours), until_ts=end,
                                        limit=50_000, ascending=True)
-        wl = build_watchlist(rt.stress.portfolio, rows, rules, hours, end) if rt.stress else {
+        wl = build_watchlist(rt.stress.portfolio, rows, rules, hours, end, rt.settings) if rt.stress else {
             "counts": {WATCH: 0, MONITOR: 0}}
         out[name] = _kpis(rows, wl)
     latest = await asyncio.to_thread(rt.store.latest_stress_run, t)

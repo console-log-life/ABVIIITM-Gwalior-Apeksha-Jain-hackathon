@@ -70,6 +70,9 @@ class ApiClient:
     def watchlist(self, hours: int | None = None, as_of: str | None = None) -> dict:
         return self._request("GET", "/watchlist", params={"hours": hours, "as_of": as_of})
 
+    def propagation(self, issuer_id: str, as_of: str | None = None) -> dict:
+        return self._request("GET", "/propagation", params={"issuer_id": issuer_id, "as_of": as_of})
+
     def history(self) -> dict:
         return self._request("GET", "/history")
 

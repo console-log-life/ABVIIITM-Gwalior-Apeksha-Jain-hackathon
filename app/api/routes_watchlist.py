@@ -50,4 +50,4 @@ async def watchlist(hours: int | None = Query(None, ge=1, le=720, description="W
     now = datetime.now(UTC) if as_of is None else (as_of.replace(tzinfo=UTC) if as_of.tzinfo is None else as_of)
     rows = await asyncio.to_thread(rt.store.list_signals, since_ts=now - timedelta(hours=hours), until_ts=now,
                                    limit=50_000, ascending=True)
-    return build_watchlist(rt.stress.portfolio, rows, WatchRules.from_settings(rt.settings), hours, now)
+    return build_watchlist(rt.stress.portfolio, rows, WatchRules.from_settings(rt.settings), hours, now, rt.settings)

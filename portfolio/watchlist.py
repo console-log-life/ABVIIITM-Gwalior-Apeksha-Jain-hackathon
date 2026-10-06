@@ -7,6 +7,8 @@ rules-based watch status is assigned (thresholds from config; documented in docs
                   or >= watch_count negative signals with impact >= watch_count_impact
   MONITOR         any negative signal with impact >= monitor_impact
   STABLE          otherwise (including no signals at all)
+  MONITOR (propagated)  a STABLE issuer linked (curated links, weight >= WATCHLIST_PROPAGATION_MIN_WEIGHT) to a
+                  WATCH-NEGATIVE issuer (portfolio/propagation.py); only when settings are passed
 
 "Negative" means sentiment <= negative_sentiment. The status is an early-warning flag for analyst attention, not a
 credit rating, a PD estimate or investment advice.
@@ -105,7 +107,7 @@ def issuer_table(portfolio: Portfolio) -> dict[str, dict[str, Any]]:
 
 
 def build_watchlist(portfolio: Portfolio, signals: list[dict[str, Any]], rules: WatchRules, hours: int,
-                    as_of: datetime) -> dict[str, Any]:
+                    as_of: datetime, settings: Settings | None = None) -> dict[str, Any]:
     """Aggregate stored signal rows (already filtered to the window) into one ranked row per held issuer."""
     issuers = issuer_table(portfolio)
     by_issuer: dict[str, list[dict[str, Any]]] = {k: [] for k in issuers}
@@ -133,6 +135,17 @@ def build_watchlist(portfolio: Portfolio, signals: list[dict[str, Any]], rules: 
             "impact_series": [{"timestamp": _ts(s).isoformat(), "impact_score": s["impact_score"],
                                "sentiment_score": s["sentiment_score"]} for s in sigs],
         })
+    if settings is not None:  # second-order view: propagated exposure + propagation rule (curated links)
+        from portfolio.propagation import propagated_exposure, propagation_monitor
+
+        exposures = {k: v["exposure_mv"] for k, v in issuers.items()}
+        for r in rows:
+            p = propagated_exposure(r["issuer_id"], exposures, portfolio.funded_mv, settings)
+            r["propagated_exposure"], r["propagated_pct"] = p["propagated_exposure"], p["propagated_pct"]
+            r["linked_issuers"] = [c["issuer_id"] for c in p["contributions"]]
+        for iid, why in propagation_monitor({r["issuer_id"]: r["status"] for r in rows}, settings).items():
+            r = next(x for x in rows if x["issuer_id"] == iid)
+            r.update(status=MONITOR, status_reason=why, via_propagation=True)
     rows.sort(key=lambda r: (-STATUS_RANK[r["status"]],
                              -max((s["impact_score"] for s in by_issuer[r["issuer_id"]]
                                    if s["sentiment_score"] <= rules.negative_sentiment), default=0.0),
