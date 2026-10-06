@@ -7,7 +7,7 @@ import html
 
 import streamlit as st
 from components import charts
-from components.ui import as_of, fmt_ts, guard, provenance_badge, risk_badge, setup
+from components.ui import as_of, credit_brief_panel, fmt_ts, guard, provenance_badge, risk_badge, setup
 
 client = setup("Explainability", "🔍")
 method = guard(client.methodology)
@@ -53,6 +53,8 @@ def explain(sig: dict) -> None:
     c2.caption(method["note"])
     st.markdown(f"**Reason:** {html.escape(sig['reason'])}")
     st.markdown(f"**4 · Business implication:** {html.escape(sig['business_implication'])}")
+    if sig.get("issuer_id"):
+        credit_brief_panel(client, sig["issuer_id"], f"ex_{sig['signal_id'][:8]}")
 
 
 tab_stored, tab_own = st.tabs(["Explain a stored signal", "Analyse your own headline"])

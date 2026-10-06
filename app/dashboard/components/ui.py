@@ -139,6 +139,23 @@ def style_risk(df: pd.DataFrame, column: str = "risk_level"):
     return df.style.map(color, subset=[column])
 
 
+# ---------------------------------------------------------------- credit brief
+def credit_brief_panel(client: ApiClient, issuer_id: str, key: str) -> None:
+    """One-click issuer credit brief (template-based, no LLM): HTML preview + PDF download."""
+    if not st.toggle("Credit brief", key=f"brief_{key}_{issuer_id}",
+                     help="One-page, template-based brief: status and rule, exposure (direct + propagated), last "
+                          "signals with reasons, stress impact on this issuer's positions, hedges."):
+        return
+    try:
+        meta = client.credit_brief(issuer_id, as_of())
+    except ApiError as exc:
+        st.caption(f"No credit brief: {exc}")
+        return
+    st.html(guard(client.credit_brief_html, issuer_id, as_of()))
+    st.download_button("⬇ Download PDF", data=guard(client.credit_brief_pdf, issuer_id, as_of()),
+                       file_name=meta["file_name"], mime="application/pdf", key=f"pdf_{key}_{issuer_id}")
+
+
 # ---------------------------------------------------------------- ticker tape
 def ticker_tape(client: ApiClient, n: int = 10) -> None:
     """Latest signals (as of the time machine) scrolling across the top; pauses on hover; static when the user

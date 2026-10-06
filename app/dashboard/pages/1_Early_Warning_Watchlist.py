@@ -7,7 +7,19 @@ import html
 from datetime import datetime
 
 import streamlit as st
-from components.ui import MUTED, as_of, fmt_ts, guard, kpi, money, provenance_badge, risk_badge, run_body, setup
+from components.ui import (
+    MUTED,
+    as_of,
+    credit_brief_panel,
+    fmt_ts,
+    guard,
+    kpi,
+    money,
+    provenance_badge,
+    risk_badge,
+    run_body,
+    setup,
+)
 
 client = setup("Early Warning Watchlist", "🚩")
 
@@ -144,6 +156,7 @@ def body() -> None:
                         f"<i>{html.escape(t['event_type'])}</i> · sentiment {t['sentiment_score']:+.2f} · "
                         f"{html.escape(t['source'])} · {fmt_ts(t['timestamp'])} · {explain_link(t['signal_id'])}<br>"
                         f"<span style='color:{MUTED}'>{html.escape(t['reason'])}</span>", unsafe_allow_html=True)
+                credit_brief_panel(client, r["issuer_id"], "wl")
 
     rules = w["rules"]
     st.caption(f"**Rules** (config, see docs/methodology.md): **WATCH-NEGATIVE**: "

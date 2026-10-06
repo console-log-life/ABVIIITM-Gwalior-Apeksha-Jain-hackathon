@@ -26,7 +26,7 @@ class ApiClient:
         self.timeout = timeout
 
     def _request(self, method: str, path: str, *, params: dict | None = None, json: Any = None,
-                 allow_404: bool = False) -> Any:
+                 allow_404: bool = False, raw: bool = False) -> Any:
         url = f"{self.base_url}{path}"
         try:
             r = httpx.request(method, url, params={k: v for k, v in (params or {}).items() if v not in (None, "")},
@@ -49,7 +49,7 @@ class ApiClient:
             if isinstance(detail, list):
                 detail = "; ".join(str(d.get("msg", d)) for d in detail)
             raise ApiError(f"{method} {path} → HTTP {r.status_code}: {detail}")
-        return r.json()
+        return r if raw else r.json()
 
     # ---- read
     def health(self) -> dict:
@@ -72,6 +72,17 @@ class ApiClient:
 
     def propagation(self, issuer_id: str, as_of: str | None = None) -> dict:
         return self._request("GET", "/propagation", params={"issuer_id": issuer_id, "as_of": as_of})
+
+    def credit_brief(self, issuer_id: str, as_of: str | None = None) -> dict:
+        return self._request("GET", f"/credit-brief/{issuer_id}", params={"as_of": as_of})
+
+    def credit_brief_html(self, issuer_id: str, as_of: str | None = None) -> str:
+        return self._request("GET", f"/credit-brief/{issuer_id}", params={"format": "html", "as_of": as_of},
+                             raw=True).text
+
+    def credit_brief_pdf(self, issuer_id: str, as_of: str | None = None) -> bytes:
+        return self._request("GET", f"/credit-brief/{issuer_id}", params={"format": "pdf", "as_of": as_of},
+                             raw=True).content
 
     def history(self) -> dict:
         return self._request("GET", "/history")

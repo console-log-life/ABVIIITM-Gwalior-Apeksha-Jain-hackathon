@@ -34,7 +34,7 @@ log = get_logger(__name__)
 META_FILE_SUFFIX = ".meta.json"
 HISTORY_VERSION = 2  # bump when the build logic changes (2: event-time clock and ordering)
 INPUTS = ["risk_engine/event_classifier/taxonomy.yaml", "risk_engine/impact_scoring/weights.yaml",
-          "portfolio/scenarios.yaml"]
+          "portfolio/scenarios.yaml", "risk_engine/entity_resolution/universe.yaml"]
 
 
 def history_path(settings: Settings) -> Path:

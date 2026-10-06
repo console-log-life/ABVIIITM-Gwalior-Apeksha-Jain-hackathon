@@ -1,5 +1,11 @@
 from __future__ import annotations
 
+import os
+
+# Never let a test build/load the REAL history into data/real_history.db (module/session fixtures start apps before
+# function-scoped autouse fixtures run, so set it at import time as well).
+os.environ["REAL_HISTORY_AUTOLOAD"] = "false"
+
 from collections.abc import Callable
 
 import httpx

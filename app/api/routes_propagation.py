@@ -80,3 +80,31 @@ async def propagation(issuer_id: str = Query(..., examples=["IN-TATAMOTORS"]),
                note="Curated links (universe.yaml), not inferred from data; illustrative exposure map for analyst "
                     "attention, not a correlation or default-contagion model.")
     return out
+
+
+@router.get("/credit-brief/{issuer_id}", summary="One-page issuer credit brief (template-based, no LLM): JSON, HTML "
+            "or PDF", responses={200: {"content": {"application/json": {"example": {
+                "issuer_id": "IN-TATAMOTORS", "status": "WATCH-NEGATIVE", "rating_bucket": "BB",
+                "exposure": {"direct": 41013632.09, "direct_pct": 4.94, "propagated": 23417302.0}}},
+                "application/pdf": {"example": "%PDF-1.3 ..."}}}, 404: {"description": "Issuer not held"}})
+async def credit_brief(issuer_id: str, fmt: str = Query("json", alias="format", pattern="^(json|html|pdf)$"),
+                       as_of: datetime | None = Query(None, description="Time machine cut-off"),
+                       rt: Runtime = Depends(get_runtime)):
+    from fastapi.responses import HTMLResponse, Response
+
+    from portfolio.credit_brief import build_brief, file_name, render_html, render_pdf, summary_lines
+
+    if rt.stress is None:
+        raise HTTPException(503, "portfolio unavailable (see /health)")
+    t = None if as_of is None else (as_of.replace(tzinfo=UTC) if as_of.tzinfo is None else as_of)
+    try:
+        b = await asyncio.to_thread(build_brief, issuer_id, rt.stress, rt.store, rt.settings, t)
+    except KeyError as exc:
+        raise HTTPException(404, f"issuer {issuer_id} is not held") from exc
+    if fmt == "html":
+        return HTMLResponse(render_html(b))
+    if fmt == "pdf":
+        pdf = await asyncio.to_thread(render_pdf, b)
+        return Response(pdf, media_type="application/pdf",
+                        headers={"Content-Disposition": f'attachment; filename="{file_name(b)}"'})
+    return {**b, "summary": summary_lines(b), "file_name": file_name(b)}
