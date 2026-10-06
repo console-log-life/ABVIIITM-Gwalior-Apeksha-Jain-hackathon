@@ -101,6 +101,9 @@ class ApiClient:
     def analyze(self, text: str, ticker: str | None = None, source: str = "manual") -> dict:
         return self._request("POST", "/analyze", json={"text": text, "ticker": ticker or None, "source": source})
 
+    def what_if(self, shocks: dict, issuer_id: str | None = None) -> dict:
+        return self._request("POST", "/portfolio/what-if", json={"shocks": shocks, "issuer_id": issuer_id})
+
     def run_stress(self, body: dict) -> dict:
         return self._request("POST", "/portfolio/stress-test", json=body)
 

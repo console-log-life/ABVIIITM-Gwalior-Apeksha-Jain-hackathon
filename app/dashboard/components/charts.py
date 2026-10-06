@@ -131,6 +131,19 @@ def waterfall(summary: dict) -> go.Figure:
     return _layout(fig, "Before vs after stress (funded value, by asset class)", height=420)
 
 
+def pnl_bar(pnl: dict[str, float], title: str, height: int | None = None) -> go.Figure:
+    """Horizontal P&L bars (USD m): losses red, gains blue; worst at the top."""
+    items = sorted(pnl.items(), key=lambda kv: kv[1])
+    fig = go.Figure(go.Bar(x=[v / 1e6 for _, v in items], y=[k for k, _ in items], orientation="h",
+                           marker={"color": [LOSS if v < 0 else GAIN for _, v in items], "cornerradius": 3},
+                           text=[f"{v / 1e6:+,.1f}" for _, v in items], textposition="auto",
+                           hovertemplate="%{y}: %{x:+,.2f}m USD<extra></extra>"))
+    fig.update_yaxes(autorange="reversed")
+    fig.add_vline(x=0, line={"color": LINE, "width": 1})
+    fig.update_xaxes(title="stress P&L (USD m)")
+    return _layout(fig, title, height=height or max(260, 30 * len(items) + 90))
+
+
 def top_positions(summary: dict) -> go.Figure:
     rows = sorted(summary["top_contributors"], key=lambda r: r["pnl"])
     labels = [f"{r['asset_id']} · {r['issuer_name'] or r['asset_type']}" + (" (hedge)" if r["is_hedge"] else "")

@@ -46,11 +46,82 @@ def trigger_banner(run: dict, signals_by_id: dict) -> None:
         f'run {run["run_id"][:8]} at {fmt_ts(run["created_at"])}</span></div>', unsafe_allow_html=True)
 
 
+SLIDERS = [  # (key, label, min, max, step, unit, to_api)
+    ("rates_bp", "Rates (bp)", -300, 300, 5, "bp", 1.0),
+    ("ig_spread_bp", "IG spread (bp)", -100, 500, 5, "bp", 1.0),
+    ("hy_spread_bp", "HY spread (bp)", -200, 1200, 10, "bp", 1.0),
+    ("equity_pct", "Equity (%)", -50, 20, 1, "%", 0.01),
+    ("em_fx_pct", "EM FX (%)", -30, 10, 1, "%", 0.01),
+    ("pd_multiplier", "PD multiplier (×)", 0.5, 5.0, 0.1, "×", 1.0),
+]
+
+
+def _load_scenario(scen: dict) -> None:
+    name = st.session_state.get("wi_from")
+    shocks = scen[name]["shocks"] if name in scen else {"pd_multiplier": 1.0}
+    for key, _, lo, hi, _, unit, conv in SLIDERS:
+        v = float(shocks.get(key, 1.0 if key == "pd_multiplier" else 0.0)) / conv
+        st.session_state[f"wi_{key}"] = min(max(round(v, 2) if unit == "×" else round(v), lo), hi)
+
+
+def what_if_panel(run: dict | None, scen: dict) -> None:
+    """Interactive scenario builder: instant repricing through POST /portfolio/what-if (nothing is saved)."""
+    st.subheader("What-if scenario builder")
+    st.markdown('<div class="note">Move the shocks, or start from a named scenario. The portfolio is repriced '
+                "instantly with the same pricers (no model, nothing saved to the audit log).</div>",
+                unsafe_allow_html=True)
+    systemic = {k: v for k, v in scen.items() if not v.get("issuer_only")}
+    if "wi_rates_bp" not in st.session_state:
+        st.session_state["wi_from"] = "geopolitical_severe" if "geopolitical_severe" in systemic else next(iter(
+            systemic))
+        _load_scenario(systemic)
+    c0, c1 = st.columns([3, 2])
+    c0.selectbox("Start from", list(systemic), key="wi_from", on_change=_load_scenario, args=(systemic,),
+                 format_func=lambda k: systemic[k]["label"])
+    compare = c1.toggle("Compare with the selected triggered run", value=run is not None, disabled=run is None)
+    cols = st.columns(6)
+    shocks = {}
+    for col, (key, label, lo, hi, step, _unit, conv) in zip(cols, SLIDERS, strict=True):
+        v = col.slider(label, lo, hi, step=step, key=f"wi_{key}")
+        shocks[key] = v * conv
+    res = guard(client.what_if, shocks)
+
+    def tiles(r: dict, compact: bool = False) -> None:
+        rows = [st.columns(2), st.columns(2)] if compact else [st.columns(4)]
+        cols = [c for row in rows for c in row]
+        kpi(cols[0], "Loss", f"{r['loss_pct']:.2f}%", money(r["loss"]), RAG_COLORS.get(r["rag"]),
+            tip="Simulated loss as % of funded market value")
+        kpi(cols[1], "RAG", r["rag"], f"appetite {r.get('risk_appetite_loss_pct', 2.0):.1f}%",
+            RAG_COLORS.get(r["rag"]), tip="Green < 1% · amber 1% to appetite · red above appetite")
+        kpi(cols[2], "Hedges", money(r["hedge_offset"]), "positive P&L", tip="Sum of positive position P&L")
+        kpi(cols[3], "After", money(r["after_value"]), f"from {money(r['before_value'])}",
+            tip="Funded value after the shock")
+
+    if compare and run is not None:
+        left, right = st.columns(2)
+        with left:
+            st.markdown(f"**Triggered:** {html.escape(run['scenario_label'])}")
+            tiles(run, compact=True)
+            st.plotly_chart(charts.waterfall(run), use_container_width=True, key="wi_wf_run")
+        with right:
+            st.markdown("**What-if:** custom shocks")
+            tiles(res, compact=True)
+            st.plotly_chart(charts.waterfall(res), use_container_width=True, key="wi_wf_custom")
+    else:
+        tiles(res)
+        st.plotly_chart(charts.waterfall(res), use_container_width=True, key="wi_wf")
+    a, b = st.columns(2)
+    a.plotly_chart(charts.pnl_bar(res["by_asset_class"], "What-if P&L by asset class"), use_container_width=True,
+                   key="wi_ac")
+    b.plotly_chart(charts.pnl_bar(res["by_sector"], "What-if P&L by sector"), use_container_width=True, key="wi_sec")
+    disclaimer()
+
+
 def body() -> None:
     runs = guard(client.stress_runs, 100, as_of())
     if not runs["runs"]:
-        st.info("No stress run yet. A high-impact signal triggers one automatically (try **▶ Demo story** in the "
-                "sidebar), or run a scenario manually below.")
+        st.info("No stress run yet. A high-impact signal triggers one automatically (try the **▶ Scenario demo** "
+                "in the sidebar), or run a scenario manually below.")
     else:
         options = {f"{fmt_ts(r['created_at'])} · {r['scenario']}"
                    + (f" ({r['scope_issuer_id']})" if r.get("scope_issuer_id") else "")
@@ -88,8 +159,11 @@ def body() -> None:
         t4.json({"scope_issuer_id": run.get("scope_issuer_id"), **run["shocks"]})
 
     st.divider()
-    st.subheader("Run a scenario manually")
     scen = guard(client.scenarios)
+    what_if_panel(run if runs["runs"] else None, scen)
+
+    st.divider()
+    st.subheader("Run a scenario manually")
     port = guard(client.portfolio)
     issuers = sorted({(r["issuer_id"], r["issuer_name"]) for r in port["positions"] if r["issuer_id"]},
                      key=lambda x: x[1])

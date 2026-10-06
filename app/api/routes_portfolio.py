@@ -146,3 +146,29 @@ async def stress_run(run_id: str, rt: Runtime = Depends(get_runtime)) -> dict[st
         raise HTTPException(404, f"unknown run_id {run_id}")
     run["positions"] = await asyncio.to_thread(rt.store.stress_positions, run_id)
     return run
+
+
+class WhatIfRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", json_schema_extra={"examples": [
+        {"shocks": {"rates_bp": 100, "ig_spread_bp": 80, "hy_spread_bp": 250, "equity_pct": -0.1,
+                    "em_fx_pct": -0.03, "pd_multiplier": 1.5}},
+        {"shocks": {"ig_spread_bp": 300, "hy_spread_bp": 600, "equity_pct": -0.25, "pd_multiplier": 3},
+         "issuer_id": "IN-TATAMOTORS"},
+    ]})
+    shocks: CustomShocks
+    issuer_id: str | None = None  # optional: apply the shock vector to one held issuer only
+
+
+@router.post("/portfolio/what-if", summary="What-if: price a custom shock vector instantly, WITHOUT saving a run",
+             responses={200: {"content": {"application/json": {"example": STRESS_EXAMPLE}}},
+                        422: {"description": "Invalid shocks or unknown issuer"}})
+async def what_if(req: WhatIfRequest, rt: Runtime = Depends(get_runtime)) -> dict[str, Any]:
+    """Pure Python repricing of the portfolio (no model, no audit-log entry, no bus event): used by the dashboard's
+    scenario builder sliders."""
+    eng = _engine(rt)
+    if req.issuer_id is not None and req.issuer_id not in set(eng.portfolio.df["issuer_id"]):
+        raise HTTPException(422, f"issuer {req.issuer_id} is not held")
+    summary, positions = await asyncio.to_thread(eng.run, None, req.issuer_id, None, "what-if (not saved)",
+                                                 req.shocks.model_dump())
+    summary.update(scenario="what_if", scenario_label="What-if (custom shocks, not saved)")
+    return {**summary, "positions": positions}
