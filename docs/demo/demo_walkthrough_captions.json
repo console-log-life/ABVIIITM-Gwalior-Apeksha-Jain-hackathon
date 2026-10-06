@@ -1,0 +1,80 @@
+[
+  {
+    "start_s": 6.0,
+    "end_s": 11.0,
+    "page": null,
+    "caption": "Risk Signal Engine: demo walkthrough (silent backup recording)"
+  },
+  {
+    "start_s": 27.8,
+    "end_s": 36.8,
+    "page": "feed",
+    "caption": "Step 0: four REAL headlines from the published sample, badged CACHED_REAL with capture time"
+  },
+  {
+    "start_s": 44.8,
+    "end_s": 51.8,
+    "page": "signals",
+    "caption": "Real data, same pipeline: Harley-Davidson junk downgrade scores 7.3, but it is not held, so no stress run"
+  },
+  {
+    "start_s": 56.2,
+    "end_s": 62.2,
+    "page": "signals",
+    "caption": "Step 1 (SYNTHETIC from here on): Nvidia product launch on social media, impact 3.6 Low, no trigger"
+  },
+  {
+    "start_s": 70.0,
+    "end_s": 79.0,
+    "page": "stress",
+    "caption": "Step 2: Moody's downgrade + SEBI probe at Tata Motors (held issuer), impact 8.7 → issuer-only stress 0.41% GREEN"
+  },
+  {
+    "start_s": 81.0,
+    "end_s": 91.0,
+    "page": "watchlist",
+    "caption": "Early Warning Watchlist: Tata Motors is WATCH-NEGATIVE, ranked first (the story pauses here)"
+  },
+  {
+    "start_s": 95.1,
+    "end_s": 104.1,
+    "page": "Explain →",
+    "caption": "Click-through: why the signal scored 8.7 (probabilities, evidence, weighted factors)"
+  },
+  {
+    "start_s": 109.4,
+    "end_s": 117.4,
+    "page": "stress",
+    "caption": "Step 3: invasion headline from a news wire (market-wide, impact 7.0) → systemic stress, moderate, 1.32% AMBER"
+  },
+  {
+    "start_s": 131.2,
+    "end_s": 141.2,
+    "page": "stress",
+    "caption": "Step 4: a second independent source corroborates: severe, 2.45% RED, above the 2% risk appetite"
+  },
+  {
+    "start_s": 142.4,
+    "end_s": 152.4,
+    "page": null,
+    "caption": "Waterfall, top-10 positions (hedges green) and sector × asset heatmap"
+  },
+  {
+    "start_s": 153.6,
+    "end_s": 161.6,
+    "page": null,
+    "caption": "Audit log: every run stores the signal that triggered it"
+  },
+  {
+    "start_s": 163.8,
+    "end_s": 171.8,
+    "page": "portfolio",
+    "caption": "Portfolio: 49 SYNTHETIC positions (seed 42): loans, bonds, IRS, CDS, FX, equity"
+  },
+  {
+    "start_s": 174.0,
+    "end_s": 182.1,
+    "page": "home",
+    "caption": "Executive overview. Simplified, illustrative stress model; not investment advice"
+  }
+]

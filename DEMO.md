@@ -49,5 +49,8 @@ works without any network, REPLAY shows real cached data, and `docs/screenshots/
 
 Before presenting, run `tasks.ps1 preflight` (GO / NO-GO: RAM, model files, DB, free ports, demo data).
 
-A **silent backup recording** of this story is in `docs/demo/demo_walkthrough.webm` (3:30, 1600×900, captions on
-screen; re-record with `tasks.ps1 video`). A narrated recording still has to be made by a person.
+A **silent backup recording** of the whole demo (step 0 real headlines, steps 1–4, the watchlist and the
+click-through to explainability) is in `docs/demo/demo_walkthrough.webm` (3:04, 1600×900, captions on screen). Each
+caption's start and end time is in `docs/demo/demo_walkthrough_captions.json`. Re-record with `tasks.ps1 video`. The
+recorder waits for each story step via the API and for each page to finish rendering before it shows a caption. A
+narrated recording still has to be made by a person.
