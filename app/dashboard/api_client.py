@@ -58,8 +58,8 @@ class ApiClient:
     def methodology(self) -> dict:
         return self._request("GET", "/methodology")
 
-    def signals(self, limit: int = 500, **filters: Any) -> list[dict]:
-        return self._request("GET", "/signals", params={"limit": limit, **filters})
+    def signals(self, limit: int = 500, as_of: str | None = None, **filters: Any) -> list[dict]:
+        return self._request("GET", "/signals", params={"limit": limit, "as_of": as_of, **filters})
 
     def ticker(self, ticker: str) -> dict:
         return self._request("GET", f"/signals/{ticker}")
@@ -67,8 +67,17 @@ class ApiClient:
     def signal(self, signal_id: str) -> dict | None:
         return self._request("GET", f"/signals/by-id/{signal_id}", allow_404=True)
 
-    def watchlist(self, hours: int | None = None) -> dict:
-        return self._request("GET", "/watchlist", params={"hours": hours})
+    def watchlist(self, hours: int | None = None, as_of: str | None = None) -> dict:
+        return self._request("GET", "/watchlist", params={"hours": hours, "as_of": as_of})
+
+    def history(self) -> dict:
+        return self._request("GET", "/history")
+
+    def history_load(self, rebuild: bool = False) -> dict:
+        return self._request("POST", "/history/load", params={"rebuild": str(rebuild).lower()})
+
+    def overview(self, as_of: str | None = None, hours: int = 24) -> dict:
+        return self._request("GET", "/overview", params={"as_of": as_of, "hours": hours})
 
     def portfolio(self) -> dict:
         return self._request("GET", "/portfolio")
@@ -76,11 +85,11 @@ class ApiClient:
     def scenarios(self) -> dict:
         return self._request("GET", "/portfolio/scenarios")
 
-    def latest_stress(self) -> dict | None:
-        return self._request("GET", "/portfolio/stress-test", allow_404=True)
+    def latest_stress(self, as_of: str | None = None) -> dict | None:
+        return self._request("GET", "/portfolio/stress-test", params={"as_of": as_of}, allow_404=True)
 
-    def stress_runs(self, limit: int = 100) -> dict:
-        return self._request("GET", "/stress-runs", params={"limit": limit})
+    def stress_runs(self, limit: int = 100, as_of: str | None = None) -> dict:
+        return self._request("GET", "/stress-runs", params={"limit": limit, "as_of": as_of})
 
     def stress_run(self, run_id: str) -> dict | None:
         return self._request("GET", f"/stress-runs/{run_id}", allow_404=True)

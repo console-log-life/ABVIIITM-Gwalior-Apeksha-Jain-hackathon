@@ -1,6 +1,6 @@
 """Early-warning watchlist: a credit-risk view of recent signals, one row per HELD issuer.
 
-For every issuer in the portfolio, the signals inside the window (by KNOWN time = capture time) are aggregated and a
+For every issuer in the portfolio, the signals inside the window (by event time) are aggregated and a
 rules-based watch status is assigned (thresholds from config; documented in docs/methodology.md):
 
   WATCH-NEGATIVE  any negative signal with impact >= watch_impact,
@@ -72,8 +72,7 @@ def watch_status(signals: list[dict[str, Any]], rules: WatchRules) -> tuple[str,
 
 
 def _ts(sig: dict[str, Any]) -> datetime:
-    """Known time (when the document was captured); falls back to the event timestamp."""
-    return datetime.fromisoformat(str(sig.get("captured_at") or sig["timestamp"]).replace("Z", "+00:00"))
+    return datetime.fromisoformat(str(sig["timestamp"]).replace("Z", "+00:00"))
 
 
 def _source(sig: dict[str, Any]) -> str:

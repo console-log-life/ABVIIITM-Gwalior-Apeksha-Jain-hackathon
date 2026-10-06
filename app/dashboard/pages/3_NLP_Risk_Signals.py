@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import streamlit as st
 from components import charts
-from components.ui import RISK_ORDER, guard, run_body, setup, signals_frame, style_risk
+from components.ui import RISK_ORDER, as_of, guard, run_body, setup, signals_frame, style_risk
 
 client = setup("NLP Risk Signals", "🧠")
 
 
 def body() -> None:
-    df = signals_frame(guard(client.signals, limit=500))
+    df = signals_frame(guard(client.signals, limit=500, as_of=as_of()))
     if df.empty:
         st.info("No signals yet — start the demo story, REPLAY or LIVE mode from the sidebar.")
         return

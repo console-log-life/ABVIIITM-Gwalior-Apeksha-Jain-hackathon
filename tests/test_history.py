@@ -52,12 +52,12 @@ def test_build_is_fresh_until_inputs_change(s, tmp_path):
     assert not history.is_fresh(s)  # a new capture file makes the cache stale
 
 
-def test_history_runs_use_known_time_and_real_prefix(s):
+def test_history_runs_use_event_time_and_real_prefix(s):
     meta = history.build_history(s)
     st = Store(history.history_path(s))
     runs = st.list_stress_runs(100)
     assert len(runs) == meta["stress_runs"]
-    known = {(T0 + timedelta(hours=h)).isoformat() for h, _, _ in HEADLINES}
+    known = {(T0 + timedelta(hours=h - 2)).isoformat() for h, _, _ in HEADLINES}  # event (publication) times
     for r in runs:
         assert r["run_id"].startswith("real-") and r["created_at"] in known
     st.engine.dispose()
@@ -73,10 +73,10 @@ def test_load_into_store_is_idempotent_and_survives_demo_reset(s):
     assert {r["provenance"] for r in sigs} == {"CACHED_REAL"}
     live.reset_demo()
     assert len(live.list_signals(limit=100)) == 4  # history is kept by /demo/reset
-    lo, hi = live.known_time_range()
-    assert lo == T0 and hi == T0 + timedelta(hours=30)
-    # time machine: what was known 2 h after the first capture
-    assert len(live.list_signals(limit=100, known_before=T0 + timedelta(hours=2))) == 2
+    lo, hi = live.event_time_range()
+    assert lo == T0 - timedelta(hours=2) and hi == T0 + timedelta(hours=28)
+    # time machine: signals published up to T0
+    assert len(live.list_signals(limit=100, until_ts=T0)) == 2
     live.engine.dispose()
 
 
@@ -89,7 +89,7 @@ def test_api_time_machine_overview_and_watchlist(s, monkeypatch):
             time.sleep(0.2)
         h = c.get("/history").json()
         assert h["status"]["state"] == "ready" and h["fresh"] and h["meta"]["signals"] == 4
-        assert h["known_from"].startswith("2026-10-03T17:00") and h["known_to"].startswith("2026-10-04T23:00")
+        assert h["event_from"].startswith("2026-10-03T15:00") and h["event_to"].startswith("2026-10-04T21:00")
         as_of = (T0 + timedelta(hours=6)).isoformat()
         assert len(c.get("/signals", params={"as_of": as_of, "limit": 100}).json()) == 3
         ov = c.get("/overview", params={"as_of": as_of, "hours": 24}).json()

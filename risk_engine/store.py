@@ -6,8 +6,9 @@ Indexes: signals(ticker, timestamp), signals(event_type).
 `origin` records which path produced a signal: live | replay | scenario | api | real (used by /demo/reset).
 `real` = the CACHED_REAL history loaded from the processed-history cache (risk_engine/history.py); it is kept by
 /demo/reset, and its stress runs have run_ids starting with "real-".
-"Known time" = documents.captured_at: when the system learned of a document. The dashboard's time machine filters on
-it (`known_before` / `known_after`), so the view "as of T" shows exactly what had been captured by T.
+Time machine: filters on the signal's EVENT time (signals.timestamp = publication time, or capture time when a
+source gives none) with `until_ts` / `since_ts`. For the CACHED_REAL history this replays the real news timeline as
+published; the items themselves were collected at their capture times (shown on every CACHED_REAL badge).
 """
 
 from __future__ import annotations
@@ -217,8 +218,7 @@ class Store:
     def list_signals(self, *, ticker: str | None = None, event_type: str | None = None,
                      min_impact: float | None = None, provenance: str | None = None, since_seq: int | None = None,
                      limit: int = 50, ascending: bool = False, since_ts: datetime | None = None,
-                     known_before: datetime | None = None, known_after: datetime | None = None,
-                     origins: list[str] | None = None) -> list[dict[str, Any]]:
+                     until_ts: datetime | None = None, origins: list[str] | None = None) -> list[dict[str, Any]]:
         q = self._base_select()
         if ticker:
             q = q.where(func.upper(signals.c.ticker) == ticker.upper())
@@ -232,10 +232,8 @@ class Store:
             q = q.where(signals.c.seq > since_seq)
         if since_ts is not None:
             q = q.where(signals.c.timestamp >= _utc(since_ts))
-        if known_before is not None:
-            q = q.where(documents.c.captured_at <= _utc(known_before))
-        if known_after is not None:
-            q = q.where(documents.c.captured_at > _utc(known_after))
+        if until_ts is not None:
+            q = q.where(signals.c.timestamp <= _utc(until_ts))
         if origins is not None:
             q = q.where(signals.c.origin.in_(origins))
         q = q.order_by(signals.c.seq.asc() if ascending else signals.c.seq.desc()).limit(limit)
@@ -295,12 +293,10 @@ class Store:
             r = c.execute(q.order_by(stress_runs.c.created_at.desc()).limit(1)).first()
         return {**json.loads(r.summary), "created_at": _utc(r.created_at).isoformat()} if r else None
 
-    def known_time_range(self) -> tuple[datetime | None, datetime | None]:
-        """First and last known time (documents.captured_at) over stored signals."""
-        j = signals.join(documents, signals.c.doc_id == documents.c.doc_id)
+    def event_time_range(self) -> tuple[datetime | None, datetime | None]:
+        """First and last event time (signals.timestamp) over stored signals."""
         with self.engine.connect() as c:
-            lo, hi = c.execute(select(func.min(documents.c.captured_at), func.max(documents.c.captured_at))
-                               .select_from(j)).one()
+            lo, hi = c.execute(select(func.min(signals.c.timestamp), func.max(signals.c.timestamp))).one()
         return _utc(lo), _utc(hi)
 
     def get_stress_run(self, run_id: str) -> dict[str, Any] | None:

@@ -76,8 +76,8 @@ async def list_signals(
     min_impact: float | None = Query(None, ge=1, le=10, examples=[7.0]),
     provenance: Provenance | None = Query(None, examples=["CACHED_REAL"]),
     since_id: str | None = Query(None, description="Only signals created after this signal_id"),
-    as_of: datetime | None = Query(None, description="Time machine: only documents captured (known) by this time"),
-    hours: int | None = Query(None, ge=1, le=720, description="With as_of: only the last N hours of known time"),
+    as_of: datetime | None = Query(None, description="Time machine: only signals with event time up to this time"),
+    hours: int | None = Query(None, ge=1, le=720, description="Only the last N hours of event time before as_of"),
     limit: int = Query(50, ge=1, le=500),
     rt: Runtime = Depends(get_runtime),
 ) -> list[SignalView]:
@@ -87,8 +87,8 @@ async def list_signals(
         if since_seq is None:
             raise HTTPException(404, f"unknown since_id {since_id}")
     rows = await asyncio.to_thread(rt.store.list_signals, since_seq=since_seq, limit=limit,
-                                   ascending=since_seq is not None, known_before=as_of,
-                                   known_after=(as_of or datetime.now(UTC)) - timedelta(hours=hours) if hours else None,
+                                   ascending=since_seq is not None, until_ts=as_of,
+                                   since_ts=(as_of or datetime.now(UTC)) - timedelta(hours=hours) if hours else None,
                                    **_filters(ticker, event_type, min_impact, provenance))
     return [SignalView(**r) for r in rows]
 

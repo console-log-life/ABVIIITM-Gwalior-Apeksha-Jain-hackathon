@@ -16,7 +16,7 @@ from risk_engine.history import history_path, is_fresh, read_meta
 router = APIRouter(tags=["history"])
 
 HISTORY_EXAMPLE = {"status": {"state": "ready", "loaded": {"signals": 1290, "stress_runs": 61}},
-                   "fresh": True, "known_from": "2026-10-03T17:22:21+00:00", "known_to": "2026-10-05T20:13:49+00:00",
+                   "fresh": True, "event_from": "2026-09-27T08:00:00+00:00", "event_to": "2026-10-05T20:10:00+00:00",
                    "meta": {"source": "local capture cache", "documents": 1325, "signals": 1290, "stress_runs": 61}}
 OVERVIEW_EXAMPLE = {"as_of": "2026-10-05T20:13:49+00:00", "hours": 24,
                     "current": {"signals": 412, "critical": 9, "issuers_on_watch": 6, "sources_active": 4,
@@ -34,12 +34,13 @@ def parse_as_of(as_of: datetime | None) -> datetime:
 @router.get("/history", summary="REAL history status, provenance and the known-time range for the time machine",
             responses={200: {"content": {"application/json": {"example": HISTORY_EXAMPLE}}}})
 async def history(rt: Runtime = Depends(get_runtime)) -> dict[str, Any]:
-    lo, hi = await asyncio.to_thread(rt.store.known_time_range)
+    lo, hi = await asyncio.to_thread(rt.store.event_time_range)
     path = history_path(rt.settings)
     return {"status": rt.history_status, "fresh": await asyncio.to_thread(is_fresh, rt.settings),
-            "known_from": lo.isoformat() if lo else None, "known_to": hi.isoformat() if hi else None,
+            "event_from": lo.isoformat() if lo else None, "event_to": hi.isoformat() if hi else None,
             "meta": read_meta(path), "note": "Signals with origin 'real' come from captured real documents "
-            "(CACHED_REAL); their stress runs are simulated (illustrative model, synthetic portfolio)."}
+            "(CACHED_REAL); the time machine replays them by publication (event) time, although they were collected at "
+            "their capture times. Their stress runs are simulated (illustrative model, synthetic portfolio)."}
 
 
 @router.post("/history/load", summary="Load the processed REAL history (build it first if missing or stale)",
@@ -62,14 +63,14 @@ def _kpis(rows: list[dict], wl: dict) -> dict[str, Any]:
 
 @router.get("/overview", summary="Home KPIs over the window ending at as_of, and the previous window (trend)",
             responses={200: {"content": {"application/json": {"example": OVERVIEW_EXAMPLE}}}})
-async def overview(as_of: datetime | None = Query(None, description="Known-time cut-off (default: now)"),
+async def overview(as_of: datetime | None = Query(None, description="Event-time cut-off (default: now)"),
                    hours: int = Query(24, ge=1, le=720), rt: Runtime = Depends(get_runtime)) -> dict[str, Any]:
     t = parse_as_of(as_of)
     rules = WatchRules.from_settings(rt.settings)
     out: dict[str, Any] = {"as_of": t.isoformat(), "hours": hours}
     for name, end in (("current", t), ("previous", t - timedelta(hours=hours))):
-        rows = await asyncio.to_thread(rt.store.list_signals, known_after=end - timedelta(hours=hours),
-                                       known_before=end, limit=50_000, ascending=True)
+        rows = await asyncio.to_thread(rt.store.list_signals, since_ts=end - timedelta(hours=hours), until_ts=end,
+                                       limit=50_000, ascending=True)
         wl = build_watchlist(rt.stress.portfolio, rows, rules, hours, end) if rt.stress else {
             "counts": {WATCH: 0, MONITOR: 0}}
         out[name] = _kpis(rows, wl)

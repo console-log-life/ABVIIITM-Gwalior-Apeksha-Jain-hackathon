@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import html
 from collections.abc import Callable
-from datetime import datetime
+from datetime import UTC, datetime, timedelta
 
 import pandas as pd
 import streamlit as st
@@ -152,6 +152,8 @@ def sidebar(client: ApiClient) -> None:
                f"{', int8' if model.get('quantized_int8') else ''}) · events "
                f"{'rules + fine-tuned model (hybrid)' if ev.get('backend') == 'hybrid' else 'rules'}")
 
+    time_machine(client, sb)
+
     with sb.expander("Mode & demo control", expanded=False):
         new_mode = st.radio("Mode", ["LIVE", "REPLAY", "SCENARIO"], index=["LIVE", "REPLAY", "SCENARIO"].index(mode)
                             if mode in ("LIVE", "REPLAY", "SCENARIO") else 2, horizontal=True,
@@ -182,6 +184,60 @@ def sidebar(client: ApiClient) -> None:
         sb.caption(f"{icon} **{s['source']}** — {s.get('status')}"
                    + (f" · {html.escape(str(s.get('last_error'))[:60])}" if s.get("last_error") else ""))
     sb.caption(f"DB {'ok' if h.get('db_ok') else 'DOWN'} · {h.get('signals_stored')} signals stored")
+
+
+# ---------------------------------------------------------------- time machine
+def _naive_utc(iso: str) -> datetime:
+    return datetime.fromisoformat(iso.replace("Z", "+00:00")).astimezone(UTC).replace(tzinfo=None)
+
+
+def time_machine(client: ApiClient, sb) -> None:
+    """Global "as of" slider over EVENT time (publication time). Default: follow the latest data. The choice is kept
+    in session_state, so it persists across pages; every page reads it with as_of(). The slider spans the last 14 days
+    of the data; older items stay included in every "as of" view."""
+    ss = st.session_state
+    try:
+        h = client.history()
+    except ApiError:
+        ss["as_of"] = None
+        return
+    status = h.get("status") or {}
+    if status.get("state") == "building":
+        done, total = (status.get("progress") or [0, 0])
+        sb.info(f"Building the REAL history from the capture cache: {done}/{total} documents")
+    elif status.get("state") == "error":
+        sb.warning(f"REAL history unavailable: {status.get('error')}")
+    if not h.get("event_from") or not h.get("event_to"):
+        ss["as_of"] = None
+        return
+    hi = _naive_utc(h["event_to"])
+    lo = max(_naive_utc(h["event_from"]), hi - timedelta(days=14))
+    if hi - lo < timedelta(hours=1):
+        ss["as_of"] = None
+        return
+    follow = ss.get("tm_follow", True)
+    cur = hi if follow or "tm_value" not in ss else min(max(ss["tm_value"], lo), hi)
+    sb.markdown("**Time machine** (event time, UTC)")
+    val = sb.slider("As of", min_value=lo, max_value=hi, value=cur, step=timedelta(minutes=30),
+                    format="MMM D, HH:mm", label_visibility="collapsed",
+                    help="Every page shows the signals published up to this time and their stress runs. The REAL "
+                         "history is the captured real news replayed by publication time (it was collected at the "
+                         "capture times on each CACHED_REAL badge). Default: the latest data.")
+    if val != cur:
+        ss["tm_follow"], ss["tm_value"] = False, val
+        follow = False
+    c1, c2 = sb.columns([3, 2])
+    c1.caption("● live: latest" if follow else f"as of {val:%b %d, %H:%M} UTC")
+    if not follow and c2.button("Latest", use_container_width=True):
+        ss["tm_follow"] = True
+        ss.pop("tm_value", None)
+        st.rerun()
+    ss["as_of"] = None if follow else val.replace(tzinfo=UTC).isoformat()
+
+
+def as_of() -> str | None:
+    """The time-machine cut-off (ISO, UTC) chosen in the sidebar, or None for the latest data."""
+    return st.session_state.get("as_of")
 
 
 def run_body(body: Callable[[], None]) -> None:

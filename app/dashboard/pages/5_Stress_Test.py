@@ -10,6 +10,7 @@ import streamlit as st
 from components import charts
 from components.ui import (
     RAG_COLORS,
+    as_of,
     badge,
     disclaimer,
     fmt_ts,
@@ -46,7 +47,7 @@ def trigger_banner(run: dict, signals_by_id: dict) -> None:
 
 
 def body() -> None:
-    runs = guard(client.stress_runs, 100)
+    runs = guard(client.stress_runs, 100, as_of())
     if not runs["runs"]:
         st.info("No stress run yet. A high-impact signal triggers one automatically (try **▶ Demo story** in the "
                 "sidebar), or run a scenario manually below.")
@@ -56,7 +57,10 @@ def body() -> None:
                    + f" · {r['loss_pct']:.2f}% {r['rag']}": r["run_id"] for r in runs["runs"]}
         chosen = st.selectbox("Stress run (newest first)", list(options))
         run = guard(client.stress_run, options[chosen])
-        signals = {s["signal_id"]: s for s in guard(client.signals, limit=500)}
+        signals = {s["signal_id"]: s for s in guard(client.signals, limit=500, as_of=as_of())}
+        if run["run_id"].startswith("real-"):
+            st.caption("This run was triggered by a CACHED_REAL signal while the REAL history was built: simulated "
+                       "with the illustrative model on the synthetic portfolio, at the time the headline was captured.")
         trigger_banner(run, signals)
 
         c1, c2, c3, c4, c5 = st.columns(5)

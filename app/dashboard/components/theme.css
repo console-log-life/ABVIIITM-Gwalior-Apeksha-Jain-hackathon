@@ -1,0 +1,103 @@
+/* Risk Signal Engine: dark risk-terminal theme (injected once per page by components/ui.py).
+   One accent (cyan) for interaction; risk colours ONLY for risk levels; tabular figures everywhere. */
+@import url('https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap');
+
+:root {
+  --bg: #0b1220; --panel: #111a2e; --panel-2: #16223a; --line: #22304d; --line-soft: #1a2640;
+  --text: #e6edf7; --muted: #8b9bb8; --dim: #5e6f8f;
+  --accent: #22d3ee; --accent-soft: rgba(34, 211, 238, 0.12);
+  --low: #22c55e; --medium: #f5b841; --high: #f97316; --critical: #ef4444;
+  --live: #38bdf8; --cached: #a78bfa; --synthetic: #94a3b8;
+  --display: 'Barlow Semi Condensed', 'Arial Narrow', sans-serif;
+  --mono: 'IBM Plex Mono', Consolas, monospace;
+  --sans: 'IBM Plex Sans', 'Segoe UI', sans-serif;
+}
+
+html, body, [class*="css"], .stMarkdown, .stCaption, p, li, label, input, textarea, button {
+  font-family: var(--sans); font-variant-numeric: tabular-nums;
+}
+.stApp { background: var(--bg); color: var(--text); }
+h1, h2, h3, h4 { font-family: var(--display) !important; letter-spacing: 0.01em; color: var(--text); }
+h1 { font-size: 2.0rem !important; font-weight: 700 !important; padding-top: 0 !important; margin-bottom: 0.2rem; }
+h2 { font-size: 1.45rem !important; font-weight: 600 !important; }
+h3 { font-size: 1.2rem !important; font-weight: 600 !important; text-transform: uppercase; color: var(--muted); }
+code, .mono { font-family: var(--mono) !important; }
+a { color: var(--accent); }
+
+/* --- Streamlit chrome: hide deploy button, menu, footer and the top decoration bar --- */
+[data-testid="stHeader"] { background: transparent; height: 0; }
+[data-testid="stToolbar"], [data-testid="stDecoration"], [data-testid="stAppDeployButton"], #MainMenu, footer {
+  display: none !important; visibility: hidden !important;
+}
+.block-container { padding-top: 1.0rem !important; padding-bottom: 2rem !important; max-width: 100% !important; }
+
+/* --- sidebar --- */
+[data-testid="stSidebar"] { background: #0a1020; border-right: 1px solid var(--line); }
+[data-testid="stSidebar"] .stMarkdown p, [data-testid="stSidebar"] .stCaption { font-size: 0.86rem; }
+[data-testid="stSidebarNav"] a span { font-family: var(--display); font-size: 1.02rem; letter-spacing: 0.02em; }
+.brand { padding: 2px 0 8px 0; border-bottom: 1px solid var(--line); margin-bottom: 10px; }
+.brand .name { font-family: var(--display); font-weight: 700; font-size: 1.3rem; letter-spacing: 0.06em; color: var(--text); }
+.brand .name b { color: var(--accent); }
+.brand .sub { color: var(--muted); font-size: 0.78rem; letter-spacing: 0.04em; text-transform: uppercase; }
+.health { display: flex; align-items: center; gap: 8px; font-size: 0.82rem; color: var(--muted); line-height: 1.55; }
+.dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.dot.ok { background: var(--low); } .dot.warn { background: var(--medium); } .dot.down { background: var(--critical); }
+.dot.off { background: var(--dim); }
+
+/* --- KPI tiles: small-caps label, big mono number, delta line --- */
+.kpi { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px 14px 9px 14px;
+       height: 100%; min-height: 96px; }
+.kpi .label { color: var(--muted); font-size: 0.72rem; font-weight: 600; text-transform: uppercase;
+              letter-spacing: 0.09em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi .value { color: var(--text); font-family: var(--mono); font-size: 1.85rem; font-weight: 600; line-height: 1.2;
+              margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kpi .sub { color: var(--muted); font-size: 0.78rem; margin-top: 2px; white-space: nowrap; overflow: hidden;
+            text-overflow: ellipsis; }
+.up-bad, .down-bad { color: var(--critical); } .up-good, .down-good { color: var(--low); } .flat { color: var(--dim); }
+
+/* --- badges / pills / chips --- */
+.badge { display: inline-block; padding: 1px 8px; border-radius: 4px; font-size: 0.74rem; font-weight: 600;
+         font-family: var(--mono); letter-spacing: 0.03em; color: #0b1220; margin-right: 6px; white-space: nowrap;
+         vertical-align: 1px; }
+.badge.outline { background: transparent !important; border: 1px solid currentColor; }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 4px; background: var(--panel-2); color: var(--text);
+        border: 1px solid var(--line); margin: 2px 4px 2px 0; font-size: 0.82rem; font-family: var(--mono); }
+
+/* --- panels, alerts, disclaimer --- */
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 12px 16px; }
+.alert { border: 1px solid var(--critical); border-left: 4px solid var(--critical); background: rgba(239, 68, 68, 0.08);
+         padding: 10px 14px; border-radius: 6px; margin-bottom: 10px; }
+.alert.amber { border-color: var(--medium); background: rgba(245, 184, 65, 0.08); }
+.alert.green { border-color: var(--low); background: rgba(34, 197, 94, 0.07); }
+.disclaimer { border-left: 3px solid var(--critical); background: rgba(239, 68, 68, 0.06); padding: 6px 12px;
+              color: var(--text); border-radius: 4px; font-size: 0.84rem; margin: 6px 0 12px 0; }
+.note { color: var(--muted); font-size: 0.82rem; }
+
+/* --- ticker tape (respects prefers-reduced-motion) --- */
+.tape { overflow: hidden; white-space: nowrap; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+        background: #091024; margin: -4px 0 12px 0; height: 30px; position: relative; }
+.tape-track { display: inline-block; padding-left: 100%; animation: tape 75s linear infinite; line-height: 30px; }
+.tape:hover .tape-track { animation-play-state: paused; }
+.tape-item { display: inline-block; margin-right: 38px; font-family: var(--mono); font-size: 0.8rem; color: var(--text); }
+.tape-item .lvl { font-weight: 600; margin-right: 6px; }
+.tape-item .ent { color: var(--muted); margin-right: 6px; }
+@keyframes tape { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+@media (prefers-reduced-motion: reduce) {
+  .tape { height: auto; white-space: normal; }
+  .tape-track { animation: none; padding-left: 8px; }
+}
+
+/* --- tables rendered as HTML (watchlist) --- */
+table.wl { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+table.wl th { text-align: left; color: var(--muted); font-weight: 600; font-size: 0.72rem; text-transform: uppercase;
+              letter-spacing: 0.07em; border-bottom: 1px solid var(--line); padding: 6px 8px; white-space: nowrap; }
+table.wl td { border-bottom: 1px solid var(--line-soft); padding: 7px 8px; vertical-align: middle; }
+table.wl tr:hover td { background: var(--panel); }
+table.wl td.num { text-align: right; font-family: var(--mono); }
+table.wl a { color: var(--accent); font-weight: 600; text-decoration: none; white-space: nowrap; }
+
+/* --- Streamlit widgets in the dark theme --- */
+[data-testid="stExpander"] { border: 1px solid var(--line) !important; border-radius: 6px; background: var(--panel); }
+[data-testid="stDataFrame"] { border: 1px solid var(--line); border-radius: 6px; }
+.stTabs [data-baseweb="tab"] { font-family: var(--display); font-size: 1.02rem; letter-spacing: 0.02em; }
+div[data-testid="stMetricValue"] { font-family: var(--mono); }

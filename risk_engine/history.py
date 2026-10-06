@@ -1,10 +1,12 @@
 """REAL history: the CACHED_REAL capture cache processed through the SAME pipeline and trigger rules, cached on disk.
 
-Build (slow, once): every cached document, in the order it was captured, goes through RiskPipeline (FinBERT, events,
-entities, corroboration, impact) and the stress TriggerEngine with a simulated clock = the document's capture time
-("known time"). Triggered stress runs are simulated with the illustrative StressEngine on the SYNTHETIC portfolio and
-stored with created_at = that known time and run_id "real-<uuid>". Nothing is invented: every signal comes from a real
-captured document (provenance CACHED_REAL, capture time kept).
+Build (slow, once): every cached document, in event-time order (publication time), goes through RiskPipeline
+(FinBERT, events, entities, corroboration, impact) and the stress TriggerEngine with a simulated clock = the signal's
+event time (the same convention as scripts/replay_trigger_report.py). Triggered stress runs are simulated with the
+illustrative StressEngine on the SYNTHETIC portfolio and stored with created_at = that event time and run_id
+"real-<uuid>". Nothing is invented: every signal comes from a real captured document (provenance CACHED_REAL, capture
+time kept on the badge). The dashboard's time machine therefore replays the real news timeline as published; the
+documents themselves were collected at their capture times.
 
 The result is a Store-format SQLite file (data/real_history.db, git-ignored). Loading copies it into the live store
 (origin "real"), which takes about a second, so the dashboard starts with real data. A fingerprint (capture files +
@@ -30,6 +32,7 @@ from risk_engine.store import Store
 
 log = get_logger(__name__)
 META_FILE_SUFFIX = ".meta.json"
+HISTORY_VERSION = 2  # bump when the build logic changes (2: event-time clock and ordering)
 INPUTS = ["risk_engine/event_classifier/taxonomy.yaml", "risk_engine/impact_scoring/weights.yaml",
           "portfolio/scenarios.yaml"]
 
@@ -40,7 +43,7 @@ def history_path(settings: Settings) -> Path:
 
 def fingerprint(settings: Settings) -> dict:
     files = cache_files(settings.cache_path)
-    h = hashlib.sha256()
+    h = hashlib.sha256(f"v{HISTORY_VERSION}".encode())
     for f in files:
         h.update(f"{f.name}:{f.stat().st_size}".encode())
     for rel in INPUTS + [str(Path(settings.portfolio_path))]:
@@ -77,7 +80,7 @@ def build_history(settings: Settings, sentiment=None, progress: Callable[[int, i
     t0 = time.time()
     fp = fingerprint(settings)
     docs = load_cached_documents(settings.cache_path)
-    docs.sort(key=lambda d: (d.captured_at, d.published_at or d.captured_at, d.doc_id))
+    docs.sort(key=lambda d: (d.published_at or d.captured_at, d.doc_id))
     portfolio = load_portfolio(settings)
     pipe = RiskPipeline(settings=settings, sentiment=sentiment or SentimentEngine(settings),
                         scorer=ImpactScorer(exposures=issuer_exposures(portfolio)),
@@ -99,7 +102,7 @@ def build_history(settings: Settings, sentiment=None, progress: Callable[[int, i
             if not store.save_signal(doc, sig, "real"):
                 continue
             n_sig += 1
-            known = doc.captured_at
+            known = sig.timestamp  # event time
             clock["t"] = known.timestamp()
             src = (doc.imitated_source or doc.source).value
             for d in engine.evaluate(sig, src):

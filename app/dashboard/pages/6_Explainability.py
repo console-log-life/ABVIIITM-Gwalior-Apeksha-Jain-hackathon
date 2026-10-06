@@ -7,7 +7,7 @@ import html
 
 import streamlit as st
 from components import charts
-from components.ui import fmt_ts, guard, provenance_badge, risk_badge, setup
+from components.ui import as_of, fmt_ts, guard, provenance_badge, risk_badge, setup
 
 client = setup("Explainability", "🔍")
 method = guard(client.methodology)
@@ -57,7 +57,7 @@ def explain(sig: dict) -> None:
 
 tab_stored, tab_own = st.tabs(["Explain a stored signal", "Analyse your own headline"])
 with tab_stored:
-    rows = guard(client.signals, limit=500)
+    rows = guard(client.signals, limit=500, as_of=as_of())
     wanted = st.query_params.get("signal_id")  # click-through from the Early Warning Watchlist
     if wanted and not any(r["signal_id"] == wanted for r in rows):
         extra = guard(client.signal, wanted)

@@ -40,14 +40,14 @@ WATCHLIST_EXAMPLE = {
 @router.get("/watchlist", summary="Early-warning watchlist: watch status per HELD issuer from recent signals",
             responses={200: {"content": {"application/json": {"example": WATCHLIST_EXAMPLE}}},
                        503: {"description": "Portfolio unavailable"}})
-async def watchlist(hours: int | None = Query(None, ge=1, le=720, description="Window by KNOWN time (capture "
-                                              "time; default WATCHLIST_WINDOW_H = 24)", examples=[24]),
-                    as_of: datetime | None = Query(None, description="Time machine: window ends at this known time"),
+async def watchlist(hours: int | None = Query(None, ge=1, le=720, description="Window by event time (default "
+                                              "WATCHLIST_WINDOW_H = 24)", examples=[24]),
+                    as_of: datetime | None = Query(None, description="Time machine: window ends at this event time"),
                     rt: Runtime = Depends(get_runtime)) -> dict[str, Any]:
     if rt.stress is None:
         raise HTTPException(503, "watchlist unavailable (portfolio could not be loaded; see /health)")
     hours = hours or rt.settings.watchlist_window_h
     now = datetime.now(UTC) if as_of is None else (as_of.replace(tzinfo=UTC) if as_of.tzinfo is None else as_of)
-    rows = await asyncio.to_thread(rt.store.list_signals, known_after=now - timedelta(hours=hours),
-                                   known_before=now, limit=50_000, ascending=True)
+    rows = await asyncio.to_thread(rt.store.list_signals, since_ts=now - timedelta(hours=hours), until_ts=now,
+                                   limit=50_000, ascending=True)
     return build_watchlist(rt.stress.portfolio, rows, WatchRules.from_settings(rt.settings), hours, now)

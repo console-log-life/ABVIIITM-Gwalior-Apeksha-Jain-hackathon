@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import streamlit as st
-from components.ui import guard, run_body, setup, signals_frame
+from components.ui import as_of, guard, run_body, setup, signals_frame
 
 client = setup("News & Social Feed", "📰")
 
 
 def body() -> None:
-    df = signals_frame(guard(client.signals, limit=500))
+    df = signals_frame(guard(client.signals, limit=500, as_of=as_of()))
     if df.empty:
         st.info("No documents yet — start the demo story, REPLAY or LIVE mode from the sidebar.")
         return

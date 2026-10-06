@@ -12,6 +12,7 @@ import streamlit as st
 from components.ui import (
     RAG_COLORS,
     RISK_COLORS,
+    as_of,
     badge,
     disclaimer,
     fmt_ts,
@@ -27,30 +28,53 @@ from components.ui import (
 client = setup("Executive Risk Overview", "🛡️")
 
 
+def trend(cur: float, prev: float, unit: str = "", good_when_down: bool = True) -> str:
+    """Arrow + change vs the previous window; for risk counts, up is shown in red."""
+    d = cur - prev
+    if abs(d) < 1e-9:
+        return f"→ flat vs previous 24 h{unit}"
+    up_bad = good_when_down
+    color = (RISK_COLORS["Critical"] if (d > 0) == up_bad else RISK_COLORS["Low"])
+    arrow = "▲" if d > 0 else "▼"
+    num = f"{d:+.1f}" if isinstance(d, float) and not float(d).is_integer() else f"{int(d):+d}"
+    return f'<span style="color:{color}">{arrow} {num}{unit}</span> vs previous 24 h'
+
+
 def body() -> None:
+    t = as_of()
     health = guard(client.health)
-    rows = guard(client.signals, limit=500)
-    latest = guard(client.latest_stress)
+    rows = guard(client.signals, limit=500, as_of=t)
+    latest = guard(client.latest_stress, t)
+    ov = guard(client.overview, t, 24)
+    cur, prev = ov["current"], ov["previous"]
     df = signals_frame(rows)
 
-    today = pd.Timestamp.now(tz="UTC").normalize()
-    n_today = int((df["time"] >= today).sum()) if len(df) else 0
-    n_crit = int((df["risk_level"] == "Critical").sum()) if len(df) else 0
+    st.caption(f"Window: the 24 h of event time ending {'now' if t is None else fmt_ts(t)} · trend arrows compare "
+               "with the previous 24 h · CACHED_REAL history + any LIVE / SYNTHETIC demo data, each row badged")
     c1, c2, c3, c4, c5 = st.columns(5)
-    kpi(c1, "Signals today (event time, UTC)", f"{n_today}", f"{len(df)} loaded in total")
-    kpi(c2, "Critical signals", f"{n_crit}", "impact ≥ 8.5", RISK_COLORS["Critical"] if n_crit else None)
+    kpi(c1, "Signals (24 h)", f"{cur['signals']}", trend(cur["signals"], prev["signals"], good_when_down=False))
+    kpi(c2, "Critical", f"{cur['critical']}", trend(cur["critical"], prev["critical"]),
+        RISK_COLORS["Critical"] if cur["critical"] else None)
+    kpi(c3, "Issuers on watch", f"{cur['issuers_on_watch']}", trend(cur["issuers_on_watch"], prev["issuers_on_watch"]))
+    kpi(c4, "Sources active", f"{cur['sources_active']}", trend(cur["sources_active"], prev["sources_active"],
+                                                                good_when_down=False))
+    kpi(c5, "Social share", f"{cur['social_pct']:.0f}%", trend(cur["social_pct"], prev["social_pct"], " pts",
+                                                                 good_when_down=False))
+    st.write("")
+    c1, c2, c3 = st.columns([2, 2, 1])
     if latest:
-        kpi(c3, "Latest portfolio RAG", latest["rag"], f"{latest['loss_pct']:.2f}% simulated loss · "
-            f"{html.escape(latest['scenario_label'])}", RAG_COLORS.get(latest["rag"]))
+        kpi(c1, "Latest portfolio RAG", latest["rag"], f"{latest['loss_pct']:.2f}% simulated loss · "
+            f"{html.escape(latest['scenario_label'])} · {fmt_ts(latest.get('created_at'))}",
+            RAG_COLORS.get(latest["rag"]))
     else:
-        kpi(c3, "Latest portfolio RAG", "—", "no stress run yet")
+        kpi(c1, "Latest portfolio RAG", "—", "no stress run yet")
     if len(df):
         worst = df.sort_values(["impact_score", "seq"], ascending=False).iloc[0]
-        kpi(c4, "Worst event", f"{worst['impact_score']:.1f}",
+        kpi(c2, "Worst event", f"{worst['impact_score']:.1f}",
             f"{html.escape(worst['entity'])} · {worst['event_type']}", RISK_COLORS.get(worst["risk_level"]))
     else:
-        kpi(c4, "Worst event", "—", "no signals yet")
-    kpi(c5, "Mode", health["mode"], "LIVE / REPLAY / SCENARIO — same NLP pipeline")
+        kpi(c2, "Worst event", "—", "no signals yet")
+    kpi(c3, "Mode", health["mode"], "same NLP pipeline")
 
     st.write("")
     if latest:

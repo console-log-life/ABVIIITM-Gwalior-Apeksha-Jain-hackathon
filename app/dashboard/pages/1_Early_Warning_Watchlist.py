@@ -7,7 +7,7 @@ import html
 from datetime import datetime
 
 import streamlit as st
-from components.ui import MUTED, fmt_ts, guard, kpi, money, provenance_badge, risk_badge, run_body, setup
+from components.ui import MUTED, as_of, fmt_ts, guard, kpi, money, provenance_badge, risk_badge, run_body, setup
 
 client = setup("Early Warning Watchlist", "🚩")
 
@@ -30,28 +30,45 @@ def pill(status: str) -> str:
             f'{"⚑ " if status == "WATCH-NEGATIVE" else ""}{html.escape(status)}</span>')
 
 
-def sparkline(series: list[dict], color: str, w: int = 130, h: int = 30) -> str:
-    """Inline SVG: impact (1-10) over time; dots are signals."""
+def rolling_max(ts: list[float], vals: list[float], window_s: float = 6 * 3600) -> list[float]:
+    """For each point, the highest impact seen in the preceding 6 h (inclusive)."""
+    return [max(v for t2, v in zip(ts, vals, strict=True) if t - window_s <= t2 <= t) for t in ts]
+
+
+def sparkline(series: list[dict], color: str, t_end: float | None = None, hours: int = 24, w: int = 150,
+              h: int = 34) -> str:
+    """Inline SVG over the whole window: one dot per signal (impact 1-10) and a 6 h rolling-max step line.
+    The dashed line marks impact 7 (WATCH threshold)."""
     if not series:
         return f'<span style="color:{MUTED}">no signals</span>'
     ts = [datetime.fromisoformat(p["timestamp"].replace("Z", "+00:00")).timestamp() for p in series]
-    t0, t1 = min(ts), max(ts)
+    vals = [p["impact_score"] for p in series]
+    t1 = t_end or max(ts)
+    t0 = t1 - hours * 3600
     pad = 4
 
     def xy(t: float, v: float) -> tuple[float, float]:
-        x = pad + (w - 2 * pad) * ((t - t0) / (t1 - t0) if t1 > t0 else 0.5)
+        x = pad + (w - 2 * pad) * min(max((t - t0) / (t1 - t0), 0.0), 1.0)
         y = h - pad - (h - 2 * pad) * (v - 1) / 9
         return round(x, 1), round(y, 1)
 
-    pts = [xy(t, p["impact_score"]) for t, p in zip(ts, series, strict=True)]
+    rm = rolling_max(ts, vals)
+    step = []
+    for i, (t, v) in enumerate(zip(ts, rm, strict=True)):
+        x, y = xy(t, v)
+        if i:
+            step.append(f"{x},{step[-1].split(',')[1]}")
+        step.append(f"{x},{y}")
+    xe, _ = xy(t1, rm[-1])
+    step.append(f"{xe},{step[-1].split(',')[1]}")
     y7 = xy(t0, 7)[1]
-    line = " ".join(f"{x},{y}" for x, y in pts)
-    dots = "".join(f'<circle cx="{x}" cy="{y}" r="2.6" fill="{color}"/>' for x, y in pts)
-    title = " · ".join(f"{p['impact_score']:.1f}" for p in series)
-    return (f'<svg width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img" aria-label="impact over time: {title}">'
-            f'<title>impact over time: {title}</title>'
+    dots = "".join(f'<circle cx="{x}" cy="{y}" r="2.4" fill="{color}" fill-opacity="0.75"/>'
+                   for x, y in (xy(t, v) for t, v in zip(ts, vals, strict=True)))
+    label = f"{len(vals)} signals, max impact {max(vals):.1f}"
+    return (f'<svg width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img" aria-label="{label}">'
+            f'<title>{label}; line = 6 h rolling max</title>'
             f'<line x1="{pad}" x2="{w - pad}" y1="{y7}" y2="{y7}" stroke="#d6d4ce" stroke-dasharray="3 3"/>'
-            f'<polyline points="{line}" fill="none" stroke="{color}" stroke-width="2"/>{dots}</svg>')
+            f'<polyline points="{" ".join(step)}" fill="none" stroke="{color}" stroke-width="1.6"/>{dots}</svg>')
 
 
 def explain_link(signal_id: str, label: str = "Explain →") -> str:
@@ -64,7 +81,8 @@ def md_money(x: float) -> str:
 
 def body() -> None:
     hours = st.session_state.get("wl_hours", 24)
-    w = guard(client.watchlist, hours)
+    w = guard(client.watchlist, hours, as_of())
+    t_end = datetime.fromisoformat(w["as_of"]).timestamp()
     counts = w["counts"]
     c1, c2, c3, c4 = st.columns(4)
     kpi(c1, "WATCH-NEGATIVE", f"{counts['WATCH-NEGATIVE']}", "held issuers needing attention",
@@ -102,7 +120,8 @@ def body() -> None:
                 f"<td class='num'>{r['signal_count']} ({r['negative_count']})</td>"
                 f"<td class='num'>{worst}</td><td class='num'>{mean}</td>"
                 f"<td>{events}<br><span style='color:{MUTED};font-size:0.85rem'>{srcs}</span></td>"
-                f"<td>{sparkline(r['impact_series'], STATUS_COLORS[r['status']])}</td><td>{link}</td></tr>")
+                f"<td>{sparkline(r['impact_series'], STATUS_COLORS[r['status']], t_end, w['window_hours'])}</td>"
+                f"<td>{link}</td></tr>")
         st.markdown(TABLE_CSS + f"<table class='wl'>{head}{''.join(body_rows)}</table>", unsafe_allow_html=True)
 
     c1, c2 = st.columns([1, 3])
