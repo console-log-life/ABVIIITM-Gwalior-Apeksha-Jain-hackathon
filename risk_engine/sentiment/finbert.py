@@ -1,6 +1,9 @@
 """Sentiment (spec 6.2): FinBERT with automatic lexicon fallback.
 
 - Model ProsusAI/finbert, loaded once (singleton). Label order is read from model.config.id2label.
+- If MODEL_SENTIMENT_PATH points to a fine-tuned FinBERT folder (notebooks/train_models.ipynb), that model is used
+  instead; if it fails to load, base FinBERT is used and status() says why. MODEL_QUANTIZE_INT8 applies torch
+  dynamic int8 quantisation.
 - s = P(positive) - P(negative), rounded to 3 dp; confidence = max(probs).
 - Long text: title (weight 2) + up to 8 sentences (weight 1); probabilities aggregated with a
   confidence-weighted mean; every segment truncated to 256 tokens. Batched inference.
@@ -19,6 +22,7 @@ from functools import lru_cache
 
 from app.config import Settings, get_settings
 from risk_engine.logging_setup import get_logger
+from risk_engine.model_paths import finetuned_dir, quantize_int8
 from risk_engine.sentiment import lexicon_fallback
 
 log = get_logger(__name__)
@@ -74,17 +78,18 @@ def aggregate(prob_rows: list[dict[str, float]], weights: list[float]) -> dict[s
     return {k: sum(p[k] * e for p, e in zip(prob_rows, eff, strict=True)) / total for k in REQUIRED_LABELS}
 
 
-_MODEL_CACHE: dict[tuple[str, str], _FinBertModel] = {}
+_MODEL_CACHE: dict[tuple, _FinBertModel] = {}
 _MODEL_CACHE_LOCK = threading.Lock()
 
 
 def load_finbert(settings: Settings) -> _FinBertModel:
     """Process-wide singleton: FinBERT is loaded at most ONCE per process, however many engines are created."""
-    key = (settings.finbert_model, str(settings.models_dir))
+    ft = finetuned_dir(settings.model_sentiment_path, settings)
+    key = (settings.finbert_model, str(settings.models_dir), str(ft), settings.model_quantize_int8)
     with _MODEL_CACHE_LOCK:
         if key not in _MODEL_CACHE:
             t0 = time.perf_counter()
-            log.info("Loading FinBERT %s from %s (once per process; torch threads=%d) ...", key[0], key[1],
+            log.info("Loading FinBERT %s from %s (once per process; torch threads=%d) ...", ft or key[0], key[1],
                      settings.torch_threads)
             _MODEL_CACHE[key] = _FinBertModel(settings)
             log.info("FinBERT ready in %.1f s", time.perf_counter() - t0)
@@ -100,16 +105,32 @@ class _FinBertModel:
         torch.set_num_threads(settings.torch_threads)  # keep the laptop responsive (API + dashboard + browser)
         cache = str(settings.models_dir)
         name = settings.finbert_model
-        try:  # local first: no network round-trip when weights are already cached
-            self.tok = AutoTokenizer.from_pretrained(name, cache_dir=cache, local_files_only=True)
-            self.model = AutoModelForSequenceClassification.from_pretrained(name, cache_dir=cache,
-                                                                            local_files_only=True)
-        except OSError:
-            if os.environ.get("HF_HUB_OFFLINE") == "1" or os.environ.get("TRANSFORMERS_OFFLINE") == "1":
-                raise
-            self.tok = AutoTokenizer.from_pretrained(name, cache_dir=cache)
-            self.model = AutoModelForSequenceClassification.from_pretrained(name, cache_dir=cache)
+        self.variant, self.source, self.finetuned_error = "base", name, None
+        ft = finetuned_dir(settings.model_sentiment_path, settings)
+        loaded = False
+        if ft is not None:
+            try:
+                self.tok = AutoTokenizer.from_pretrained(str(ft), local_files_only=True)
+                self.model = AutoModelForSequenceClassification.from_pretrained(str(ft), local_files_only=True)
+                map_logits_to_probs([0.0] * self.model.config.num_labels, dict(self.model.config.id2label))
+                self.variant, self.source, loaded = "fine-tuned", str(ft), True
+            except Exception as exc:  # never silently: logged and reported by status()
+                self.finetuned_error = f"{type(exc).__name__}: {exc}"[:300]
+                log.warning("fine-tuned FinBERT at %s could not be loaded, using base: %s", ft, self.finetuned_error)
+        if not loaded:
+            try:  # local first: no network round-trip when weights are already cached
+                self.tok = AutoTokenizer.from_pretrained(name, cache_dir=cache, local_files_only=True)
+                self.model = AutoModelForSequenceClassification.from_pretrained(name, cache_dir=cache,
+                                                                                local_files_only=True)
+            except OSError:
+                if os.environ.get("HF_HUB_OFFLINE") == "1" or os.environ.get("TRANSFORMERS_OFFLINE") == "1":
+                    raise
+                self.tok = AutoTokenizer.from_pretrained(name, cache_dir=cache)
+                self.model = AutoModelForSequenceClassification.from_pretrained(name, cache_dir=cache)
         self.model.eval()
+        self.quantized = bool(settings.model_quantize_int8)
+        if self.quantized:
+            self.model = quantize_int8(self.model)
         self.id2label = dict(self.model.config.id2label)
         map_logits_to_probs([0.0] * len(self.id2label), self.id2label)  # validate labels at load time
         self._torch = torch
@@ -151,8 +172,10 @@ class SentimentEngine:
             log.warning("FinBERT unavailable, using lexicon fallback: %s", self.fallback_reason)
 
     def status(self) -> dict:
-        return {"backend": self.backend, "model": self.settings.finbert_model if self._model else None,
-                "loaded": self._model is not None, "fallback_reason": self.fallback_reason}
+        m = self._model
+        return {"backend": self.backend, "model": m.source if m else None, "loaded": m is not None,
+                "variant": m.variant if m else None, "quantized_int8": m.quantized if m else False,
+                "finetuned_error": m.finetuned_error if m else None, "fallback_reason": self.fallback_reason}
 
     def _probs(self, texts: list[str]) -> list[dict[str, float]]:
         if self._model is not None:

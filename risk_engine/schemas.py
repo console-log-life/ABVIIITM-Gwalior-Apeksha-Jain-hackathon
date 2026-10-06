@@ -194,6 +194,8 @@ class RiskSignal(_Strict):
     model: Literal["finbert", "lexicon-fallback"]
     reason: str = Field(min_length=1)
     business_implication: str = Field(min_length=1)
+    event_method: str | None = None  # rules | hybrid:model | hybrid:rules | hybrid:rules-authoritative | ...
+    event_model_probs: dict[str, float] | None = None  # learned event model probabilities (hybrid only)
 
     @field_validator("timestamp")
     @classmethod

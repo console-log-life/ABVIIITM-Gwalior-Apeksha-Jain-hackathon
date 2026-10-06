@@ -134,7 +134,8 @@ class RiskPipeline:
             secondary_event_type=event.secondary, event_evidence=event.evidence, impact_score=impact.score,
             impact_factors=impact.factors, risk_level=impact.risk_level, confidence=sent.confidence,
             corroborating_sources=n_sources, model=sent.model, reason=impact.reason,
-            business_implication=impact.business_implication,
+            business_implication=impact.business_implication, event_method=event.method,
+            event_model_probs=event.model_probs,
         )
 
 

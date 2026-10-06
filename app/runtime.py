@@ -241,6 +241,9 @@ class Runtime:
         sources = HEALTH.snapshot() or self.store.source_health_rows() or last_capture_health(self.settings.cache_path)
         if self._pipeline is not None:
             model = self._pipeline.sentiment.status()
+            from risk_engine.event_classifier.learned import event_status
+
+            model["event"] = event_status(self.settings)
         else:
             model = {"backend": "loading" if not self._pipeline_error else "error", "error": self._pipeline_error}
         db_ok = self.store.ping()

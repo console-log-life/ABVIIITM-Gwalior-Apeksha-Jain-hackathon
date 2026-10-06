@@ -29,8 +29,13 @@ def explain(sig: dict) -> None:
     if sig["model"] != "finbert":
         c2.warning("Lexicon fallback was used (FinBERT unavailable); confidence is capped at 0.5.")
 
-    st.markdown("**2 · Event classification** (rule-based, evidence phrases shown)")
+    st.markdown("**2 · Event classification** (rules with evidence phrases; hybrid with the fine-tuned model when "
+                "installed)")
     chips = "".join(f'<span class="chip">{html.escape(e)}</span>' for e in sig["event_evidence"]) or "<i>none</i>"
+    if sig.get("event_model_probs"):
+        top3 = sorted(sig["event_model_probs"].items(), key=lambda x: -x[1])[:3]
+        st.markdown("Fine-tuned event model: " + " · ".join(f"{html.escape(c)} **{p:.2f}**" for c, p in top3)
+                    + f" · decision: `{html.escape(sig.get('event_method') or '')}`")
     st.markdown(f"Primary **{sig['event_type']}**"
                 + (f" · secondary **{sig['secondary_event_type']}**" if sig.get("secondary_event_type") else "")
                 + f"<br>Evidence: {chips}", unsafe_allow_html=True)

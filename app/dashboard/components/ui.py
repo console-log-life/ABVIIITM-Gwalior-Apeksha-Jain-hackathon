@@ -147,6 +147,10 @@ def sidebar(client: ApiClient) -> None:
                 "#0ca30c" if model.get("backend") == "finbert" else "#ec835a"), unsafe_allow_html=True)
     if model.get("backend") != "finbert":
         sb.caption(f"Sentiment fallback active: {model.get('fallback_reason') or model.get('backend')}")
+    ev = model.get("event") or {}
+    sb.caption(f"Models: sentiment FinBERT ({model.get('variant') or 'n/a'}"
+               f"{', int8' if model.get('quantized_int8') else ''}) · events "
+               f"{'rules + fine-tuned model (hybrid)' if ev.get('backend') == 'hybrid' else 'rules'}")
 
     with sb.expander("Mode & demo control", expanded=False):
         new_mode = st.radio("Mode", ["LIVE", "REPLAY", "SCENARIO"], index=["LIVE", "REPLAY", "SCENARIO"].index(mode)

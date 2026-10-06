@@ -60,6 +60,15 @@ class Settings(BaseSettings):
     # CPU threads for torch (FinBERT). 2 keeps API + dashboard + browser responsive on a 4-core laptop.
     torch_threads: int = Field(default=2, ge=1, le=32)
     enable_zero_shot: bool = False
+    # Fine-tuned models (notebooks/train_models.ipynb -> scripts/import_trained_models.py). Used when the folder exists;
+    # otherwise base FinBERT / the rule engine. Set to an empty string to force the base model / rules.
+    model_sentiment_path: str = "./models/finetuned/sentiment_finbert_ft"
+    model_event_path: str = "./models/finetuned/event_distilroberta_ft"
+    # Hybrid event classifier: rules stay authoritative for these classes when their rule score reaches the minimum
+    event_rules_authoritative: list[str] = ["Credit Event", "Supply Chain", "Litigation"]
+    event_rules_authoritative_min_score: float = Field(default=2.0, ge=0)
+    event_model_min_confidence: float = Field(default=0.6, ge=0, le=1)  # below this the rules decide
+    model_quantize_int8: bool = False  # torch dynamic int8 quantisation of Linear layers (CPU RAM/latency)
     zero_shot_model: str = "typeform/distilbert-base-uncased-mnli"
 
     # NLP thresholds

@@ -31,6 +31,9 @@ class EventResult:
     intensifier_terms: list[str] = field(default_factory=list)
     method: str = "rules"  # rules | rules+zero-shot | ...+market-evidence-guard
     evidence_by_class: dict[str, list[str]] = field(default_factory=dict)  # one phrase per distinct matched pattern
+    model_probs: dict[str, float] | None = None  # hybrid only: learned model class probabilities
+    model_label: str | None = None
+    model_confidence: float | None = None
 
     def distinct_patterns(self, cls: str | None = None) -> int:
         return len(self.evidence_by_class.get(cls or self.primary, []))
@@ -107,10 +110,16 @@ class RuleEventClassifier:
 
 
 @lru_cache(maxsize=1)
-def get_event_classifier() -> RuleEventClassifier:
+def get_event_classifier():
+    """Rules, or the hybrid (rules + fine-tuned model) when MODEL_EVENT_PATH holds a trained model."""
+    settings = get_settings()
     zs = None
-    if get_settings().enable_zero_shot:
+    if settings.enable_zero_shot:
         from risk_engine.event_classifier.zero_shot import get_zero_shot
 
         zs = get_zero_shot()
-    return RuleEventClassifier(zero_shot=zs)
+    rules = RuleEventClassifier(zero_shot=zs)
+    from risk_engine.event_classifier.learned import HybridEventClassifier, load_event_model
+
+    model = load_event_model(settings)
+    return HybridEventClassifier(rules, model, settings) if model is not None else rules
