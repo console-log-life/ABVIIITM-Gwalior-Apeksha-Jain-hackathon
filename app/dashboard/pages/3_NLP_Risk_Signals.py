@@ -14,11 +14,12 @@ def body() -> None:
     if df.empty:
         st.info("No signals yet — start the demo story, REPLAY or LIVE mode from the sidebar.")
         return
-    c1, c2, c3 = st.columns(3)
-    levels = c1.multiselect("Risk level", RISK_ORDER, default=RISK_ORDER)
-    events = c2.multiselect("Event type", sorted(df["event_type"].unique()), default=sorted(df["event_type"].unique()))
+    c1, c2, c3 = st.columns([3, 2, 2])
+    levels = c1.pills("Risk level", RISK_ORDER, selection_mode="multi", default=RISK_ORDER) or RISK_ORDER
+    event = c2.selectbox("Event type", ["All"] + sorted(df["event_type"].unique()))
     min_imp = c3.slider("Minimum impact", 1.0, 10.0, 1.0, 0.5)
-    view = df[df["risk_level"].isin(levels) & df["event_type"].isin(events) & (df["impact_score"] >= min_imp)]
+    view = df[df["risk_level"].isin(levels) & ((df["event_type"] == event) if event != "All" else True)
+              & (df["impact_score"] >= min_imp)]
 
     st.subheader("Risk signals")
     cols = ["time", "risk_level", "impact_score", "entity", "event_type", "secondary_event_type", "sentiment_score",
@@ -39,6 +40,8 @@ def body() -> None:
     with right:
         st.plotly_chart(charts.impact_distribution(view), use_container_width=True)
 
+    if len(view) > 3:
+        st.plotly_chart(charts.sentiment_band(view), use_container_width=True)
     tick = view.dropna(subset=["ticker"])
     if len(tick):
         top = tick["ticker"].value_counts().index.tolist()

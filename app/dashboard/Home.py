@@ -7,13 +7,13 @@ from __future__ import annotations
 
 import html
 
-import pandas as pd
 import streamlit as st
+from components import charts
 from components.ui import (
     RAG_COLORS,
     RISK_COLORS,
     as_of,
-    badge,
+    delta,
     disclaimer,
     fmt_ts,
     guard,
@@ -28,88 +28,64 @@ from components.ui import (
 client = setup("Executive Risk Overview", "🛡️")
 
 
-def trend(cur: float, prev: float, unit: str = "", good_when_down: bool = True) -> str:
-    """Arrow + change vs the previous window; for risk counts, up is shown in red."""
-    d = cur - prev
-    if abs(d) < 1e-9:
-        return f"→ flat vs previous 24 h{unit}"
-    up_bad = good_when_down
-    color = (RISK_COLORS["Critical"] if (d > 0) == up_bad else RISK_COLORS["Low"])
-    arrow = "▲" if d > 0 else "▼"
-    num = f"{d:+.1f}" if isinstance(d, float) and not float(d).is_integer() else f"{int(d):+d}"
-    return f'<span style="color:{color}">{arrow} {num}{unit}</span> vs previous 24 h'
-
-
 def body() -> None:
     t = as_of()
-    health = guard(client.health)
-    rows = guard(client.signals, limit=500, as_of=t)
-    latest = guard(client.latest_stress, t)
     ov = guard(client.overview, t, 24)
     cur, prev = ov["current"], ov["previous"]
-    df = signals_frame(rows)
+    latest = ov.get("latest_stress")
+    window = signals_frame(guard(client.signals, limit=500, as_of=t, hours=24))
+    trend72 = signals_frame(guard(client.signals, limit=500, as_of=t, hours=72))
 
-    st.caption(f"Window: the 24 h of event time ending {'now' if t is None else fmt_ts(t)} · trend arrows compare "
-               "with the previous 24 h · CACHED_REAL history + any LIVE / SYNTHETIC demo data, each row badged")
-    c1, c2, c3, c4, c5 = st.columns(5)
-    kpi(c1, "Signals (24 h)", f"{cur['signals']}", trend(cur["signals"], prev["signals"], good_when_down=False))
-    kpi(c2, "Critical", f"{cur['critical']}", trend(cur["critical"], prev["critical"]),
-        RISK_COLORS["Critical"] if cur["critical"] else None)
-    kpi(c3, "Issuers on watch", f"{cur['issuers_on_watch']}", trend(cur["issuers_on_watch"], prev["issuers_on_watch"]))
-    kpi(c4, "Sources active", f"{cur['sources_active']}", trend(cur["sources_active"], prev["sources_active"],
-                                                                good_when_down=False))
-    kpi(c5, "Social share", f"{cur['social_pct']:.0f}%", trend(cur["social_pct"], prev["social_pct"], " pts",
-                                                                 good_when_down=False))
-    st.write("")
-    c1, c2, c3 = st.columns([2, 2, 1])
+    st.markdown(f'<div class="note">24 h window of event time ending <b>{"now" if t is None else fmt_ts(t)}</b> · '
+                "arrows compare with the previous 24 h · REAL (CACHED_REAL) history plus any LIVE or SYNTHETIC demo "
+                "data, every row badged</div>", unsafe_allow_html=True)
+    c = st.columns(6)
+    kpi(c[0], "Signals 24h", f"{cur['signals']}", delta(cur["signals"], prev["signals"], up_is_bad=False),
+        tip="Risk signals with event time in the 24 h window")
+    kpi(c[1], "Critical", f"{cur['critical']}", delta(cur["critical"], prev["critical"]),
+        RISK_COLORS["Critical"] if cur["critical"] else None, tip="Signals with impact ≥ 8.5")
+    kpi(c[2], "On watch", f"{cur['issuers_on_watch']}", delta(cur["issuers_on_watch"], prev["issuers_on_watch"]),
+        RISK_COLORS["High"] if cur["watch_negative"] else None,
+        tip=f"Held issuers WATCH-NEGATIVE or MONITOR (WATCH-NEGATIVE: {cur['watch_negative']})")
+    kpi(c[3], "Sources", f"{cur['sources_active']}", delta(cur["sources_active"], prev["sources_active"],
+                                                          up_is_bad=False), tip="Distinct sources in the window")
+    kpi(c[4], "Social", f"{cur['social_pct']:.0f}%", delta(cur["social_pct"], prev["social_pct"], " pt",
+                                                           up_is_bad=False), tip="Share of signals from social media")
     if latest:
-        kpi(c1, "Latest portfolio RAG", latest["rag"], f"{latest['loss_pct']:.2f}% simulated loss · "
-            f"{html.escape(latest['scenario_label'])} · {fmt_ts(latest.get('created_at'))}",
-            RAG_COLORS.get(latest["rag"]))
+        kpi(c[5], "Portfolio RAG", latest["rag"], f"{latest['loss_pct']:.2f}% · {fmt_ts(latest['created_at'], True)}",
+            RAG_COLORS.get(latest["rag"]), tip=f"Latest simulated stress run: {latest['scenario_label']}")
     else:
-        kpi(c1, "Latest portfolio RAG", "—", "no stress run yet")
-    if len(df):
-        worst = df.sort_values(["impact_score", "seq"], ascending=False).iloc[0]
-        kpi(c2, "Worst event", f"{worst['impact_score']:.1f}",
-            f"{html.escape(worst['entity'])} · {worst['event_type']}", RISK_COLORS.get(worst["risk_level"]))
-    else:
-        kpi(c2, "Worst event", "—", "no signals yet")
-    kpi(c3, "Mode", health["mode"], "same NLP pipeline")
+        kpi(c[5], "Portfolio RAG", "—", "no stress run yet")
 
-    st.write("")
     if latest:
+        cls = {"RED": "", "AMBER": " amber", "GREEN": " green"}.get(latest["rag"], "")
         st.markdown(
-            f'<div class="alert">🚨 <b>Stress test triggered</b> — {html.escape(latest["scenario_label"])} · '
-            f'{badge(latest["rag"], RAG_COLORS.get(latest["rag"], "#52514e"))} '
-            f'simulated loss <b>{latest["loss_pct"]:.2f}%</b> of funded value<br>'
-            f'<span style="color:#52514e">Rule: {html.escape(latest["rule"])}</span></div>',
-            unsafe_allow_html=True)
+            f'<div class="alert{cls}" style="margin-top:12px">▲ <b>Latest stress test</b> · '
+            f'{html.escape(latest["scenario_label"])} · simulated loss <b>{latest["loss_pct"]:.2f}%</b> of funded '
+            f'value · {fmt_ts(latest["created_at"])}<br><span class="note">Rule: {html.escape(latest["rule"] or "")}'
+            '</span></div>', unsafe_allow_html=True)
         disclaimer()
 
     left, right = st.columns([3, 2])
     with left:
-        st.subheader("Highest-impact signals")
-        if not len(df):
-            st.info("No signals yet. Use the sidebar: **▶ Demo story** (SYNTHETIC scenario), switch to **REPLAY** "
-                    "(cached real data) or **LIVE**.")
-        top = df.sort_values(["impact_score", "seq"], ascending=False).head(6) if len(df) else df
+        st.subheader("Highest impact · 24 h")
+        if not len(window):
+            st.info("No signals in this window. Move the time machine in the sidebar, or start the **Scenario demo**.")
+        top = window.sort_values(["impact_score", "seq"], ascending=False).head(7) if len(window) else window
         for _, r in top.iterrows():
             st.markdown(
-                f"{risk_badge(r['risk_level'])}{provenance_badge(r.to_dict())} <b>{r['impact_score']:.1f}</b> · "
-                f"{html.escape(r['entity'])} · <i>{r['event_type']}</i> · {fmt_ts(r['timestamp'])}<br>"
-                f"<span style='color:#52514e'>{html.escape(r['text_excerpt'][:180])}</span>",
-                unsafe_allow_html=True)
+                f"{risk_badge(r['risk_level'])}{provenance_badge(r.to_dict())} <b class='mono'>"
+                f"{r['impact_score']:.1f}</b> · {html.escape(r['entity'])} · <i>{r['event_type']}</i> · "
+                f"<span class='note'>{fmt_ts(r['timestamp'], True)}</span><br>"
+                f"<span class='note'>{html.escape(r['text_excerpt'][:170])}</span>", unsafe_allow_html=True)
     with right:
-        st.subheader("Data mix")
-        if len(df):
-            mix = df["provenance"].value_counts()
-            st.dataframe(pd.DataFrame({"provenance": mix.index, "signals": mix.values}), hide_index=True,
-                         use_container_width=True)
-            src = df.groupby(["source_type", "source_label"]).size().reset_index(name="signals")
-            st.dataframe(src, hide_index=True, use_container_width=True)
-        model = health["model"]
-        st.caption(f"Sentiment model: **{model.get('backend')}** · DB {'ok' if health['db_ok'] else 'DOWN'} · "
-                   f"portfolio: {(health.get('portfolio') or {}).get('source', 'unavailable')}")
+        if len(window):
+            mix = window["provenance"].value_counts().to_dict()
+            st.plotly_chart(charts.data_mix(mix, "Data mix · provenance"), use_container_width=True)
+            src = window["source_label"].value_counts().to_dict()
+            st.plotly_chart(charts.data_mix(src, "Data mix · source"), use_container_width=True)
+    if len(trend72) > 3:
+        st.plotly_chart(charts.sentiment_band(trend72), use_container_width=True)
 
 
 run_body(body)

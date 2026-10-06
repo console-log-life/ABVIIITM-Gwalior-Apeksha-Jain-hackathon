@@ -14,7 +14,7 @@ def body() -> None:
     c1, c2, c3, c4 = st.columns(4)
     model = h["model"]
     kpi(c1, "Service status", h["status"].upper(), "degraded = DB down or sentiment fallback",
-        "#0ca30c" if h["status"] == "ok" else "#ec835a")
+        "#22c55e" if h["status"] == "ok" else "#f97316")
     kpi(c2, "Sentiment model", model.get("backend", "?"), model.get("fallback_reason") or (model.get("model") or ""))
     kpi(c3, "Signals stored", str(h.get("signals_stored")), f"DB {'ok' if h['db_ok'] else 'DOWN'}")
     kpi(c4, "Bus events", str(h["bus"]["signal.created"]), f"{h['bus']['stress.completed']} stress runs published")

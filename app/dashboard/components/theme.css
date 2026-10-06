@@ -33,6 +33,9 @@ a { color: var(--accent); }
 
 /* --- sidebar --- */
 [data-testid="stSidebar"] { background: #0a1020; border-right: 1px solid var(--line); }
+[data-testid="stSidebar"] > div, [data-testid="stSidebarContent"], [data-testid="stSidebarUserContent"] {
+  overflow-x: hidden !important; }
+[data-testid="stSidebar"] [data-testid="stSlider"] { padding: 0 22px 0 8px; }
 [data-testid="stSidebar"] .stMarkdown p, [data-testid="stSidebar"] .stCaption { font-size: 0.86rem; }
 [data-testid="stSidebarNav"] a span { font-family: var(--display); font-size: 1.02rem; letter-spacing: 0.02em; }
 .brand { padding: 2px 0 8px 0; border-bottom: 1px solid var(--line); margin-bottom: 10px; }

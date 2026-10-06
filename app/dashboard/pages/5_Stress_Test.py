@@ -34,7 +34,7 @@ def trigger_banner(run: dict, signals_by_id: dict) -> None:
         trig = (f"{risk_badge(sig['risk_level'])}{provenance_badge(sig)} <b>{sig['impact_score']:.1f}</b> · "
                 f"{html.escape(sig['company'])} · <i>{sig['event_type']}</i><br>“{html.escape(sig['text_excerpt'])}”")
     elif run.get("trigger_signal_id"):
-        trig = f"signal {run['trigger_signal_id']} (not in the latest 500 signals)"
+        trig = f"signal {run['trigger_signal_id']} (no longer stored: the demo was reset)"
     else:
         trig = "manual run (no triggering signal)"
     st.markdown(
@@ -57,7 +57,8 @@ def body() -> None:
                    + f" · {r['loss_pct']:.2f}% {r['rag']}": r["run_id"] for r in runs["runs"]}
         chosen = st.selectbox("Stress run (newest first)", list(options))
         run = guard(client.stress_run, options[chosen])
-        signals = {s["signal_id"]: s for s in guard(client.signals, limit=500, as_of=as_of())}
+        trig = guard(client.signal, run["trigger_signal_id"]) if run.get("trigger_signal_id") else None
+        signals = {trig["signal_id"]: trig} if trig else {}
         if run["run_id"].startswith("real-"):
             st.caption("This run was triggered by a CACHED_REAL signal while the REAL history was built: simulated "
                        "with the illustrative model on the synthetic portfolio, at the time the headline was captured.")

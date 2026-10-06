@@ -11,21 +11,12 @@ from components.ui import MUTED, as_of, fmt_ts, guard, kpi, money, provenance_ba
 
 client = setup("Early Warning Watchlist", "🚩")
 
-STATUS_COLORS = {"WATCH-NEGATIVE": "#d03b3b", "MONITOR": "#fab219", "STABLE": "#0ca30c"}
-TABLE_CSS = """
-<style>
-  table.wl { width:100%; border-collapse:collapse; font-size:0.95rem; }
-  table.wl th { text-align:left; color:#52514e; font-weight:600; border-bottom:2px solid #e3e2de; padding:6px 8px; }
-  table.wl td { border-bottom:1px solid #eceae4; padding:7px 8px; vertical-align:middle; }
-  table.wl td.num { text-align:right; font-variant-numeric:tabular-nums; }
-  table.wl a { color:#2a78d6; font-weight:600; text-decoration:none; white-space:nowrap; }
-</style>
-"""
+STATUS_COLORS = {"WATCH-NEGATIVE": "#ef4444", "MONITOR": "#f5b841", "STABLE": "#22c55e"}
 
 
 def pill(status: str) -> str:
     color = STATUS_COLORS.get(status, MUTED)
-    text_color = "#0b0b0b" if status == "MONITOR" else "#ffffff"
+    text_color = "#0b1220"
     return (f'<span class="badge" style="background:{color};color:{text_color}">'
             f'{"⚑ " if status == "WATCH-NEGATIVE" else ""}{html.escape(status)}</span>')
 
@@ -67,7 +58,7 @@ def sparkline(series: list[dict], color: str, t_end: float | None = None, hours:
     label = f"{len(vals)} signals, max impact {max(vals):.1f}"
     return (f'<svg width="{w}" height="{h}" viewBox="0 0 {w} {h}" role="img" aria-label="{label}">'
             f'<title>{label}; line = 6 h rolling max</title>'
-            f'<line x1="{pad}" x2="{w - pad}" y1="{y7}" y2="{y7}" stroke="#d6d4ce" stroke-dasharray="3 3"/>'
+            f'<line x1="{pad}" x2="{w - pad}" y1="{y7}" y2="{y7}" stroke="#2b3b5c" stroke-dasharray="3 3"/>'
             f'<polyline points="{" ".join(step)}" fill="none" stroke="{color}" stroke-width="1.6"/>{dots}</svg>')
 
 
@@ -122,7 +113,7 @@ def body() -> None:
                 f"<td>{events}<br><span style='color:{MUTED};font-size:0.85rem'>{srcs}</span></td>"
                 f"<td>{sparkline(r['impact_series'], STATUS_COLORS[r['status']], t_end, w['window_hours'])}</td>"
                 f"<td>{link}</td></tr>")
-        st.markdown(TABLE_CSS + f"<table class='wl'>{head}{''.join(body_rows)}</table>", unsafe_allow_html=True)
+        st.markdown(f"<table class='wl'>{head}{''.join(body_rows)}</table>", unsafe_allow_html=True)
 
     c1, c2 = st.columns([1, 3])
     c1.selectbox("Window (hours, by event time)", [6, 24, 72, 168], index=[6, 24, 72, 168].index(hours)

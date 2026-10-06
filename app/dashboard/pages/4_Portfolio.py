@@ -9,7 +9,7 @@ from components.ui import badge, guard, kpi, money, setup
 client = setup("Portfolio Overview", "💼")
 
 p = guard(client.portfolio)
-label_color = "#52514e" if p["provenance"] == "SYNTHETIC" else "#2a78d6"
+label_color = "#94a3b8" if p["provenance"] == "SYNTHETIC" else "#38bdf8"
 st.markdown(badge(p["source"], label_color) + " every position below is generated for the demo — not real holdings"
             if p["provenance"] == "SYNTHETIC" else badge(p["source"], label_color), unsafe_allow_html=True)
 st.write("")

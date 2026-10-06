@@ -1,29 +1,34 @@
-"""Plotly figure builders. Colour roles follow the reference dataviz palette:
-categorical slots in fixed order for identity, status colours (with text labels) for risk levels,
-a diverging red <-> blue pair with a grey midpoint for losses vs gains; one y-axis per chart; hover on every mark."""
+"""Plotly figure builders in the dark risk-terminal theme. Colour roles: categorical slots in fixed order for
+identity; risk colours (with text labels) ONLY for risk levels; a diverging red <-> blue pair with a dark midpoint for
+losses vs gains; hedges in green; one y-axis per chart; hover on every mark; tabular figures (IBM Plex Mono)."""
 
 from __future__ import annotations
 
 import pandas as pd
 import plotly.graph_objects as go
 
-from components.ui import MUTED, RISK_COLORS, RISK_ORDER, SURFACE, TEXT
+from components.ui import ACCENT, LINE, MUTED, RISK_COLORS, RISK_ORDER, SURFACE, TEXT
 
-CATEGORICAL = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#008300", "#4a3aa7", "#e34948"]
-SEQ_BLUE = "#2a78d6"
-LOSS, GAIN, MID = "#d03b3b", "#2a78d6", "#f0efec"
-HEDGE = "#0ca30c"
-GRID = "#e8e7e4"
+CATEGORICAL = ["#22d3ee", "#f472b6", "#a3e635", "#fbbf24", "#818cf8", "#fb7185", "#34d399", "#c084fc"]
+SEQ_BLUE = "#3b82f6"
+LOSS, GAIN, MID = "#ef4444", "#3b82f6", "#172238"
+HEDGE = "#22c55e"
+GRID = "#1c2a45"
+FONT = "IBM Plex Sans, Segoe UI, sans-serif"
+MONO = "IBM Plex Mono, Consolas, monospace"
+PROV = {"CACHED_REAL": "#a78bfa", "LIVE": "#38bdf8", "SYNTHETIC": "#94a3b8"}
 
 
-def _layout(fig: go.Figure, title: str, height: int = 380, **kw) -> go.Figure:
+def _layout(fig: go.Figure, title: str, height: int = 360, **kw) -> go.Figure:
     fig.update_layout(
-        title={"text": title, "font": {"size": 19, "color": TEXT}, "x": 0, "xanchor": "left"},
-        paper_bgcolor=SURFACE, plot_bgcolor=SURFACE, height=height, margin={"l": 10, "r": 20, "t": 56, "b": 10},
-        font={"size": 15, "color": TEXT}, hoverlabel={"font_size": 14}, legend={"orientation": "h", "y": -0.18},
-        **kw)
-    fig.update_xaxes(gridcolor=GRID, zerolinecolor="#c9c7c1", linecolor=GRID, tickfont={"color": MUTED})
-    fig.update_yaxes(gridcolor=GRID, zerolinecolor="#c9c7c1", linecolor=GRID, tickfont={"color": MUTED})
+        title={"text": title.upper(), "font": {"size": 13, "color": MUTED, "family": FONT}, "x": 0, "xanchor": "left"},
+        paper_bgcolor=SURFACE, plot_bgcolor=SURFACE, height=height, margin={"l": 10, "r": 18, "t": 44, "b": 10},
+        font={"size": 13, "color": TEXT, "family": FONT}, hoverlabel={"font_size": 13, "font_family": MONO},
+        legend={"orientation": "h", "y": -0.2, "font": {"color": MUTED}}, **kw)
+    fig.update_xaxes(gridcolor=GRID, zerolinecolor=LINE, linecolor=LINE, tickfont={"color": MUTED, "family": MONO},
+                     title_font={"color": MUTED, "size": 12})
+    fig.update_yaxes(gridcolor=GRID, zerolinecolor=LINE, linecolor=LINE, tickfont={"color": MUTED, "family": MONO},
+                     title_font={"color": MUTED, "size": 12})
     return fig
 
 
@@ -38,9 +43,39 @@ def sentiment_trend(df: pd.DataFrame, tickers: list[str]) -> go.Figure:
             customdata=d[["event_type", "impact_score", "text_excerpt"]].values,
             hovertemplate="<b>%{fullData.name}</b> %{x|%Y-%m-%d %H:%M}<br>sentiment %{y:+.2f}<br>"
                           "%{customdata[0]} · impact %{customdata[1]}<br>%{customdata[2]}<extra></extra>"))
-    fig.add_hline(y=0, line={"color": "#c9c7c1", "width": 1})
+    fig.add_hline(y=0, line={"color": LINE, "width": 1})
     fig.update_yaxes(range=[-1.05, 1.05], title="sentiment (−1 … +1)")
     return _layout(fig, "Sentiment trend by ticker")
+
+
+def sentiment_band(df: pd.DataFrame, freq: str = "6h") -> go.Figure:
+    """Mean sentiment per time bucket (line) with a ±1 standard deviation band, and signal count on hover."""
+    d = df.set_index("time").sort_index()["sentiment_score"].resample(freq)
+    g = pd.DataFrame({"mean": d.mean(), "std": d.std().fillna(0), "n": d.count()}).dropna(subset=["mean"])
+    g = g[g["n"] > 0]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=list(g.index) + list(g.index[::-1]),
+                             y=list((g["mean"] + g["std"]).clip(upper=1)) + list((g["mean"] - g["std"]).clip(lower=-1)
+                                                                                 [::-1]),
+                             fill="toself", fillcolor="rgba(34,211,238,0.12)", line={"width": 0}, hoverinfo="skip",
+                             name="±1 std"))
+    fig.add_trace(go.Scatter(x=g.index, y=g["mean"], mode="lines+markers", name="mean sentiment",
+                             line={"color": ACCENT, "width": 2}, marker={"size": 5}, customdata=g["n"],
+                             hovertemplate="%{x|%b %d %H:%M}<br>mean %{y:+.2f} · %{customdata} signals<extra></extra>"))
+    fig.add_hline(y=0, line={"color": LINE, "width": 1})
+    fig.update_yaxes(range=[-1.05, 1.05], title="sentiment")
+    return _layout(fig, f"Sentiment trend ({freq} buckets, band = ±1 std)", height=320)
+
+
+def data_mix(counts: dict[str, int], title: str) -> go.Figure:
+    labels = list(counts)
+    fig = go.Figure(go.Pie(labels=labels, values=list(counts.values()), hole=0.62, sort=False,
+                           marker={"colors": [PROV.get(k, CATEGORICAL[i % len(CATEGORICAL)])
+                                              for i, k in enumerate(labels)], "line": {"color": SURFACE, "width": 2}},
+                           textinfo="percent", textfont={"family": MONO, "size": 12},
+                           hovertemplate="%{label}: %{value} signals (%{percent})<extra></extra>"))
+    fig.update_layout(showlegend=True, legend={"orientation": "v", "x": 1.0, "y": 0.5})
+    return _layout(fig, title, height=240)
 
 
 def event_distribution(df: pd.DataFrame) -> go.Figure:
@@ -62,7 +97,7 @@ def impact_distribution(df: pd.DataFrame) -> go.Figure:
                                        marker={"color": RISK_COLORS[level], "line": {"width": 1, "color": SURFACE}},
                                        hovertemplate=f"{level}: impact %{{x}}<br>%{{y}} signals<extra></extra>"))
     for x, label in [(4, "Medium"), (7, "High"), (8.5, "Critical")]:
-        fig.add_vline(x=x, line={"dash": "dot", "color": MUTED, "width": 1},
+        fig.add_vline(x=x, line={"dash": "dot", "color": LINE, "width": 1},
                       annotation_text=label, annotation_font_color=MUTED)
     fig.update_layout(barmode="stack")
     fig.update_xaxes(range=[1, 10], title="impact score (1–10)")
@@ -89,7 +124,7 @@ def waterfall(summary: dict) -> go.Figure:
         x=names, y=values, measure=["absolute"] + ["relative"] * len(by) + ["total"],
         text=[f"{v:,.1f}" for v in values], textposition="outside",
         decreasing={"marker": {"color": LOSS}}, increasing={"marker": {"color": GAIN}},
-        totals={"marker": {"color": "#52514e"}}, connector={"line": {"color": "#c9c7c1", "width": 1}},
+        totals={"marker": {"color": "#475569"}}, connector={"line": {"color": LINE, "width": 1}},
         hovertemplate="%{x}: %{y:,.2f}m USD<extra></extra>"))
     lo = min(summary["after_value"], summary["before_value"]) / 1e6
     fig.update_yaxes(title="portfolio value (USD m)", range=[lo * 0.97, summary["before_value"] / 1e6 * 1.01])
@@ -105,7 +140,7 @@ def top_positions(summary: dict) -> go.Figure:
                            marker={"color": colors, "cornerradius": 4},
                            text=[f"{r['pnl'] / 1e6:+,.2f}m" for r in rows], textposition="auto",
                            hovertemplate="%{y}<br>P&L %{x:+,.2f}m USD<extra></extra>"))
-    fig.add_vline(x=0, line={"color": "#c9c7c1", "width": 1})
+    fig.add_vline(x=0, line={"color": LINE, "width": 1})
     fig.update_xaxes(title="stress P&L (USD m) — red = loss, green = hedge gain")
     return _layout(fig, "Top-10 contributing positions", height=460)
 
@@ -127,7 +162,7 @@ def heatmap(summary: dict) -> go.Figure:
 
 
 def sentiment_probs(probs: dict) -> go.Figure:
-    order = [("negative", LOSS), ("neutral", "#8f8e88"), ("positive", HEDGE)]
+    order = [("negative", LOSS), ("neutral", "#64748b"), ("positive", HEDGE)]
     fig = go.Figure(go.Bar(x=[n for n, _ in order], y=[probs.get(n, 0) for n, _ in order],
                            marker={"color": [c for _, c in order], "cornerradius": 4},
                            text=[f"{probs.get(n, 0):.2f}" for n, _ in order], textposition="outside",
@@ -142,7 +177,7 @@ def factor_contributions(factors: dict, weights: dict) -> go.Figure:
     keys = ["E", "M", "X", "R"]
     contrib = [weights[k] * factors[k] for k in keys]
     fig = go.Figure(go.Bar(
-        x=contrib, y=[names[k] for k in keys], orientation="h", marker={"color": SEQ_BLUE, "cornerradius": 4},
+        x=contrib, y=[names[k] for k in keys], orientation="h", marker={"color": ACCENT, "cornerradius": 3},
         text=[f"{weights[k]:.2f} × {factors[k]:.2f} = {c:.3f}" for k, c in zip(keys, contrib, strict=True)],
         textposition="outside", hovertemplate="%{y}<br>weighted contribution %{x:.3f}<extra></extra>"))
     fig.update_yaxes(autorange="reversed")
