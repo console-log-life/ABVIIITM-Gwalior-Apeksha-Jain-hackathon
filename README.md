@@ -8,12 +8,13 @@ S&P Global × CRISIL "Code to Connect Hackathon 2026" · Phase 3 · Module B (St
 > Decision-support prototype, **not investment advice**. Stress results come from a *simplified, illustrative
 > hackathon stress model; it is not a production or regulatory risk model.*
 
-| Early Warning Watchlist | Event-driven stress test | Explainability |
+| Executive overview on real captured news | Risk propagation over curated links | Event-driven stress test |
 |---|---|---|
-| [![Watchlist: Tata Motors flagged WATCH-NEGATIVE after a downgrade signal](docs/screenshots/readme/1_watchlist.png)](docs/screenshots/readme/1_watchlist.png) | [![Stress test: severe geopolitical scenario, 2.45% simulated loss, RED](docs/screenshots/readme/2_stress.png)](docs/screenshots/readme/2_stress.png) | [![Explainability: sentiment probabilities, evidence phrases and weighted impact factors](docs/screenshots/readme/3_explain.png)](docs/screenshots/readme/3_explain.png) |
+| [![Executive overview: KPIs over the last 24 h with trends, latest stress run, highest-impact signals](docs/screenshots/readme/1_home.png)](docs/screenshots/readme/1_home.png) | [![Risk propagation: Tata Motors direct vs second-order exposure, exposure graph coloured by watch status](docs/screenshots/readme/2_propagation.png)](docs/screenshots/readme/2_propagation.png) | [![Stress test: severe geopolitical scenario, 2.45% simulated loss, RED, waterfall by asset class](docs/screenshots/readme/3_stress.png)](docs/screenshots/readme/3_stress.png) |
 
-*Screenshots from the scripted demo: headlines are SYNTHETIC, the portfolio is SYNTHETIC (seed 42) and stress results
-are simulated.*
+*The dashboard runs on 1,325 real captured headlines and posts (CACHED_REAL, capture time on every badge) plus a
+scripted SYNTHETIC story (Tata Motors downgrade, invasion) for the stress climax. The portfolio is SYNTHETIC (seed 42)
+and stress results are simulated. All pages at projector sizes: `docs/screenshots/1366x768/` and `1920x1080/`.*
 
 ---
 
@@ -68,11 +69,20 @@ Details: [docs/architecture.md](docs/architecture.md) · methodology: [docs/meth
   sector × asset-class heatmap, HHI and RAG against risk appetite.
 - **Resilient.** Per-source timeouts, retries and backoff, and a health panel. It runs offline after setup (FinBERT
   from `./models`), with a lexicon fallback if the model cannot load.
+- **REAL data by default.** The whole capture cache (1,325 real documents) runs through the same pipeline and
+  trigger rules once, is cached on disk and loads in about a second; a **time machine** replays the real news timeline
+  by publication time on every page.
 - **Early Warning Watchlist** (`GET /watchlist`): for every held issuer, signal count, worst impact, mean
-  sentiment, event types, sources, exposure (% of book), rating bucket and the top-3 signals with reasons. Status
-  WATCH-NEGATIVE / MONITOR / STABLE comes from configurable rules ([methodology](docs/methodology.md)).
-- **Dashboard.** All 12 required sections plus the watchlist (ranked table, status pills, impact sparklines,
-  click-through to explainability), an "Analyse your own headline" box, a mode switch and source health.
+  sentiment, event types, sources, exposure (% of book), propagated exposure, rating bucket, the top-3 signals with
+  reasons, and a sparkline (impact per signal + 6 h rolling max). Status WATCH-NEGATIVE / MONITOR / STABLE comes from
+  configurable rules ([methodology](docs/methodology.md)).
+- **Risk propagation** (`GET /propagation`): direct vs second-order exposure over 16 hand-curated issuer links
+  (supplier, parent, peer), an interactive exposure graph, and MONITOR-by-propagation on the watchlist.
+- **What-if scenario builder** (`POST /portfolio/what-if`): six shock sliders, start from any scenario, compare with the
+  triggered run; instant repricing, nothing saved.
+- **One-click credit brief** (`GET /credit-brief/{issuer}`): a template-based (no LLM) issuer brief as HTML and PDF.
+- **Dashboard.** A dark risk-terminal theme with a ticker tape, all 12 required sections plus watchlist and
+  propagation pages, an "Analyse your own headline" box, a mode switch and source health.
 
 ## Tech stack
 
@@ -149,9 +159,8 @@ are exposed at `GET /methodology`.
 
 ## Screenshots
 
-`docs/screenshots/`: `01_home.png` (executive overview) · `02_feed.png` · `03_signals.png` · `04_portfolio.png` ·
-`05_stress.png` (trigger banner, waterfall, top-10, heatmap) · `06_explain.png` · `07_health.png` ·
-`08_watchlist.png` (Early Warning Watchlist). Refresh with `scripts/screenshot_dashboard.py` and
+`docs/screenshots/`: full pages `01_home.png` … `09_propagation.png` and `10_credit_brief.png`; projector-size
+viewports in `1366x768/` and `1920x1080/`. Refresh with `scripts/screenshot_dashboard.py [--size 1366x768]` and
 `scripts/crop_screenshots.py` while the demo runs.
 
 ## Install
@@ -200,19 +209,20 @@ curl -s -X POST http://127.0.0.1:8000/portfolio/stress-test -H "content-type: ap
      -d '{"scenario": "geopolitical_severe"}'
 curl -s  http://127.0.0.1:8000/stress-runs                              # audit log (trigger signal_id)
 curl -s "http://127.0.0.1:8000/watchlist?hours=24"                      # early-warning status per held issuer
+curl -s "http://127.0.0.1:8000/overview?as_of=2026-10-05T20:00:00Z"      # time machine: KPIs as of a time
+curl -s "http://127.0.0.1:8000/propagation?issuer_id=IN-TATAMOTORS"       # direct vs propagated exposure + graph
+curl -s -X POST http://127.0.0.1:8000/portfolio/what-if -H "content-type: application/json" \
+     -d '{"shocks": {"hy_spread_bp": 400, "pd_multiplier": 2}}'       # instant what-if, not saved
+curl -s "http://127.0.0.1:8000/credit-brief/IN-TATAMOTORS?format=pdf" -o brief.pdf
 ```
 
 ## Demo
 
-See [DEMO.md](DEMO.md) and the timed script in [docs/demo_script.md](docs/demo_script.md). The story has a real-data
-opening and four scripted steps:
-0. four REAL headlines replayed from the committed CACHED_REAL sample (badged with their capture time; none of them
-   triggers stress);
-1. a low-impact product launch (no trigger);
-2. a Tata Motors downgrade, which runs the idiosyncratic stress and puts Tata Motors on the watchlist as
-   WATCH-NEGATIVE (the story pauses 20 s here);
-3. an invasion headline, which runs moderate systemic stress;
-4. a corroborating second source, which escalates it to severe.
+See [DEMO.md](DEMO.md) and the timed script in [docs/demo_script.md](docs/demo_script.md). The 5-minute flow starts
+on REAL data (home with the time machine, watchlist, explainability, risk propagation), then plays the SYNTHETIC
+scenario for the stress climax (Tata Motors downgrade → 0.41% GREEN → invasion → 1.32% AMBER → corroborated →
+2.45% RED), then the what-if builder and a credit brief PDF. DEMO.md lists which parts are CACHED_REAL and which are
+SYNTHETIC.
 
 ## Testing
 

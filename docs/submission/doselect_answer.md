@@ -11,7 +11,7 @@ Downgrades, regulatory probes, sanctions and rate shocks surface first in unstru
 - **Sentiment score:** a score in [−1, 1] from FinBERT, with class probabilities and confidence.
 - **Event classification:** an 11-class taxonomy (from Geopolitical, Macroeconomic and Credit Event to Management and Other), with the evidence phrases behind each class.
 - **Impact score from 1 to 10:** a transparent weighted formula, explained factor by factor.
-- **Structured output:** a REST API with Swagger, a Server-Sent Events stream of new signals, a JSONL export and a SQLite store.
+- **Structured output:** REST API with Swagger, a Server-Sent Events stream, JSONL export, SQLite.
 
 ### Downstream module
 
@@ -22,23 +22,23 @@ Module B: Strategic Portfolio Stress Testing was implemented. The stress engine 
 
 A cooldown prevents repeated runs, and every run stores its triggering signal as an audit trail. Outputs show the value before and after the shock, the loss by asset class, sector, issuer and country, the top-10 positions, the hedge offset, concentration and a red/amber/green status against a 2% risk appetite.
 
-An **early warning watchlist** gives every held issuer a rules-based status (WATCH-NEGATIVE, MONITOR or STABLE) from its last 24 hours of signals, with exposure, rating bucket and the top three signals with their reasons.
+**Credit-risk views:** an early warning watchlist gives every held issuer a rules-based status (WATCH-NEGATIVE, MONITOR or STABLE) from its recent signals; risk propagation adds the decay-weighted exposure of 16 hand-curated linked issuers; a what-if builder reprices the book instantly for any shock; and a one-click, template-based credit brief (HTML or PDF) summarises an issuer.
 
 ### Technical architecture
 
 Data sources → ingestion → NLP → risk signals → store/API → stress engine → dashboard
 
 - Live polling, replay of captured real data, the scripted demo and direct API calls all pass through one shared NLP pipeline.
-- Adapters handle timeouts, retries, rate limits and source health; a failing source never stops the system.
+- Adapters handle retries, rate limits and source health; a failing source never stops the system.
 - Signals are stored in SQLite and published on an in-process event bus; FastAPI serves REST, streaming and export.
-- The stress engine is a bus subscriber with simplified pricers for bonds, loans, interest-rate swaps, credit default swaps, FX forwards and equity.
-- A Streamlit dashboard covers all twelve required views plus the watchlist via the API; the demo runs offline after a one-time model download.
+- The stress engine is a bus subscriber with simplified pricers for bonds, loans, IRS, CDS, FX forwards and equity.
+- A Streamlit dashboard covers all twelve required views and runs offline after setup.
 
 ### AI/NLP methodology
 
 - **Sentiment:** FinBERT (ProsusAI/finbert) with s = P(positive) − P(negative). Labels are read from the model configuration; a finance lexicon is the fallback.
-- **Event classification:** rule-based, with weighted patterns per class, primary and secondary events, evidence phrases and intensifiers. An optional zero-shot tie-breaker was evaluated and left disabled because it lowered macro-F1.
-- **Entity resolution:** cashtags, an alias dictionary with context checks for ambiguous names, spaCy organisation entities, guarded fuzzy matching, then a market-wide or unresolved label.
+- **Event classification:** rule-based with weighted patterns, evidence phrases and intensifiers; a zero-shot tie-breaker lowered macro-F1 and stays off.
+- **Entity resolution:** cashtags, aliases with context checks, spaCy entities and guarded fuzzy matching.
 - **Impact formula:** Impact = 1 + 9 × Q × (0.40 E + 0.25 M + 0.20 X + 0.15 R), clipped to 1–10. E is event severity, M sentiment magnitude, X portfolio exposure, R source credibility plus corroboration, and Q model confidence.
 - **Explainability:** every signal shows probabilities, evidence phrases, weighted factor contributions, a reason and a business implication.
 
@@ -47,7 +47,7 @@ Data sources → ingestion → NLP → risk signals → store/API → stress eng
 Sources used (each passed our source probe): Google News RSS (news), Reddit subreddit RSS (social), Mastodon hashtag timelines (social).
 
 - **Real, live:** fetched during a session (label: LIVE).
-- **Real, cached:** real items captured between 2026-10-03 and 2026-10-05 for replay, shown with capture time (label: CACHED_REAL); the public repository ships only a news-headline sample.
+- **Real, cached:** real items captured between 2026-10-03 and 2026-10-05, shown with capture time (label: CACHED_REAL). The dashboard opens on all 1,325 of them, processed through the same pipeline, with a time machine that replays them by publication time. The public repository ships only a news-headline sample.
 - **Synthetic:** the demo story, user-typed text and the generated portfolio (seed 42, 49 positions), labelled SYNTHETIC.
 - **Simulated:** every stress-test result, produced by an illustrative model.
 
@@ -56,9 +56,9 @@ Sources used (each passed our source probe): Google News RSS (news), Reddit subr
 - Provenance badge on every record: LIVE, CACHED_REAL or SYNTHETIC.
 - One NLP pipeline for live, replay, demo and API input.
 - Explainable 1–10 impact score with visible weights.
-- Corroboration across independent sources escalates severity.
+- Real-data time machine over every captured document.
 - Event-driven stress tests with an audit trail and cooldown.
-- Early warning watchlist of held issuers, linked to each signal's explanation.
+- Watchlist, risk propagation, what-if builder and one-click credit brief.
 - Runs offline with graceful fallback when sources fail.
 
 ### Results
@@ -89,9 +89,9 @@ Risk teams get earlier warning and materiality-based triage; credit analysts see
 
 - Production streaming ingestion with Kafka.
 - Calibrating the impact score against observed market reactions.
-- More and licensed datasets with full article text.
+- Licensed full-text news.
 - Historical backtesting of triggers and signals.
-- Full-revaluation risk models with correlated scenarios.
+- Full revaluation with correlated scenarios.
 - Scalability, security and access control.
 
 ### Deliverables

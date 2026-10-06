@@ -16,21 +16,21 @@ from PIL import Image, ImageDraw
 ROOT = Path(__file__).resolve().parents[1]
 SHOTS = ROOT / "docs" / "screenshots"
 OUT = ROOT / "docs" / "presentation" / "assets"
-CROPS = {
-    "stress_banner.png": ("05_stress.png", (415, 355, 1515, 700)),
-    "stress_waterfall.png": ("05_stress.png", (415, 690, 1515, 1110)),
-    "stress_top10_heatmap.png": ("05_stress.png", (415, 1130, 1515, 1590)),
-    "signals_charts.png": ("03_signals.png", (419, 1005, 1518, 1395)),
-    "signals_table.png": ("03_signals.png", (419, 470, 1518, 945)),
-    "home_kpis.png": ("01_home.png", (410, 205, 1535, 555)),
-    "explain_factors.png": ("06_explain.png", (410, 940, 1535, 1300)),
-    "watchlist.png": ("08_watchlist.png", (410, 205, 1525, 700)),
+CROPS = {  # dark theme, 1600-px full-page captures (scripts/screenshot_dashboard.py without --size)
+    "stress_banner.png": ("05_stress.png", (405, 255, 1525, 520)),
+    "stress_waterfall.png": ("05_stress.png", (405, 540, 1525, 960)),
+    "stress_top10_heatmap.png": ("05_stress.png", (405, 975, 1525, 1430)),
+    "home_kpis.png": ("01_home.png", (405, 140, 1525, 335)),
+    "explain_factors.png": ("06_explain.png", (405, 870, 1525, 1180)),
+    "watchlist.png": ("08_watchlist.png", (405, 120, 1525, 720)),
+    "propagation_graph.png": ("09_propagation.png", (405, 300, 1080, 790)),
+    "credit_brief.png": ("10_credit_brief.png", (0, 0, 1068, 560)),
 }
 README_DIR = ROOT / "docs" / "screenshots" / "readme"
 README_CROPS = {  # the three images at the top of README.md
-    "1_watchlist.png": ("08_watchlist.png", (410, 130, 1525, 700)),
-    "2_stress.png": ("05_stress.png", (415, 355, 1515, 1110)),
-    "3_explain.png": ("06_explain.png", (410, 270, 1535, 1300)),
+    "1_home.png": ("01_home.png", (405, 60, 1525, 700)),
+    "2_propagation.png": ("09_propagation.png", (405, 60, 1525, 870)),
+    "3_stress.png": ("05_stress.png", (405, 60, 1525, 960)),
 }
 
 

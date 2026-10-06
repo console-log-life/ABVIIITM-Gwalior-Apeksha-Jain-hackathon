@@ -26,11 +26,12 @@ client = setup("Early Warning Watchlist", "🚩")
 STATUS_COLORS = {"WATCH-NEGATIVE": "#ef4444", "MONITOR": "#f5b841", "STABLE": "#22c55e"}
 
 
-def pill(status: str) -> str:
+def pill(status: str, short: bool = False) -> str:
     color = STATUS_COLORS.get(status, MUTED)
-    text_color = "#0b1220"
-    return (f'<span class="badge" style="background:{color};color:{text_color}">'
-            f'{"⚑ " if status == "WATCH-NEGATIVE" else ""}{html.escape(status)}</span>')
+    label = "⚑ WATCH" if short and status == "WATCH-NEGATIVE" else (
+        ("⚑ " if status == "WATCH-NEGATIVE" else "") + status)
+    return (f'<span class="badge" style="background:{color};color:#0b1220" title="{html.escape(status)}">'
+            f'{html.escape(label)}</span>')
 
 
 def rolling_max(ts: list[float], vals: list[float], window_s: float = 6 * 3600) -> list[float]:
@@ -103,11 +104,13 @@ def body() -> None:
         st.info(f"No signals on held issuers in the last {w['window_hours']} h. Start the demo story from the sidebar "
                 "(after step 2, Tata Motors moves to WATCH-NEGATIVE), or tick **Show all held issuers**.")
     else:
-        head = ("<tr><th>#</th><th>Status</th><th>Issuer</th><th>Rating</th><th class='num'>Exposure</th>"
-                "<th class='num'>% book</th>"
+        head = ("<tr><th>#</th><th>Status</th><th>Issuer · rule</th><th>Rtg</th>"
+                "<th class='num' title='Funded market value and % of the funded book'>Exposure</th>"
                 "<th class='num' title='Decay-weighted exposure of issuers linked to this one "
-                "(curated links)'>Propagated</th><th class='num'>Signals (neg.)</th><th class='num'>Worst impact</th>"
-                "<th class='num'>Mean sent.</th><th>Events · sources</th><th>Impact over time</th><th></th></tr>")
+                "(curated links)'>Propag.</th><th class='num' title='Signals in the window (negative)'>Sig.</th>"
+                "<th class='num' title='Worst impact in the window'>Worst</th><th>Events · sources</th>"
+                "<th title='Impact per signal over the window; line = 6 h rolling max'>24 h impact</th>"
+                "<th></th></tr>")
         body_rows = []
         for r in shown:
             name = html.escape(r["issuer_name"]) + (f" <span style='color:{MUTED}'>({html.escape(r['ticker'])})"
@@ -121,18 +124,21 @@ def body() -> None:
                     if r.get("propagated_exposure") else "—")
             mean = "—" if r["mean_sentiment"] is None else f"{r['mean_sentiment']:+.2f}"
             body_rows.append(
-                f"<tr><td>{r['rank']}</td><td>{pill(r['status'])}</td><td><b>{name}</b><br>"
+                f"<tr title='mean sentiment {mean}'><td>{r['rank']}</td><td>{pill(r['status'], short=True)}</td>"
+                f"<td style='min-width:140px;max-width:200px'><b>{name}</b><br>"
                 f"<span style='color:{MUTED};font-size:0.85rem'>{'⇄ ' if r.get('via_propagation') else ''}"
                 f"{html.escape(r['status_reason'])}</span></td>"
-                f"<td>{html.escape(r['rating_bucket'])}</td><td class='num'>{money(r['exposure_mv'])}</td>"
-                f"<td class='num'>{r['exposure_pct']:.2f}%</td>"
+                f"<td>{html.escape(r['rating_bucket'])}</td><td class='num'>{money(r['exposure_mv'])}<br>"
+                f"<span style='color:{MUTED};font-size:0.8rem'>{r['exposure_pct']:.2f}%</span></td>"
                 f"<td class='num'>{prop}</td>"
                 f"<td class='num'>{r['signal_count']} ({r['negative_count']})</td>"
-                f"<td class='num'>{worst}</td><td class='num'>{mean}</td>"
-                f"<td>{events}<br><span style='color:{MUTED};font-size:0.85rem'>{srcs}</span></td>"
-                f"<td>{sparkline(r['impact_series'], STATUS_COLORS[r['status']], t_end, w['window_hours'])}</td>"
+                f"<td class='num'>{worst}</td>"
+                f"<td style='max-width:170px;font-size:0.8rem'>{events}<br>"
+                f"<span style='color:{MUTED}'>{srcs}</span></td>"
+                f"<td>{sparkline(r['impact_series'], STATUS_COLORS[r['status']], t_end, w['window_hours'], 100)}</td>"
                 f"<td>{link}</td></tr>")
-        st.markdown(f"<table class='wl'>{head}{''.join(body_rows)}</table>", unsafe_allow_html=True)
+        st.markdown(f"<div style='overflow-x:auto'><table class='wl'>{head}{''.join(body_rows)}</table></div>",
+                    unsafe_allow_html=True)
 
     c1, c2 = st.columns([1, 3])
     c1.selectbox("Window (hours, by event time)", [6, 24, 72, 168], index=[6, 24, 72, 168].index(hours)

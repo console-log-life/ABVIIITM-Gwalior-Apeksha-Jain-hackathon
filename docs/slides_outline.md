@@ -69,7 +69,8 @@ secondary, impact 8.7.
   2% appetite.
 - **Demo outcomes (simulated):** idiosyncratic 0.41% GREEN → geopolitical moderate 1.32% AMBER → severe 2.45% RED.
 
-**Visual:** screenshot `05_stress.png`.
+**Visual:** the stress waterfall (`05_stress.png`) and the **risk propagation graph** (`09_propagation.png`, Tata
+Motors: $41m held directly, $23m more via curated peer links to Ford and Tesla; curated, not inferred).
 **Don't include:** any wording that sounds like a regulatory model. Keep the disclaimer visible on the slide.
 **Speaker notes:** "Simplified, illustrative hackathon stress model. Not a production or regulatory risk model."
 
@@ -83,7 +84,8 @@ secondary, impact 8.7.
 - **Impact:** faster triage, prioritisation by materiality, instant portfolio view. A decision-support tool, not
   investment advice.
 
-**Visual:** `01_home.png` plus a small results table, with "PRELIMINARY" written on it.
+**Visual:** the results cards (PRELIMINARY), the **Early Warning Watchlist** (`08_watchlist.png`) and the
+**one-click credit brief** (`10_credit_brief.png`, template-based, no LLM, PDF download).
 **Don't include:** returns, alpha or "x% faster" claims (not measured).
 **Speaker notes:** state the same-author caveat. The lexicon and rules were written by the labeller.
 

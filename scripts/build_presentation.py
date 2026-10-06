@@ -267,7 +267,7 @@ def build(nums: dict) -> Presentation:
              ("NLP pipeline", "Entities, FinBERT, events, impact"),
              ("Signals", "SQLite, bus, REST, SSE, JSONL"),
              ("Stress engine", "Module B triggers and pricers"),
-             ("Dashboard", "12 sections and a watchlist")]
+             ("Dashboard", "watchlist, propagation, what-if, brief")]
     bw, gap, y = Inches(1.82), Inches(0.27), Inches(2.25)
     for i, (head, body) in enumerate(boxes):
         x = MARGIN + i * (bw + gap)
@@ -326,38 +326,47 @@ def build(nums: dict) -> Presentation:
              "dominate, the signal is market-wide, and two independent sources corroborate it. The weights are "
              "expert priors, published at /methodology; calibration against market reactions is future work.")
 
-    # 5 ── stress testing with waterfall
+    # 5 ── stress testing with waterfall + risk propagation
     s = prs.slides.add_slide(blank)
     title(s, "Stress testing (Module B)", "High-impact news triggers a stress test of the book")
-    bullets(s, MARGIN, BODY_TOP + Inches(0.1), Inches(4.7), Inches(3.4), [
+    bullets(s, MARGIN, BODY_TOP + Inches(0.05), Inches(4.75), Inches(2.9), [
         f"{nums['positions']} positions, ${nums['funded_mv_m']:.0f}m funded: loans, bonds, IRS, CDS hedges, FX, equity",
         "Systemic: market-wide or corroborated, news-sourced, impact ≥ 7",
         "Issuer: credit/regulatory/legal, held issuer, negative news",
-        "Cooldown and an audit trail for every run",
-    ], size=18)
+        "What-if sliders reprice the book instantly",
+    ], size=17, space_after=8)
     labels = {"idiosyncratic_credit": "Tata Motors downgrade", "geopolitical_moderate": "Invasion (1 source)",
               "geopolitical_severe": "Corroborated (2 sources)"}
     for i, (key, lab) in enumerate(labels.items()):
         loss, rag, _ = nums["runs"][key]
-        y = Inches(4.95) + i * Inches(0.6)
-        dot = s.shapes.add_shape(MSO_SHAPE.OVAL, MARGIN, y + Inches(0.1), Inches(0.28), Inches(0.28))
+        y = Inches(4.55) + i * Inches(0.5)
+        dot = s.shapes.add_shape(MSO_SHAPE.OVAL, MARGIN, y + Inches(0.1), Inches(0.26), Inches(0.26))
         dot.fill.solid()
         dot.fill.fore_color.rgb = RISK[rag]
         dot.line.fill.background()
         dot.shadow.inherit = False
-        text(s, MARGIN + Inches(0.45), y, Inches(4.3), Inches(0.5),
-             [(f"{loss:.2f}% {rag}  ", 19, True, RISK[rag]), (lab, 18, False, INK)], anchor=MSO_ANCHOR.MIDDLE)
-    pic = picture(s, ASSETS / "stress_waterfall.png", Inches(5.65), BODY_TOP + Inches(0.1), w=Inches(7.1))
-    caption(s, Inches(5.65), BODY_TOP + Inches(0.2) + pic.height, Inches(7.1),
+        text(s, MARGIN + Inches(0.42), y, Inches(4.3), Inches(0.46),
+             [(f"{loss:.2f}% {rag}  ", 18, True, RISK[rag]), (lab, 17, False, INK)], anchor=MSO_ANCHOR.MIDDLE)
+    text(s, MARGIN, Inches(6.1), Inches(4.75), Inches(0.7), STRESS_DISCLAIMER, size=13, color=RISK["RED"], bold=True)
+    rx = Inches(5.6)
+    pic = picture(s, ASSETS / "stress_waterfall.png", rx, BODY_TOP, w=Inches(7.15))
+    caption(s, rx, BODY_TOP + pic.height + Inches(0.03), Inches(7.15),
             f"Before → after, corroborated geopolitical shock · {illus}")
-    text(s, Inches(5.65), BODY_TOP + Inches(0.6) + pic.height, Inches(7.1), Inches(0.7), STRESS_DISCLAIMER,
-         size=14, color=RISK["RED"], bold=True)
+    gy = BODY_TOP + pic.height + Inches(0.42)
+    g = picture(s, ASSETS / "propagation_graph.png", rx, gy, h=Inches(6.85) - gy)
+    text(s, rx + g.width + Inches(0.25), gy, Inches(7.15) - g.width - Inches(0.25), Inches(6.85) - gy, [
+        [("Risk propagation", 18, True, NAVY)],
+        [("Direct vs second-order exposure over 16 hand-curated links (supplier, parent, peer). Tata Motors: "
+          "$41m held, $23m more via Ford and Tesla.", 15, False, INK)],
+        [("Curated, not inferred; an attention measure, not a contagion model.", 13, False, MUTED)],
+    ])
     footer(s, 5, note=f"Demo losses: simulated, {illus.lower()} · not investment advice")
     notes(s, "Read the disclaimer aloud. In the demo the Tata Motors downgrade triggers an issuer-only stress; our "
              "CDS hedge offsets much of it. The invasion headline triggers a moderate systemic stress; a second "
-             "independent source escalates it to severe, above our 2% risk appetite.")
+             "independent source escalates it to severe, above our 2% risk appetite. The propagation graph shows "
+             "what else in the book is linked to the issuer: the links are curated by hand and documented.")
 
-    # 6 ── results + dashboard + business impact
+    # 6 ── results + watchlist + credit brief + business impact
     s = prs.slides.add_slide(blank)
     title(s, "Results and dashboard", f"Accuracy: {prelim.lower()}")
     stats = [(f"{nums['sent_acc']}", "Sentiment", f"accuracy · FinBERT · n = {nums['n']}"),
@@ -369,33 +378,30 @@ def build(nums: dict) -> Presentation:
     sw = Inches(2.3)
     for i, (big, lab, sub) in enumerate(stats):
         x = MARGIN + i * (sw + Inches(0.13))
-        card(s, x, BODY_TOP, sw, Inches(1.55))
-        text(s, x + Inches(0.18), BODY_TOP + Inches(0.1), sw - Inches(0.3), Inches(0.6), big, size=30, bold=True,
+        card(s, x, BODY_TOP, sw, Inches(1.45))
+        text(s, x + Inches(0.18), BODY_TOP + Inches(0.08), sw - Inches(0.3), Inches(0.6), big, size=28, bold=True,
              color=NAVY)
-        text(s, x + Inches(0.18), BODY_TOP + Inches(0.72), sw - Inches(0.3), Inches(0.4), lab, size=18, bold=True)
-        text(s, x + Inches(0.18), BODY_TOP + Inches(1.08), sw - Inches(0.3), Inches(0.35), sub, size=12, color=MUTED)
-    caption(s, MARGIN, BODY_TOP + Inches(1.62), Inches(12), f"{prelim}: labels drafted by an AI assistant, which also "
+        text(s, x + Inches(0.18), BODY_TOP + Inches(0.66), sw - Inches(0.3), Inches(0.4), lab, size=18, bold=True)
+        text(s, x + Inches(0.18), BODY_TOP + Inches(1.0), sw - Inches(0.3), Inches(0.35), sub, size=12, color=MUTED)
+    caption(s, MARGIN, BODY_TOP + Inches(1.5), Inches(12), f"{prelim}: labels drafted by an AI assistant, which also "
             "wrote the event rules. Treat as a smoke test, not a benchmark.", size=12)
-    y2 = BODY_TOP + Inches(2.1)
-    from PIL import Image
-
-    avail, gap_i = W - 2 * MARGIN - Inches(0.25), Inches(0.25)
-    ratios = [Image.open(ASSETS / f).size for f in ("home_kpis.png", "watchlist.png")]
-    hh = int(avail / sum(w_ / h_ for w_, h_ in ratios))  # common height so both fit the width exactly
-    p1 = picture(s, ASSETS / "home_kpis.png", MARGIN, y2, h=hh)
-    p2 = picture(s, ASSETS / "watchlist.png", MARGIN + p1.width + gap_i, y2, h=hh)
-    caption(s, MARGIN, y2 + hh + Inches(0.05), p1.width, "Executive overview after the SYNTHETIC demo story")
-    caption(s, p2.left, y2 + hh + Inches(0.05), p2.width,
-            "Watchlist: Tata Motors WATCH-NEGATIVE after the downgrade")
-    text(s, MARGIN, y2 + hh + Inches(0.45), Inches(12.1), Inches(0.8),
-         [("Business impact: ", 18, True, NAVY), ("earlier warning on held names, triage by materiality, an audited "
-                                                 "portfolio view.", 18, False, INK)])
+    y2 = BODY_TOP + Inches(1.95)
+    hh = Inches(2.65)
+    p1 = picture(s, ASSETS / "watchlist.png", MARGIN, y2, h=hh)
+    p2 = picture(s, ASSETS / "credit_brief.png", MARGIN + p1.width + Inches(0.2), y2, h=hh)
+    caption(s, MARGIN, y2 + hh + Inches(0.04), p1.width, "Early-warning watchlist (real data + SYNTHETIC story)")
+    caption(s, p2.left, y2 + hh + Inches(0.04), p2.width, "One-click credit brief (template, no LLM; PDF)")
+    bx = p2.left + p2.width + Inches(0.25)
+    text(s, bx, y2, W - MARGIN - bx, Inches(0.4), "Business impact", size=18, bold=True, color=NAVY)
+    bullets(s, bx, y2 + Inches(0.45), W - MARGIN - bx, hh - Inches(0.45), [
+        "Earlier warning on held names", "Triage by materiality, rule shown", "Audited portfolio view in seconds",
+    ], size=14, space_after=8)
     footer(s, 6)
     notes(s, "State the caveat plainly: the evaluation labels were drafted by an AI assistant and are pending human "
              "review, and the same assistant wrote the rules, so those numbers are a smoke test. Replaying 911 real "
              "captured documents, our false-trigger fixes cut simulated stress runs from 84 to 50 and removed every "
-             "run triggered by social posts alone. The watchlist is the credit analyst's view: every held issuer "
-             "gets a rules-based status from its recent signals; it is an attention flag, not a rating.")
+             "run triggered by social posts alone. The watchlist is the credit analyst's view on real captured news; "
+             "the credit brief is filled from templates, not generated by a language model.")
 
     # 7 ── innovation + limitations + future + takeaway
     s = prs.slides.add_slide(blank)
