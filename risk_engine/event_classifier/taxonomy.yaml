@@ -10,6 +10,37 @@ secondary_ratio: 0.6
 # systemic stress run. One keyword ("war", "inflation") is not enough to stress the whole book.
 market_min_distinct_patterns: 2
 
+# Mapping of the 20 topics in the PUBLIC human-labelled dataset zeroshot/twitter-financial-news-topic (MIT) to our
+# 11-class taxonomy. Used ONLY to train/evaluate the learned event classifier (risk_engine/training/, notebooks/), never
+# by the rules. Curated by hand; documented in docs/methodology.md. Known limits:
+#   - Litigation is not separable from Regulation in this dataset ("Legal | Regulation" -> Regulatory).
+#   - "Treasuries | Corporate Debt" -> Credit Event is BROADER than credit events (bond-market news, not only
+#     defaults/downgrades); "Company | Product News" -> Product Launch is noisy (general company news).
+#   - IPO -> Other: a listing is a capital-markets event, not a change of control, so it is not M&A.
+#   - Supply Chain, Litigation and true Credit Events (defaults/downgrades) have no clean public labels, so the rule
+#     engine stays authoritative for those classes (hybrid classifier).
+topic_map:
+  "Analyst Update": Other
+  "Fed | Central Banks": Macroeconomic
+  "Company | Product News": Product Launch
+  "Treasuries | Corporate Debt": Credit Event
+  "Dividend": Earnings
+  "Earnings": Earnings
+  "Energy | Oil": Macroeconomic
+  "Financials": Other
+  "Currencies": Macroeconomic
+  "General News | Opinion": Other
+  "Gold | Metals | Materials": Macroeconomic
+  "IPO": Other
+  "Legal | Regulation": Regulatory
+  "M&A | Investments": M&A
+  "Macro": Macroeconomic
+  "Markets": Other
+  "Politics": Geopolitical
+  "Personnel Change": Management
+  "Stock Commentary": Other
+  "Stock Movement": Other
+
 classes:
   Credit Event:
     - {p: "downgrad(?:e|es|ed|ing)", w: 3}

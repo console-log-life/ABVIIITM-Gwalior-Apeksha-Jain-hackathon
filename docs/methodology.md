@@ -184,3 +184,34 @@ largest funded position. CDS protection bought is shown as notional.
 **What it is not:** the status is a rules-based flag for analyst attention. It is not a credit rating, a PD
 estimate or investment advice, and the thresholds are expert-set, not calibrated. In the demo story, step 2
 (the Tata Motors downgrade, impact 8.7, sentiment −0.90) makes Tata Motors WATCH-NEGATIVE (`tests/test_watchlist.py`).
+
+## 8. Learned models: public training data (`risk_engine/training/`, `scripts/datasets/`)
+
+Two **public, human-labelled** datasets (both MIT-licensed; provenance in `data/external/DATASETS.md`):
+- `zeroshot/twitter-financial-news-sentiment` (Bearish / Bullish / Neutral → Negative / Positive / Neutral) to
+  fine-tune FinBERT;
+- `zeroshot/twitter-financial-news-topic` (20 topics) to train an event classifier.
+
+**Splits (seed 42, `risk_engine/training/public_data.py`):** test = each dataset's own `validation` split, held out
+and used only for the final evaluation. Train rows that duplicate a test row after link removal, or nearly duplicate
+one (rapidfuzz ratio ≥ 92), are removed from train (sentiment: 227 rows, topic: 1,270). Dev = a stratified 10% of
+the remaining train rows. The split ids and sha256 checksums are committed in `data/splits/`. Financial PhraseBank
+is not used to evaluate FinBERT, because FinBERT was trained on it.
+
+**Topic → event mapping** (`topic_map` in `taxonomy.yaml`, curated by hand):
+
+| Public topic | Our class |
+|---|---|
+| Fed / Central Banks, Macro, Currencies, Energy / Oil, Gold / Metals / Materials | Macroeconomic |
+| Politics | Geopolitical |
+| Legal / Regulation | Regulatory (litigation is not separable in this dataset) |
+| M&A / Investments | M&A |
+| Earnings, Dividend | Earnings |
+| Personnel Change | Management |
+| Company / Product News | Product Launch (noisy: includes general company news) |
+| Treasuries / Corporate Debt | Credit Event (broader than defaults and downgrades) |
+| IPO | Other (a listing is not a change of control) |
+| Analyst Update, Financials, General News / Opinion, Markets, Stock Commentary, Stock Movement | Other |
+
+Credit events in the strict sense (defaults, downgrades), Supply Chain and Litigation have no clean public labels.
+For those three classes the rule engine stays authoritative (hybrid classifier, below).

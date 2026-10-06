@@ -35,3 +35,9 @@ data/cache/captures/*.tmp
 .tmp/
 coverage.xml
 data/cache/captures/
+
+# public datasets (downloaded by scripts/datasets/prepare_*.py); only the provenance/licence notes are committed
+data/external/*
+!data/external/DATASETS.md
+models/finetuned/
+trained_models.zip
