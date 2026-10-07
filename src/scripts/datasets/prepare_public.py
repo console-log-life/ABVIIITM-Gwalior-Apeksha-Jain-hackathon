@@ -108,9 +108,12 @@ def write_md(results: list[dict]) -> None:
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("datasets", nargs="*", choices=["sentiment", "topic"], default=["sentiment", "topic"],
+    # no `choices=`: Python 3.11 checks the empty default list against it and rejects a bare call
+    ap.add_argument("datasets", nargs="*", metavar="{sentiment,topic}",
                     help="which datasets to prepare (default: both)")
     keys = ap.parse_args().datasets or ["sentiment", "topic"]
+    if bad := [k for k in keys if k not in ("sentiment", "topic")]:
+        ap.error(f"unknown dataset(s) {bad}; choose from sentiment, topic")
     results = []
     for k in keys:
         r = prepare(k)

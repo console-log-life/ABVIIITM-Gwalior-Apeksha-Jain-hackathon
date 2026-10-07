@@ -1,5 +1,5 @@
 # Render every slide of the deck to PNG with the locally installed PowerPoint (COM), for visual QA.
-# Usage: powershell -ExecutionPolicy Bypass -File scripts\render_slides.ps1 [-Deck <pptx>] [-Out <dir>]
+# Usage: powershell -ExecutionPolicy Bypass -File src\scripts\render_slides.ps1 [-Deck <pptx>] [-Out <dir>]
 param(
     [string]$Deck = (Join-Path $PSScriptRoot "..\..\docs\presentation\Risk_Signal_Engine.pptx"),
     [string]$Out = (Join-Path $PSScriptRoot "..\..\docs\presentation\preview"),
