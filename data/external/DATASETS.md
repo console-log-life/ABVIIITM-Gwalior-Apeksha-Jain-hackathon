@@ -1,6 +1,6 @@
 # External datasets
 
-Downloaded by `scripts/datasets/prepare_public.py` with the Hugging Face `datasets` library. The data itself is git-ignored; the split ids (with sha256 checksums) are committed in `data/splits/` so the training notebook rebuilds exactly the same splits.
+Downloaded by `src/scripts/datasets/prepare_public.py` with the Hugging Face `datasets` library. The data itself is git-ignored; the split ids (with sha256 checksums) are committed in `data/splits/` so the training notebook rebuilds exactly the same splits.
 
 **Split rule (seed 42):** test = the dataset's own `validation` split, held out and used only for the final evaluation; train rows that duplicate a test row (same text after removing links) or nearly duplicate one (rapidfuzz ratio >= 92) are removed from train; dev = a stratified 10% of the rest.
 

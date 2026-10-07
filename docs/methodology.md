@@ -9,7 +9,7 @@ historical losses.
 | Mode | What flows in | Provenance label |
 |---|---|---|
 | LIVE | Real sources polled now (Google News RSS, Reddit RSS, Mastodon; best-effort GDELT/StockTwits; optional Finnhub/Bluesky) | `LIVE` |
-| REPLAY | Real documents captured earlier by `scripts/capture_cache.py` | `CACHED_REAL` + capture timestamp |
+| REPLAY | Real documents captured earlier by `src/scripts/capture_cache.py` | `CACHED_REAL` + capture timestamp |
 | SCENARIO / user text | Scripted demo story, headlines typed into the dashboard or `POST /analyze` | `SYNTHETIC` |
 
 All modes call the same function, `risk_engine.pipeline.process_batch()`. Preprocessing does the following:
@@ -24,7 +24,7 @@ The local capture cache (`data/cache/captures/`) is git-ignored. Only a 50-headl
 author handles. The `publisher` field holds the channel, e.g. `r/stocks`, `#stocks`,
 `$AAPL stream`.
 
-## 2. Entity resolution (`risk_engine/entity_resolution/`)
+## 2. Entity resolution (`src/risk_engine/entity_resolution/`)
 
 The universe has 25 issuers: 15 US large caps, 6 Indian corporates, the US and Indian sovereigns, and HSBC. Each has
 aliases, a sector, a country and an **illustrative** rating bucket. Resolution runs in this order:
@@ -41,10 +41,10 @@ aliases, a sector, a country and an **illustrative** rating bucket. Resolution r
 
 The pattern "X's supplier" sets `relation = supplier`, which appears in the business implication.
 
-## 3. Sentiment (`risk_engine/sentiment/finbert.py`)
+## 3. Sentiment (`src/risk_engine/sentiment/finbert.py`)
 
 - **Model:** `ProsusAI/finbert`, loaded once on CPU. Label order is read from `model.config.id2label`. On this model it
-  is `{0: positive, 1: negative, 2: neutral}`, verified by `scripts/setup_models.py`.
+  is `{0: positive, 1: negative, 2: neutral}`, verified by `src/scripts/setup_models.py`.
 - **Score:** `s = P(positive) − P(negative)`, rounded to 3 dp. Labels: s ≤ −0.25 Negative, s ≥ 0.25 Positive, otherwise
   Neutral.
 - **Long text:** the title (weight 2) plus up to 8 sentences. Probabilities are averaged with weight × segment
@@ -52,7 +52,7 @@ The pattern "X's supplier" sets `relation = supplier`, which appears in the busi
 - **Fallback:** a curated finance lexicon with negation handling (a negator within 3 tokens flips polarity). It reports
   `model = "lexicon-fallback"` with confidence capped at 0.5, and `/health` reports when the fallback is active.
 
-## 4. Event classification (`risk_engine/event_classifier/taxonomy.yaml`)
+## 4. Event classification (`src/risk_engine/event_classifier/taxonomy.yaml`)
 
 - **Classes:** 11, exactly as in the spec, each with weighted regex patterns. The score is the sum of distinct matched
   weights.
@@ -61,7 +61,7 @@ The pattern "X's supplier" sets `relation = supplier`, which appears in the busi
 - **Evidence:** the matched phrases are returned as `event_evidence`.
 - **Market evidence guard (trigger only):** classification is not changed. A MARKET-wide Geopolitical or
   Macroeconomic signal needs at least 2 *distinct* matched patterns of that class (`market_min_distinct_patterns`,
-  counted by `rules.class_evidence_count`) before it may start a **systemic stress run** (`portfolio/triggers.py`).
+  counted by `rules.class_evidence_count`) before it may start a **systemic stress run** (`src/portfolio/triggers.py`).
   Applying the guard in classification cost event accuracy (0.803 → 0.762 on the PRELIMINARY labels), so it was moved
   (see `docs/evaluation.md` history and `docs/trigger_replay.md`).
 - **Opinion "verdicts":** "analyst verdict", "our verdict", "verdict on the stock" and similar are not Litigation.
@@ -72,9 +72,9 @@ The pattern "X's supplier" sets `relation = supplier`, which appears in the busi
   +0.15, war/sanctions/halt +0.10. Rumour/considering/may/could/reportedly/talks subtract 0.10; "may" is
   case-sensitive, so the month is ignored. The total is clipped to [−0.20, +0.25].
 - **Optional zero-shot tie-breaker** (`typeform/distilbert-base-uncased-mnli`): it stays **OFF** because
-  `scripts/evaluate.py` measured macro-F1 0.78 with it versus 0.795 without (n=147, PRELIMINARY labels).
+  `src/scripts/evaluate.py` measured macro-F1 0.78 with it versus 0.795 without (n=147, PRELIMINARY labels).
 
-## 5. Impact score (`risk_engine/impact_scoring/weights.yaml`)
+## 5. Impact score (`src/risk_engine/impact_scoring/weights.yaml`)
 
 ```
 Impact = clip(1 + 9 × Q × (0.40·E + 0.25·M + 0.20·X + 0.15·R), 1, 10), rounded to 1 dp
@@ -152,7 +152,7 @@ recalibration was needed.
 
 *Simplified, illustrative hackathon stress model. Not a production or regulatory risk model.*
 
-## 7. Early warning watchlist (`portfolio/watchlist.py`, `GET /watchlist`)
+## 7. Early warning watchlist (`src/portfolio/watchlist.py`, `GET /watchlist`)
 
 A credit-risk view of recent signals: one row per **held** issuer (every issuer_id in the portfolio), including
 issuers with no signals.
@@ -186,14 +186,14 @@ largest funded position. CDS protection bought is shown as notional.
 estimate or investment advice, and the thresholds are expert-set, not calibrated. In the demo story, step 2
 (the Tata Motors downgrade, impact 8.7, sentiment −0.90) makes Tata Motors WATCH-NEGATIVE (`tests/test_watchlist.py`).
 
-## 8. Learned models: public training data (`risk_engine/training/`, `scripts/datasets/`)
+## 8. Learned models: public training data (`src/risk_engine/training/`, `src/scripts/datasets/`)
 
 Two **public, human-labelled** datasets (both MIT-licensed; provenance in `data/external/DATASETS.md`):
 - `zeroshot/twitter-financial-news-sentiment` (Bearish / Bullish / Neutral → Negative / Positive / Neutral) to
   fine-tune FinBERT;
 - `zeroshot/twitter-financial-news-topic` (20 topics) to train an event classifier.
 
-**Splits (seed 42, `risk_engine/training/public_data.py`):** test = each dataset's own `validation` split, held out
+**Splits (seed 42, `src/risk_engine/training/public_data.py`):** test = each dataset's own `validation` split, held out
 and used only for the final evaluation. Train rows that duplicate a test row after link removal, or nearly duplicate
 one (rapidfuzz ratio ≥ 92), are removed from train (sentiment: 227 rows, topic: 1,270). Dev = a stratified 10% of
 the remaining train rows. The split ids and sha256 checksums are committed in `data/splits/`. Financial PhraseBank
@@ -217,11 +217,11 @@ is not used to evaluate FinBERT, because FinBERT was trained on it.
 Credit events in the strict sense (defaults, downgrades), Supply Chain and Litigation have no clean public labels.
 For those three classes the rule engine stays authoritative (hybrid classifier, below).
 
-## 9. REAL history and the time machine (`risk_engine/history.py`, `GET /history`, `as_of` everywhere)
+## 9. REAL history and the time machine (`src/risk_engine/history.py`, `GET /history`, `as_of` everywhere)
 
 The whole local CACHED_REAL capture cache is processed **once** through the same pipeline (FinBERT, events, entities,
 corroboration, impact) and the same stress trigger rules, in event-time order, with the trigger clock set to each
-signal's event time (the convention of `scripts/replay_trigger_report.py`). Triggered stress runs are simulated with
+signal's event time (the convention of `src/scripts/replay_trigger_report.py`). Triggered stress runs are simulated with
 the illustrative model on the synthetic portfolio, stored at the event time with ids `real-…`. The result is cached in
 `data/real_history.db` (git-ignored) with a fingerprint of the capture files, taxonomy, weights, scenarios, portfolio,
 issuer universe and active models; the API loads it at start-up in about a second, or rebuilds it (minutes, reusing
@@ -236,7 +236,7 @@ CACHED_REAL badge shows: an "as of" view is a reconstruction, not what a live sy
 Demo resets keep the REAL history. The corroboration window ignores it, so the scripted SYNTHETIC story always gives
 the same results.
 
-## 10. Risk propagation (`portfolio/propagation.py`, `GET /propagation`)
+## 10. Risk propagation (`src/portfolio/propagation.py`, `GET /propagation`)
 
 16 issuer links in `universe.yaml` (`supplier_of`, `parent_of`, `peer_of`), **curated by hand** from well-known public
 relationships, not inferred from data and not exhaustive. Examples: Nvidia supplier of Microsoft, Meta, Amazon and
@@ -258,7 +258,7 @@ named scenarios. Nothing is saved: no audit-log entry, no "latest run", no bus e
 reproduces it exactly (e.g. geopolitical severe = 2.45%). Tests check monotonic responses: wider spreads lose more on
 bonds and loans and gain more on bought CDS protection; higher PD multipliers lose more; higher rates lose on bonds.
 
-## 12. Credit brief (`portfolio/credit_brief.py`, `GET /credit-brief/{issuer}?format=json|html|pdf`)
+## 12. Credit brief (`src/portfolio/credit_brief.py`, `GET /credit-brief/{issuer}?format=json|html|pdf`)
 
 A one-page issuer brief built from **templates** (no language model): issuer and illustrative rating bucket; watch
 status and the rule that fired; direct and propagated exposure; the last six signals with their reason text; the

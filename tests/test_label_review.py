@@ -12,7 +12,7 @@ import pytest
 load_workbook = pytest.importorskip("openpyxl").load_workbook  # dev dependency (requirements-dev.txt)
 
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT / "scripts"))
+sys.path.insert(0, str(ROOT / "src" / "scripts"))
 import build_label_review  # noqa: E402
 import import_label_review  # noqa: E402
 

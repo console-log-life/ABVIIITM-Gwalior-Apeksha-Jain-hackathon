@@ -15,11 +15,11 @@ switch ($Target) {
     "setup" {
         if (-not (Test-Path $py)) { py -3.11 -m venv .venv }
         Invoke-Install
-        & $py scripts/setup_models.py
+        & $py src/scripts/setup_models.py
     }
     "install" { Invoke-Install }
-    "models" { & $py scripts/setup_models.py }
-    "probe" { & $py scripts/probe_sources.py }
+    "models" { & $py src/scripts/setup_models.py }
+    "probe" { & $py src/scripts/probe_sources.py }
     "test" {
         # fast suite first (with coverage), then the FinBERT tests in a SEPARATE process (one model load, less RAM)
         & $py -m pytest -q -m "not model" --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing --cov-report=xml
@@ -27,31 +27,31 @@ switch ($Target) {
         & $py -m pytest -q -m model
     }
     "test-model" { & $py -m pytest -q -m model }
-    "preflight" { & $py scripts/preflight.py }
-    "label-review" { & $py scripts/build_label_review.py }
-    "import-labels" { & $py scripts/import_label_review.py }
-    "real-history" { & $py scripts/build_real_history.py }
-    "video" { & $py scripts/record_demo_video.py }
+    "preflight" { & $py src/scripts/preflight.py }
+    "label-review" { & $py src/scripts/build_label_review.py }
+    "import-labels" { & $py src/scripts/import_label_review.py }
+    "real-history" { & $py src/scripts/build_real_history.py }
+    "video" { & $py src/scripts/record_demo_video.py }
     "deck" {
-        & $py scripts/crop_screenshots.py
-        & $py scripts/build_presentation.py
-        if ($LASTEXITCODE -eq 0) { & powershell -NoProfile -ExecutionPolicy Bypass -File scripts/render_slides.ps1 }
+        & $py src/scripts/crop_screenshots.py
+        & $py src/scripts/build_presentation.py
+        if ($LASTEXITCODE -eq 0) { & powershell -NoProfile -ExecutionPolicy Bypass -File src/scripts/render_slides.ps1 }
     }
     "test-fast" { & $py -m pytest -q -m "not model" }
     "lint" { & $py -m ruff check . }
-    "capture" { & $py scripts/capture_cache.py }
+    "capture" { & $py src/scripts/capture_cache.py }
     "replay" { & $py -m risk_engine.ingestion.replay --limit 20 }
     "ingest-once" { & $py -m risk_engine.ingestion.scheduler --once }
-    "api" { & $py -m uvicorn app.main:app --host 127.0.0.1 --port 8000 }
-    "dashboard" { & $py -m streamlit run app/dashboard/Home.py --server.port 8501 }
-    "demo" { & $py scripts/run_demo.py }
-    "demo-offline" { & $py scripts/run_demo.py --offline }
-    "drill" { & $py scripts/failure_drill.py }
-    "check-dashboard" { & $py scripts/check_dashboard.py }
-    "screenshots" { & $py scripts/screenshot_dashboard.py }
+    "api" { & $py -m uvicorn --app-dir src app.main:app --host 127.0.0.1 --port 8000 }
+    "dashboard" { & $py -m streamlit run src/app/dashboard/Home.py --server.port 8501 }
+    "demo" { & $py src/scripts/run_demo.py }
+    "demo-offline" { & $py src/scripts/run_demo.py --offline }
+    "drill" { & $py src/scripts/failure_drill.py }
+    "check-dashboard" { & $py src/scripts/check_dashboard.py }
+    "screenshots" { & $py src/scripts/screenshot_dashboard.py }
     "portfolio" { & $py -m portfolio.generate_portfolio }
-    "evaluate" { & $py scripts/evaluate.py }
-    "benchmark" { & $py scripts/benchmark_latency.py }
-    "submission" { & $py scripts/build_submission.py }
+    "evaluate" { & $py src/scripts/evaluate.py }
+    "benchmark" { & $py src/scripts/benchmark_latency.py }
+    "submission" { & $py src/scripts/build_submission.py }
 }
 exit $LASTEXITCODE

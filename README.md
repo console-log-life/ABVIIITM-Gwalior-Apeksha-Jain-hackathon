@@ -92,7 +92,7 @@ pytest · ruff. Exact pins are in `requirements.txt`.
 
 ## Data sources and provenance
 
-Sources are claimed as working only after `scripts/probe_sources.py` passed on the developer machine (last run
+Sources are claimed as working only after `src/scripts/probe_sources.py` passed on the developer machine (last run
 2026-10-03; details in [docs/data_sources.md](docs/data_sources.md)):
 
 | Source | Type | Status |
@@ -107,7 +107,7 @@ Sources are claimed as working only after `scripts/probe_sources.py` passed on t
 | Provenance | Meaning |
 |---|---|
 | `LIVE` | fetched from a real source in this session |
-| `CACHED_REAL` | real document captured earlier by `scripts/capture_cache.py`; the capture time is shown |
+| `CACHED_REAL` | real document captured earlier by `src/scripts/capture_cache.py`; the capture time is shown |
 | `SYNTHETIC` | scripted demo story, the generated portfolio, or user-typed text |
 | simulated | every stress-test result (illustrative model) |
 
@@ -134,7 +134,7 @@ Impact = clip(1 + 9 × Q × (0.40·E + 0.25·M + 0.20·X + 0.15·R), 1, 10)
 E event severity · M sentiment magnitude · X portfolio exposure / breadth · R source credibility (+ corroboration)
 Q = 0.6 + 0.4 × model confidence        Low < 4 ≤ Medium < 7 ≤ High < 8.5 ≤ Critical
 ```
-The weights are **expert-set priors, not calibrated**. All values are in `risk_engine/impact_scoring/weights.yaml` and
+The weights are **expert-set priors, not calibrated**. All values are in `src/risk_engine/impact_scoring/weights.yaml` and
 are exposed at `GET /methodology`.
 
 ## Module B: stress testing
@@ -160,8 +160,8 @@ are exposed at `GET /methodology`.
 ## Screenshots
 
 `docs/screenshots/`: full pages `01_home.png` … `09_propagation.png` and `10_credit_brief.png`; projector-size
-viewports in `1366x768/` and `1920x1080/`. Refresh with `scripts/screenshot_dashboard.py [--size 1366x768]` and
-`scripts/crop_screenshots.py` while the demo runs.
+viewports in `1366x768/` and `1920x1080/`. Refresh with `src/scripts/screenshot_dashboard.py [--size 1366x768]` and
+`src/scripts/crop_screenshots.py` while the demo runs.
 
 ## Install
 
@@ -235,13 +235,13 @@ powershell -ExecutionPolicy Bypass -File tasks.ps1 drill      # offline / outage
 - **Test suite:** 263 tests (259 fast + 4 FinBERT model tests, run in a separate process; pytest, no network in
   unit tests). Coverage on the fast suite is 90% (`--cov=risk_engine --cov=portfolio --cov=app`). It includes
   regression tests for the real headlines that misfired, and the watchlist rules and endpoint.
-- **Failure drill:** `scripts/failure_drill.py` passed 7/7 checks with every outbound HTTP request blocked.
+- **Failure drill:** `src/scripts/failure_drill.py` passed 7/7 checks with every outbound HTTP request blocked.
 
 ## Measured results (from scripts in this repo)
 
 > **PRELIMINARY.** The gold labels in `data/eval/labelled_headlines.csv` were drafted by an AI assistant and are
 > pending human review. The same assistant wrote the event rules and the lexicon, which likely flatters those
-> components. These are not final results. Source: `scripts/evaluate.py` → [docs/evaluation.md](docs/evaluation.md).
+> components. These are not final results. Source: `src/scripts/evaluate.py` → [docs/evaluation.md](docs/evaluation.md).
 
 | Measure | Value | n |
 |---|---:|---:|
@@ -253,7 +253,7 @@ powershell -ExecutionPolicy Bypass -File tasks.ps1 drill      # offline / outage
 | Zero-shot tie-breaker effect on event macro-F1 | 0.795 → 0.78 (kept off) | 147 |
 | StockTwits Bullish/Bearish agreement | not measured (source blocked) | 0 |
 
-Latency (`scripts/benchmark_latency.py` → [docs/benchmark.md](docs/benchmark.md), CPU-only laptop, n = 200 real cached
+Latency (`src/scripts/benchmark_latency.py` → [docs/benchmark.md](docs/benchmark.md), CPU-only laptop, n = 200 real cached
 documents, full pipeline): **median 204.7 ms, p95 1085.2 ms per document**; 278.9 ms per document when batched.
 
 The market-evidence guard (a MARKET-wide macro or geopolitical call needs ≥ 2 distinct cues) now gates only the
@@ -261,7 +261,7 @@ systemic stress trigger, not classification. When it lived in classification, ev
 0.803 / 0.891 to 0.762 / 0.857; moving it to the trigger restored them (0.81 / 0.898). The before/after history is in
 [docs/evaluation.md](docs/evaluation.md).
 
-**Stress-trigger replay** (`scripts/replay_trigger_report.py` → [docs/trigger_replay.md](docs/trigger_replay.md), all
+**Stress-trigger replay** (`src/scripts/replay_trigger_report.py` → [docs/trigger_replay.md](docs/trigger_replay.md), all
 911 real documents in the developer's local capture cache, which is not published; simulated stress): **84 → 50 stress runs** after the false-positive fixes. Systemic runs fell
 from 74 to 45, idiosyncratic runs from 10 to 5, and runs triggered by social posts from 11 to 0. Some of the 34
 removed runs were genuine single-cue market stories (recall cost).

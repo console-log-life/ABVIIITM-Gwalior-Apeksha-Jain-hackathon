@@ -20,10 +20,10 @@ install:
 	"$(PY)" -m pip install -r requirements.txt
 
 models:
-	"$(PY)" scripts/setup_models.py
+	"$(PY)" src/scripts/setup_models.py
 
 probe:
-	"$(PY)" scripts/probe_sources.py
+	"$(PY)" src/scripts/probe_sources.py
 
 test:  # fast suite with coverage, then FinBERT tests in a separate process
 	"$(PY)" -m pytest -q -m "not model" --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing --cov-report=xml
@@ -33,7 +33,7 @@ test-model:
 	"$(PY)" -m pytest -q -m model
 
 preflight:
-	"$(PY)" scripts/preflight.py
+	"$(PY)" src/scripts/preflight.py
 
 test-fast:
 	"$(PY)" -m pytest -q -m "not model"
@@ -42,7 +42,7 @@ lint:
 	"$(PY)" -m ruff check .
 
 capture:
-	"$(PY)" scripts/capture_cache.py
+	"$(PY)" src/scripts/capture_cache.py
 
 replay:
 	"$(PY)" -m risk_engine.ingestion.replay --limit 20
@@ -51,40 +51,40 @@ ingest-once:
 	"$(PY)" -m risk_engine.ingestion.scheduler --once
 
 api:
-	"$(PY)" -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+	"$(PY)" -m uvicorn --app-dir src app.main:app --host 127.0.0.1 --port 8000
 
 dashboard:
-	"$(PY)" -m streamlit run app/dashboard/Home.py --server.port 8501
+	"$(PY)" -m streamlit run src/app/dashboard/Home.py --server.port 8501
 
 demo:
-	"$(PY)" scripts/run_demo.py
+	"$(PY)" src/scripts/run_demo.py
 
 demo-offline:
-	"$(PY)" scripts/run_demo.py --offline
+	"$(PY)" src/scripts/run_demo.py --offline
 
 drill:
-	"$(PY)" scripts/failure_drill.py
+	"$(PY)" src/scripts/failure_drill.py
 
 check-dashboard:
-	"$(PY)" scripts/check_dashboard.py
+	"$(PY)" src/scripts/check_dashboard.py
 
 screenshots:
-	"$(PY)" scripts/screenshot_dashboard.py
+	"$(PY)" src/scripts/screenshot_dashboard.py
 
 portfolio:
 	"$(PY)" -m portfolio.generate_portfolio
 
 evaluate:
-	"$(PY)" scripts/evaluate.py
+	"$(PY)" src/scripts/evaluate.py
 
 benchmark:
-	"$(PY)" scripts/benchmark_latency.py
+	"$(PY)" src/scripts/benchmark_latency.py
 
 submission:
-	"$(PY)" scripts/build_submission.py
+	"$(PY)" src/scripts/build_submission.py
 
 label-review:
-	"$(PY)" scripts/build_label_review.py
+	"$(PY)" src/scripts/build_label_review.py
 
 import-labels:
-	"$(PY)" scripts/import_label_review.py
+	"$(PY)" src/scripts/import_label_review.py

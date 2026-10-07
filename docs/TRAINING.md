@@ -1,6 +1,6 @@
 # Training the models on a free GPU
 
-The notebook `notebooks/train_models.ipynb` fine-tunes two models on public, human-labelled datasets (MIT licence):
+The notebook `src/notebooks/train_models.ipynb` fine-tunes two models on public, human-labelled datasets (MIT licence):
 
 | Model | Base | Training data | Held-out test |
 |---|---|---|---|
@@ -21,7 +21,7 @@ match `data/splits/*.json`. That check guarantees the test examples are the same
    avatar (top right) → **Settings** → **Phone verification**.
 2. Top left, click **+ Create** → **New Notebook**.
 3. In the notebook menu, click **File** → **Import Notebook**. Choose **File** in the dialog, drag in
-   `notebooks/train_models.ipynb` from the repository folder
+   `src/notebooks/train_models.ipynb` from the repository folder
    (`E:\GT LAB\PROJECTS\risk-signal-engine\notebooks\train_models.ipynb`), and click **Import**.
 4. Open the right-hand panel (the **›** arrow at the top right if it is hidden). Under **Session options**:
    - **Accelerator** → **GPU T4 x2** (or **GPU T4**). Confirm with **Turn on GPU**.
@@ -35,11 +35,11 @@ match `data/splits/*.json`. That check guarantees the test examples are the same
    `trained_models.zip` → **⋮** → **Download**.
    If the file is not listed, click the refresh icon in the Output section.
 9. Put the zip in the project folder (`E:\GT LAB\PROJECTS\risk-signal-engine\trained_models.zip`; it is git-ignored)
-   and tell me. I'll run `python scripts/import_trained_models.py trained_models.zip`.
+   and tell me. I'll run `python src/scripts/import_trained_models.py trained_models.zip`.
 
 ## Option B: Google Colab
 
-1. Open <https://colab.research.google.com> → **File** → **Upload notebook** → choose `notebooks/train_models.ipynb`.
+1. Open <https://colab.research.google.com> → **File** → **Upload notebook** → choose `src/notebooks/train_models.ipynb`.
 2. **Runtime** → **Change runtime type** → **Hardware accelerator: T4 GPU** → **Save**.
 3. **Runtime** → **Run all**. If Colab warns that the notebook was not authored by Google, click **Run anyway**.
 4. When the last cell prints `done …`, open the **Files** panel (folder icon on the left). `trained_models.zip` is in
@@ -68,7 +68,7 @@ match `data/splits/*.json`. That check guarantees the test examples are the same
 - `predictions_test.json`: the notebook's test predictions. The import script re-predicts a sample on the laptop and
   checks they match, which catches any label-mapping mistake.
 
-The rule-based event classifier is evaluated on the same test split locally (`scripts/evaluate.py`), because it needs
+The rule-based event classifier is evaluated on the same test split locally (`src/scripts/evaluate.py`), because it needs
 the repository code.
 
 ## Reproducing the splits locally

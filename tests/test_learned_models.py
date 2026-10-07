@@ -128,7 +128,7 @@ def test_import_script_installs_and_verifies(tmp_path, monkeypatch, event_dir):
 
     from app.config import PROJECT_ROOT
 
-    sys.path.insert(0, str(PROJECT_ROOT / "scripts"))
+    sys.path.insert(0, str(PROJECT_ROOT / "src" / "scripts"))
     import import_trained_models as imp
 
     stage = tmp_path / "zip" / "out"

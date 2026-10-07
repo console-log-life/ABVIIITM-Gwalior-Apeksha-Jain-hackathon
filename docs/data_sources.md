@@ -1,8 +1,8 @@
 # Data sources
 
-A source is only claimed as working after `scripts/probe_sources.py` passes against it.
+A source is only claimed as working after `src/scripts/probe_sources.py` passes against it.
 Raw results of the latest run: `data/probe_results.json` (not committed; regenerate with `tasks.ps1 probe`).
-Per-source settings (queries, intervals, rate limits, backoffs): `risk_engine/ingestion/sources.yaml`.
+Per-source settings (queries, intervals, rate limits, backoffs): `src/risk_engine/ingestion/sources.yaml`.
 
 ## Probe and capture results — 2026-10-03, developer laptop (Windows 11, home network)
 
@@ -44,10 +44,10 @@ Rotation position, last request time and backoffs are saved in `data/cache/state
 
 ## Caching real data for REPLAY
 
-`scripts/capture_cache.py` fetches every live source once and writes only new documents to
+`src/scripts/capture_cache.py` fetches every live source once and writes only new documents to
 `data/cache/captures/capture_<UTC timestamp>.jsonl` with `provenance=CACHED_REAL` and the real `captured_at`.
 That directory is **git-ignored**: it holds real social posts and is not published. The repository ships
-`data/cache/sample/sample_google_news.jsonl` instead: 50 news headlines built by `scripts/build_cache_sample.py`.
+`data/cache/sample/sample_google_news.jsonl` instead: 50 news headlines built by `src/scripts/build_cache_sample.py`.
 REPLAY falls back to that sample when no local captures exist.
 Documents are deduplicated against the whole existing cache (exact plus same-source near-duplicates).
 

@@ -55,7 +55,8 @@ def test_build_split_partitions_and_checksum():
 
 
 def test_topic_map_covers_all_20_topics_with_valid_classes():
-    tmap = yaml.safe_load((PROJECT_ROOT / "risk_engine/event_classifier/taxonomy.yaml").read_text("utf-8"))["topic_map"]
+    taxonomy = PROJECT_ROOT / "src/risk_engine/event_classifier/taxonomy.yaml"
+    tmap = yaml.safe_load(taxonomy.read_text("utf-8"))["topic_map"]
     assert set(tmap) == set(DATASETS["topic"]["labels"]) and set(tmap.values()) <= set(EVENT_TYPES)
     assert tmap["IPO"] == "Other" and tmap["Legal | Regulation"] == "Regulatory"
     assert map_labels(["Bearish", "Bullish"], DATASETS["sentiment"]["to_ours"]) == ["Negative", "Positive"]
@@ -67,7 +68,7 @@ def test_topic_map_covers_all_20_topics_with_valid_classes():
 def test_committed_split_files_are_consistent(key):
     path = SPLITS / f"{key}.json"
     if not path.exists():
-        pytest.skip("run scripts/datasets/prepare_public.py")
+        pytest.skip("run src/scripts/datasets/prepare_public.py")
     sp = json.loads(path.read_text("utf-8"))
     assert sp["sha256"] == checksum(sp) and sp["seed"] == 42 and sp["dataset"] == DATASETS[key]["hf_id"]
     tr, dv, rm = set(sp["train_ids"]), set(sp["dev_ids"]), set(sp["removed_leak_ids"])

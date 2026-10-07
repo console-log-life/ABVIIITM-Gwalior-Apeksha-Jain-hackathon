@@ -3,7 +3,7 @@
 Numbers on these slides must come only from `docs/evaluation.md` (PRELIMINARY until the labels are human-reviewed),
 `docs/benchmark.md` and the stress engine's simulated outputs (always labelled "simulated, illustrative model").
 
-The built deck is `docs/presentation/Risk_Signal_Engine.pptx` (`tasks.ps1 deck`). `scripts/build_presentation.py` reads
+The built deck is `docs/presentation/Risk_Signal_Engine.pptx` (`tasks.ps1 deck`). `src/scripts/build_presentation.py` reads
 its numbers from the same JSON outputs, so rebuild it after any re-evaluation.
 
 ---

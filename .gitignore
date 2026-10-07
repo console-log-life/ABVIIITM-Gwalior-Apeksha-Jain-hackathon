@@ -42,3 +42,6 @@ data/external/*
 models/finetuned/
 trained_models.zip
 data/real_history.db*
+
+# AI working notes (kept locally, not published)
+.local_notes/

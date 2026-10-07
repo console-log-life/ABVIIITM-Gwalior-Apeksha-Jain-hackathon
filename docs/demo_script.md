@@ -23,7 +23,7 @@ all stress results are SYNTHETIC / simulated. The Tata Motors and invasion headl
 
 | Failure | Fallback |
 |---|---|
-| No internet / venue Wi-Fi down | Nothing to do: `tasks.ps1 demo-offline` needs no network (verified by `scripts/failure_drill.py`). |
+| No internet / venue Wi-Fi down | Nothing to do: `tasks.ps1 demo-offline` needs no network (verified by `src/scripts/failure_drill.py`). |
 | REAL history still building at start | The sidebar shows the progress; start the **Scenario demo** first (it is independent), then return to the real-data part. |
 | Live sources failing | Expected and fine: Source Health shows them DEGRADED/BACKOFF while the app keeps running. |
 | FinBERT won't load | The sidebar badge shows the lexicon fallback and /health says why. Continue; scores are confidence-capped. |
