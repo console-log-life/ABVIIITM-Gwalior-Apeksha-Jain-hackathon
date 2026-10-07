@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>Risk Signal Engine architecture</title>
+<style>
+  :root { --ink:#0f172a; --muted:#475569; --line:#cbd5e1; --navy:#1e2a44; --teal:#0e7c86; --tint:#eef4f8;
+          --real:#7c3aed; --syn:#64748b; --live:#0284c7; }
+  * { box-sizing: border-box; }
+  body { margin:0; width:1920px; background:#ffffff; font-family: "Segoe UI", Arial, sans-serif; color:var(--ink); }
+  .wrap { padding:44px 56px; }
+  h1 { margin:0; font-size:44px; letter-spacing:.01em; }
+  .sub { color:var(--muted); font-size:22px; margin:6px 0 28px 0; }
+  .row { display:flex; align-items:stretch; gap:0; }
+  .col { flex:1; display:flex; flex-direction:column; gap:14px; }
+  .stage { background:var(--tint); border:2px solid var(--line); border-radius:14px; padding:16px 18px; }
+  .stage.dark { background:var(--navy); color:#fff; border-color:var(--navy); }
+  .stage h2 { margin:0 0 8px 0; font-size:25px; }
+  .stage p, .stage li { margin:0; font-size:19px; line-height:1.38; }
+  .stage ul { margin:0; padding-left:20px; }
+  .dark li, .dark p { color:#e2e8f0; }
+  .arrow { width:46px; display:flex; align-items:center; justify-content:center; font-size:38px; color:var(--teal); }
+  .tag { display:inline-block; padding:1px 9px; border-radius:6px; font-size:15px; font-weight:700; color:#fff; margin:2px 4px 2px 0; }
+  .t-real { background:var(--real); } .t-syn { background:var(--syn); } .t-live { background:var(--live); }
+  .bottom { display:flex; gap:22px; margin-top:26px; }
+  .bottom .stage { flex:1; }
+  .note { color:var(--muted); font-size:18px; margin-top:20px; }
+</style></head>
+<body><div class="wrap">
+  <h1>Risk Signal Engine: architecture</h1>
+  <div class="sub">One NLP pipeline for live, replayed, scripted and API input · every record labelled LIVE / CACHED_REAL / SYNTHETIC</div>
+  <div class="row">
+    <div class="col">
+      <div class="stage"><h2>Sources</h2>
+        <ul><li>Google News RSS (news)</li><li>Reddit RSS, Mastodon (social)</li><li>GDELT, StockTwits (best effort)</li>
+        <li>Finnhub, Bluesky (optional keys)</li></ul></div>
+      <div class="stage"><h2>Other inputs</h2>
+        <p><span class="tag t-real">CACHED_REAL</span> capture cache + REAL history</p>
+        <p><span class="tag t-syn">SYNTHETIC</span> scenario story, typed text</p>
+        <p><span class="tag t-live">LIVE</span> polling, POST /analyze</p></div>
+    </div>
+    <div class="arrow">➜</div>
+    <div class="col">
+      <div class="stage"><h2>Ingestion</h2>
+        <ul><li>rate limits, retries, backoff</li><li>source health, never stops</li><li>clean, language check</li>
+        <li>exact + near-duplicate filter</li><li>provenance on every document</li></ul></div>
+    </div>
+    <div class="arrow">➜</div>
+    <div class="col">
+      <div class="stage dark"><h2>NLP pipeline</h2>
+        <ul><li>entities: cashtags, aliases, spaCy, guarded fuzzy</li><li>FinBERT sentiment −1…1 (fine-tuned when installed)</li>
+        <li>11-class events: rules + evidence (hybrid with a learned model)</li><li>corroboration across sources</li>
+        <li>impact 1–10 = 1 + 9·Q·(0.40E + 0.25M + 0.20X + 0.15R)</li><li>reason + business implication</li></ul></div>
+    </div>
+    <div class="arrow">➜</div>
+    <div class="col">
+      <div class="stage"><h2>RiskSignal store</h2>
+        <ul><li>SQLite (signals, documents, stress runs)</li><li>in-process event bus</li><li>time machine (as_of)</li></ul></div>
+      <div class="stage"><h2>FastAPI</h2>
+        <ul><li>REST + Swagger, SSE stream, JSONL export</li><li>/watchlist · /propagation</li><li>/portfolio/what-if · /credit-brief</li></ul></div>
+    </div>
+    <div class="arrow">➜</div>
+    <div class="col">
+      <div class="stage dark"><h2>Module B: stress engine</h2>
+        <ul><li>systemic + issuer triggers, cooldown</li><li>pricers: bonds, loans, IRS, CDS, FX, equity</li>
+        <li>named scenarios + what-if shocks</li><li>RAG vs 2% appetite, audit trail</li></ul></div>
+      <div class="stage"><h2>Streamlit dashboard</h2>
+        <ul><li>overview, watchlist, propagation</li><li>feed, signals, explainability</li><li>stress, portfolio, health</li></ul></div>
+    </div>
+  </div>
+  <div class="bottom">
+    <div class="stage"><h2>Portfolio</h2><p><span class="tag t-syn">SYNTHETIC</span> 49 positions (seed 42): loans, bonds, IRS, CDS hedges, FX forwards, equity</p></div>
+    <div class="stage"><h2>Credit-risk views</h2><p>early-warning watchlist · propagation over 16 curated links · one-click credit brief (PDF)</p></div>
+    <div class="stage"><h2>Models</h2><p>FinBERT; optional fine-tuned FinBERT + distilroberta trained on public human-labelled data</p></div>
+  </div>
+  <div class="note">Stress results come from a simplified, illustrative hackathon model, not a production or regulatory risk model. Decision support, not investment advice.</div>
+</div></body></html>

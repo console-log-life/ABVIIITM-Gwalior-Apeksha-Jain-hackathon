@@ -77,7 +77,15 @@ def load_numbers() -> dict:
         "positions": len(eng.portfolio.df), "funded_mv_m": eng.portfolio.funded_mv / 1e6,
         "runs": {k: (v["loss_pct"], v["rag"], v["scenario_label"]) for k, v in runs.items()},
         "weights": get_scorer().cfg["weights"],
+        "history": _history_meta(s),
     }
+
+
+def _history_meta(settings) -> dict | None:
+    """REAL history metadata written by src/risk_engine/history.py (None on a fresh clone without the cache)."""
+    from risk_engine.history import history_path, read_meta
+
+    return read_meta(history_path(settings))
 
 
 # ------------------------------------------------------------------ drawing helpers
@@ -186,190 +194,139 @@ def notes(slide, t):
 
 
 # ------------------------------------------------------------------ slides
+def _flow(s, x0, y, items, color, filled) -> None:
+    """Three rounded boxes with arrows (used for 'today' vs 'with the engine')."""
+    bw2, gap2 = Inches(1.78), Inches(0.36)
+    for i, it in enumerate(items):
+        x = x0 + i * (bw2 + gap2)
+        shp = card(s, x, y, bw2, Inches(1.0), fill=color if filled else TINT)
+        tf = shp.text_frame
+        tf.word_wrap = True
+        tf.vertical_anchor = MSO_ANCHOR.MIDDLE
+        for m in ("margin_left", "margin_right"):
+            setattr(tf, m, Inches(0.1))
+        p = tf.paragraphs[0]
+        p.alignment = PP_ALIGN.CENTER
+        r = p.add_run()
+        r.text = it
+        _font(r, 17, True, WHITE if filled else NAVY)
+        if i < len(items) - 1:
+            c = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, x + bw2 + Inches(0.03), y + Inches(0.5),
+                                       x + bw2 + gap2 - Inches(0.03), y + Inches(0.5))
+            c.line.color.rgb = color
+            c.line.width = Pt(2.5)
+            c.line._get_or_add_ln().append(c.line._get_or_add_ln().makeelement(qn("a:tailEnd"),
+                                                                                 {"type": "triangle"}))
+
+
 def build(nums: dict) -> Presentation:
+    """The official 7 slides: title · problem and approach · system design · implementation highlights · key results
+    and metrics · domain impact and business value · limitations and future work."""
     prs = Presentation()
     prs.slide_width, prs.slide_height = W, H
     blank = prs.slide_layouts[6]
     prelim = "Preliminary (labels pending human review)" if nums["preliminary"] else "Human-reviewed labels"
     illus = "Illustrative model, synthetic portfolio"
+    hist = nums.get("history") or {}
 
-    # 1 ── title + problem + one-line solution
+    # 1 ── title
     s = prs.slides.add_slide(blank)
-    text(s, MARGIN, Inches(1.0), Inches(12), Inches(1.0), "Risk Signal Engine", size=48, bold=True, color=NAVY)
-    text(s, MARGIN, Inches(1.95), Inches(12), Inches(0.6),
-         "From breaking news and social posts to a portfolio stress test, automatically", size=24, color=TEAL)
-    for i, (head, body) in enumerate([
-        ("The problem", "Downgrades, sanctions, probes and rate moves hit unstructured text first. "
-                        "Risk teams read them by hand, and the portfolio impact is worked out later."),
-        ("Our solution", "An NLP engine scores every item for sentiment, event type and a transparent 1–10 "
-                         "impact, then triggers a stress test of a loans, bonds and derivatives book."),
-    ]):
-        x = MARGIN + i * Inches(6.15)
-        card(s, x, Inches(3.05), Inches(5.9), Inches(2.6))
-        text(s, x + Inches(0.35), Inches(3.3), Inches(5.2), Inches(0.5), head, size=24, bold=True, color=NAVY)
-        text(s, x + Inches(0.35), Inches(3.9), Inches(5.2), Inches(1.7), body, size=20)
-    text(s, MARGIN, Inches(6.05), Inches(12), Inches(0.4),
+    card(s, 0, 0, W, Inches(4.2), fill=NAVY)
+    text(s, MARGIN, Inches(1.25), Inches(12), Inches(1.0), "Risk Signal Engine", size=54, bold=True, color=WHITE)
+    text(s, MARGIN, Inches(2.35), Inches(12), Inches(0.7),
+         "From breaking news and social posts to explainable risk signals and a portfolio stress test",
+         size=24, color=WHITE)
+    text(s, MARGIN, Inches(3.15), Inches(12), Inches(0.5),
          "S&P Global × CRISIL · Code to Connect Hackathon 2026 · Module B: Strategic Portfolio Stress Testing",
-         size=16, color=MUTED)
-    footer(s, 1)
-    notes(s, "Every number you will see is either measured by a script in the repository or clearly labelled as "
-             "simulated or synthetic. The problem: risk-relevant events surface in text first, and nothing connects "
-             "them to the portfolio until someone reads and calculates. Our answer: an NLP risk engine plus an "
-             "event-driven stress test.")
+         size=17, color=WHITE)
+    facts = [(f"{hist.get('documents', '—'):,}" if hist else "—", "real captured headlines and posts"),
+             ("1–10", "explainable impact score"), ("seconds", "from headline to portfolio view")]
+    for i, (big, lab) in enumerate(facts):
+        x = MARGIN + i * Inches(4.1)
+        text(s, x, Inches(4.75), Inches(3.8), Inches(0.8), big, size=36, bold=True, color=TEAL)
+        text(s, x, Inches(5.5), Inches(3.8), Inches(0.6), lab, size=18, color=INK)
+    text(s, MARGIN, Inches(6.35), Inches(12), Inches(0.4), "Individual submission · decision-support prototype, "
+         "not investment advice", size=15, color=MUTED)
+    notes(s, "Every number in this deck is produced by a script in the repository or labelled as simulated or "
+             "synthetic. One sentence: we turn news and social text into explainable risk signals and stress the "
+             "portfolio when something material happens.")
 
-    # 2 ── business context
+    # 2 ── problem and approach
     s = prs.slides.add_slide(blank)
-    title(s, "Why it matters", "Risk shows up in text before it shows up in data")
-    bullets(s, MARGIN, BODY_TOP + Inches(0.1), Inches(5.6), Inches(4.6), [
-        "Credit analysts and risk teams monitor hundreds of issuers",
-        "Downgrades, probes and sanctions break as headlines and posts",
-        "Manual triage is slow, noisy and duplicated",
-        "Nothing links a headline to the book's exposure",
-        [("Need: ", True), ("early warning, materiality ranking, instant portfolio view", False)],
-    ], size=20)
-    steps = [("Today", ["Headline breaks", "Analyst reads it", "Manual stress run, later"], MUTED),
-             ("With the engine", ["Headline ingested", "Scored + explained", "Stress test triggered"], TEAL)]
-    for row, (label, items, color) in enumerate(steps):
-        y = BODY_TOP + Inches(0.3) + row * Inches(2.25)
-        text(s, Inches(6.7), y, Inches(6), Inches(0.4), label, size=20, bold=True, color=color)
-        bw2, gap2 = Inches(1.78), Inches(0.36)
-        for i, it in enumerate(items):
-            x = Inches(6.7) + i * (bw2 + gap2)
-            shp = card(s, x, y + Inches(0.55), bw2, Inches(1.0), fill=color if row else TINT)
-            tf = shp.text_frame
-            tf.word_wrap = True
-            tf.vertical_anchor = MSO_ANCHOR.MIDDLE
-            for m in ("margin_left", "margin_right"):
-                setattr(tf, m, Inches(0.1))
-            p = tf.paragraphs[0]
-            p.alignment = PP_ALIGN.CENTER
-            r = p.add_run()
-            r.text = it
-            _font(r, 18, True, WHITE if row else NAVY)
-            if i < len(items) - 1:
-                c = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, x + bw2 + Inches(0.03), y + Inches(1.05),
-                                           x + bw2 + gap2 - Inches(0.03), y + Inches(1.05))
-                c.line.color.rgb = color
-                c.line.width = Pt(2.5)
-                c.line._get_or_add_ln().append(c.line._get_or_add_ln().makeelement(qn("a:tailEnd"),
-                                                                                     {"type": "triangle"}))
-    caption(s, Inches(6.7), BODY_TOP + Inches(4.75), Inches(6),
+    title(s, "Problem and approach", "Risk shows up in text before it shows up in data")
+    bullets(s, MARGIN, BODY_TOP + Inches(0.1), Inches(5.6), Inches(4.8), [
+        "Downgrades, probes, sanctions and rate moves break as headlines and posts",
+        "Credit analysts and risk teams triage them by hand: slow, noisy, duplicated",
+        "Nothing links a headline to the book's exposure until someone runs numbers",
+        [("Approach: ", True), ("an NLP risk engine scores every item (sentiment, event, impact) and an "
+                                "event-driven stress engine reprices the book", False)],
+    ], size=19, space_after=10)
+    text(s, Inches(6.7), BODY_TOP + Inches(0.3), Inches(6), Inches(0.4), "Today", size=20, bold=True, color=MUTED)
+    _flow(s, Inches(6.7), BODY_TOP + Inches(0.85), ["Headline breaks", "Analyst reads it", "Manual stress run, later"],
+          MUTED, False)
+    text(s, Inches(6.7), BODY_TOP + Inches(2.55), Inches(6), Inches(0.4), "With the engine", size=20, bold=True,
+         color=TEAL)
+    _flow(s, Inches(6.7), BODY_TOP + Inches(3.1), ["Headline ingested", "Scored + explained", "Stress test triggered"],
+          TEAL, True)
+    caption(s, Inches(6.7), BODY_TOP + Inches(4.4), Inches(6),
             f"Measured pipeline latency: median {nums['lat_med']} ms per document (n = {nums['lat_n']}, CPU laptop)")
     footer(s, 2)
-    notes(s, "Frame this as decision support, not trading signals. Users: risk managers, credit analysts, portfolio "
-             "managers. We make no ROI or time-saved claim; the only speed number is the measured per-document "
-             "latency of the pipeline.")
+    notes(s, "Frame it as decision support for risk managers, credit analysts and portfolio managers. We make no ROI "
+             "or time-saved claim; the only speed number is the measured per-document latency.")
 
-    # 3 ── architecture (native shapes)
+    # 3 ── system design with the architecture diagram
     s = prs.slides.add_slide(blank)
-    title(s, "Architecture", "One NLP pipeline for live, replay, scripted demo and API input")
-    boxes = [("Sources", "Google News, Reddit, Mastodon"),
-             ("Ingestion", "Rate limits, retries, dedup"),
-             ("NLP pipeline", "Entities, FinBERT, events, impact"),
-             ("Signals", "SQLite, bus, REST, SSE, JSONL"),
-             ("Stress engine", "Module B triggers and pricers"),
-             ("Dashboard", "watchlist, propagation, what-if, brief")]
-    bw, gap, y = Inches(1.82), Inches(0.27), Inches(2.25)
-    for i, (head, body) in enumerate(boxes):
-        x = MARGIN + i * (bw + gap)
-        key = head in ("NLP pipeline", "Stress engine")
-        card(s, x, y, bw, Inches(2.55), fill=NAVY if key else TINT, name=f"Arch{i}")
-        text(s, x + Inches(0.15), y + Inches(0.2), bw - Inches(0.3), Inches(0.5), head, size=19, bold=True,
-             color=WHITE if key else NAVY)
-        text(s, x + Inches(0.15), y + Inches(0.8), bw - Inches(0.3), Inches(1.7), body, size=18,
-             color=WHITE if key else INK)
-        if i < len(boxes) - 1:
-            c = s.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, x + bw + Inches(0.02), y + Inches(1.27),
-                                       x + bw + gap - Inches(0.02), y + Inches(1.27))
-            c.line.color.rgb = TEAL
-            c.line.width = Pt(2.5)
-            c.line._get_or_add_ln().append(c.line._get_or_add_ln().makeelement(qn("a:tailEnd"), {"type": "triangle"}))
-    text(s, MARGIN, Inches(5.15), W - 2 * MARGIN, Inches(0.45), "Every record carries its provenance", size=20,
-         bold=True, color=NAVY)
-    x = MARGIN
-    for tag, desc, cw_ in [("LIVE", "fetched now", 3.1), ("CACHED_REAL", "real, captured earlier", 4.25),
-                           ("SYNTHETIC", "demo, user text, portfolio", 4.38)]:
-        card(s, x, Inches(5.65), Inches(cw_), Inches(0.75), fill=WHITE, line=LINE)
-        text(s, x + Inches(0.2), Inches(5.65), Inches(cw_ - 0.3), Inches(0.75),
-             [(tag + "  ", 18, True, TEAL), (desc, 18, False, INK)], anchor=MSO_ANCHOR.MIDDLE)
-        x += Inches(cw_ + 0.2)
+    title(s, "System design", "One NLP pipeline for live, replayed, scripted and API input")
+    from PIL import Image
+
+    arch = ROOT / "docs" / "architecture.png"
+    aw, ah = Image.open(arch).size
+    hh = Inches(4.75)
+    ww = int(hh * aw / ah)
+    if ww > W - 2 * MARGIN:
+        ww = W - 2 * MARGIN
+        hh = int(ww * ah / aw)
+    pic = picture(s, arch, int((W - ww) / 2), BODY_TOP, w=ww)
+    caption(s, int((W - ww) / 2), BODY_TOP + pic.height + Inches(0.05), ww,
+            "Sources → ingestion → NLP → RiskSignal store and API → stress engine and dashboard · every record "
+            "labelled LIVE / CACHED_REAL / SYNTHETIC (docs/architecture.png)")
     footer(s, 3)
-    notes(s, "Sources are only claimed after our probe script passed on this machine. Adapters never crash the app: "
-             "timeouts, bounded retries and backoff, with health shown in the dashboard. The stress engine is just a "
-             "subscriber on the event bus. The whole demo runs offline after a one-time model download.")
+    notes(s, "Sources are only claimed after our probe script passed. Adapters never crash the app. The stress engine "
+             "is a subscriber on the event bus. Everything runs offline after a one-time model download.")
 
-    # 4 ── NLP risk engine incl. impact formula
+    # 4 ── implementation highlights
     s = prs.slides.add_slide(blank)
-    title(s, "NLP risk engine", "Every score is explained, every weight is published")
-    bullets(s, MARGIN, BODY_TOP + Inches(0.1), Inches(5.2), Inches(5.0), [
-        [("Entities: ", True), ("cashtags → aliases → spaCy → guarded fuzzy → MARKET", False)],
-        [("Sentiment: ", True), ("FinBERT, s = P(pos) − P(neg), lexicon fallback", False)],
-        [("Events: ", True), ("11-class rules with evidence phrases; zero-shot tested, kept off", False)],
-        [("Explainability: ", True), ("probabilities, evidence, factors, reason, business implication", False)],
-        [("Output: ", True), ("RiskSignal JSON via REST, SSE stream, JSONL export", False)],
-    ], size=20, space_after=14)
+    title(s, "Implementation highlights", "Every score is explained, every weight is published")
+    bullets(s, MARGIN, BODY_TOP + Inches(0.05), Inches(5.4), Inches(5.2), [
+        [("NLP: ", True), ("entities (cashtags, aliases, spaCy, guarded fuzzy), FinBERT sentiment, 11-class event "
+                           "rules with evidence; optional fine-tuned models in a hybrid", False)],
+        [("Stress engine: ", True), ("news-only systemic and issuer triggers with cooldown; pricers for bonds, "
+                                     "loans, IRS, CDS, FX, equity; what-if sliders", False)],
+        [("Credit views: ", True), ("watchlist, propagation over 16 curated links, one-click credit brief", False)],
+        [("Engineering: ", True), ("one pipeline for every input, offline demo, time machine over real data, "
+                                   "audit trail", False)],
+    ], size=17, space_after=9)
     w_ = nums["weights"]
     fx, fw = Inches(6.15), Inches(6.6)
-    fy = BODY_TOP + Inches(2.85)
-    card(s, fx, fy, fw, Inches(1.85), fill=WHITE, line=TEAL)
-    text(s, fx + Inches(0.25), fy + Inches(0.18), fw - Inches(0.5), Inches(1.95), [
-        [("Impact = 1 + 9 × Q × (", 19, True, NAVY), (f"{w_['E']:.2f}·E + {w_['M']:.2f}·M + {w_['X']:.2f}·X + "
-                                                     f"{w_['R']:.2f}·R", 19, True, TEAL), (")", 19, True, NAVY)],
-        [("E event severity · M sentiment magnitude · X exposure · R credibility + corroboration · Q confidence",
-          18, False, INK)],
-        [("Expert-set priors, not calibrated", 18, False, MUTED)],
-    ])
-    pic = picture(s, ASSETS / "explain_factors.png", Inches(6.15), BODY_TOP - Inches(0.05), w=Inches(6.6))
-    caption(s, Inches(6.15), BODY_TOP + Inches(0.02) + pic.height, Inches(6.6),
+    pic = picture(s, ASSETS / "explain_factors.png", fx, BODY_TOP - Inches(0.05), w=fw)
+    caption(s, fx, BODY_TOP + Inches(0.02) + pic.height, fw,
             "Dashboard explainability: factor contributions for a SYNTHETIC demo signal")
-    footer(s, 4)
-    notes(s, "Walk through the formula with the example on the right: event severity and strong negative sentiment "
-             "dominate, the signal is market-wide, and two independent sources corroborate it. The weights are "
-             "expert priors, published at /methodology; calibration against market reactions is future work.")
-
-    # 5 ── stress testing with waterfall + risk propagation
-    s = prs.slides.add_slide(blank)
-    title(s, "Stress testing (Module B)", "High-impact news triggers a stress test of the book")
-    bullets(s, MARGIN, BODY_TOP + Inches(0.05), Inches(4.75), Inches(2.9), [
-        f"{nums['positions']} positions, ${nums['funded_mv_m']:.0f}m funded: loans, bonds, IRS, CDS hedges, FX, equity",
-        "Systemic: market-wide or corroborated, news-sourced, impact ≥ 7",
-        "Issuer: credit/regulatory/legal, held issuer, negative news",
-        "What-if sliders reprice the book instantly",
-    ], size=17, space_after=8)
-    labels = {"idiosyncratic_credit": "Tata Motors downgrade", "geopolitical_moderate": "Invasion (1 source)",
-              "geopolitical_severe": "Corroborated (2 sources)"}
-    for i, (key, lab) in enumerate(labels.items()):
-        loss, rag, _ = nums["runs"][key]
-        y = Inches(4.55) + i * Inches(0.5)
-        dot = s.shapes.add_shape(MSO_SHAPE.OVAL, MARGIN, y + Inches(0.1), Inches(0.26), Inches(0.26))
-        dot.fill.solid()
-        dot.fill.fore_color.rgb = RISK[rag]
-        dot.line.fill.background()
-        dot.shadow.inherit = False
-        text(s, MARGIN + Inches(0.42), y, Inches(4.3), Inches(0.46),
-             [(f"{loss:.2f}% {rag}  ", 18, True, RISK[rag]), (lab, 17, False, INK)], anchor=MSO_ANCHOR.MIDDLE)
-    text(s, MARGIN, Inches(6.1), Inches(4.75), Inches(0.7), STRESS_DISCLAIMER, size=13, color=RISK["RED"], bold=True)
-    rx = Inches(5.6)
-    pic = picture(s, ASSETS / "stress_waterfall.png", rx, BODY_TOP, w=Inches(7.15))
-    caption(s, rx, BODY_TOP + pic.height + Inches(0.03), Inches(7.15),
-            f"Before → after, corroborated geopolitical shock · {illus}")
-    gy = BODY_TOP + pic.height + Inches(0.42)
-    g = picture(s, ASSETS / "propagation_graph.png", rx, gy, h=Inches(6.85) - gy)
-    text(s, rx + g.width + Inches(0.25), gy, Inches(7.15) - g.width - Inches(0.25), Inches(6.85) - gy, [
-        [("Risk propagation", 18, True, NAVY)],
-        [("Direct vs second-order exposure over 16 hand-curated links (supplier, parent, peer). Tata Motors: "
-          "$41m held, $23m more via Ford and Tesla.", 15, False, INK)],
-        [("Curated, not inferred; an attention measure, not a contagion model.", 13, False, MUTED)],
+    fy = BODY_TOP + pic.height + Inches(0.45)
+    card(s, fx, fy, fw, Inches(1.65), fill=WHITE, line=TEAL)
+    text(s, fx + Inches(0.25), fy + Inches(0.15), fw - Inches(0.5), Inches(1.4), [
+        [("Impact = 1 + 9 × Q × (", 18, True, NAVY), (f"{w_['E']:.2f}·E + {w_['M']:.2f}·M + {w_['X']:.2f}·X + "
+                                                     f"{w_['R']:.2f}·R", 18, True, TEAL), (")", 18, True, NAVY)],
+        [("E event severity · M sentiment magnitude · X exposure · R credibility + corroboration · Q confidence",
+          15, False, INK)],
+        [("Expert-set priors, not calibrated", 15, False, MUTED)],
     ])
-    footer(s, 5, note=f"Demo losses: simulated, {illus.lower()} · not investment advice")
-    notes(s, "Read the disclaimer aloud. In the demo the Tata Motors downgrade triggers an issuer-only stress; our "
-             "CDS hedge offsets much of it. The invasion headline triggers a moderate systemic stress; a second "
-             "independent source escalates it to severe, above our 2% risk appetite. The propagation graph shows "
-             "what else in the book is linked to the issuer: the links are curated by hand and documented.")
+    footer(s, 4)
+    notes(s, "Walk through the formula with the example: event severity and strong negative sentiment dominate, the "
+             "signal is market-wide, and two sources corroborate it. Weights are published at /methodology.")
 
-    # 6 ── results + watchlist + credit brief + business impact
+    # 5 ── key results and metrics
     s = prs.slides.add_slide(blank)
-    title(s, "Results and dashboard", f"Accuracy: {prelim.lower()}")
+    title(s, "Key results and metrics", f"Accuracy: {prelim.lower()}")
     stats = [(f"{nums['sent_acc']}", "Sentiment", f"accuracy · FinBERT · n = {nums['n']}"),
              (f"{nums['event_acc']}", "Events", f"accuracy · rules · n = {nums['n']}"),
              (f"{nums['entity_acc']}", "Entities", f"accuracy · n = {nums['n']}"),
@@ -386,48 +343,88 @@ def build(nums: dict) -> Presentation:
         text(s, x + Inches(0.18), BODY_TOP + Inches(1.0), sw - Inches(0.3), Inches(0.35), sub, size=12, color=MUTED)
     caption(s, MARGIN, BODY_TOP + Inches(1.5), Inches(12), f"{prelim}: labels drafted by an AI assistant, which also "
             "wrote the event rules. Treat as a smoke test, not a benchmark.", size=12)
-    y2 = BODY_TOP + Inches(1.95)
-    hh = Inches(2.65)
-    p1 = picture(s, ASSETS / "watchlist.png", MARGIN, y2, h=hh)
-    p2 = picture(s, ASSETS / "credit_brief.png", MARGIN + p1.width + Inches(0.2), y2, h=hh)
-    caption(s, MARGIN, y2 + hh + Inches(0.04), p1.width, "Early-warning watchlist (real data + SYNTHETIC story)")
-    caption(s, p2.left, y2 + hh + Inches(0.04), p2.width, "One-click credit brief (template, no LLM; PDF)")
-    bx = p2.left + p2.width + Inches(0.25)
-    text(s, bx, y2, W - MARGIN - bx, Inches(0.4), "Business impact", size=18, bold=True, color=NAVY)
-    bullets(s, bx, y2 + Inches(0.45), W - MARGIN - bx, hh - Inches(0.45), [
-        "Earlier warning on held names", "Triage by materiality, rule shown", "Audited portfolio view in seconds",
-    ], size=14, space_after=8)
-    footer(s, 6)
+    y2 = BODY_TOP + Inches(2.0)
+    text(s, MARGIN, y2, Inches(4.9), Inches(0.4), "Scenario demo (simulated)", size=19, bold=True, color=NAVY)
+    labels = {"idiosyncratic_credit": "Tata Motors downgrade", "geopolitical_moderate": "Invasion (1 source)",
+              "geopolitical_severe": "Corroborated (2 sources)"}
+    for i, (key, lab) in enumerate(labels.items()):
+        loss, rag, _ = nums["runs"][key]
+        y = y2 + Inches(0.5) + i * Inches(0.5)
+        dot = s.shapes.add_shape(MSO_SHAPE.OVAL, MARGIN, y + Inches(0.1), Inches(0.26), Inches(0.26))
+        dot.fill.solid()
+        dot.fill.fore_color.rgb = RISK[rag]
+        dot.line.fill.background()
+        dot.shadow.inherit = False
+        text(s, MARGIN + Inches(0.42), y, Inches(4.4), Inches(0.46),
+             [(f"{loss:.2f}% {rag}  ", 18, True, RISK[rag]), (lab, 17, False, INK)], anchor=MSO_ANCHOR.MIDDLE)
+    if hist:
+        text(s, MARGIN, y2 + Inches(2.15), Inches(4.9), Inches(1.2), [
+            [("REAL history: ", 16, True, NAVY), (f"{hist['documents']:,} captured documents → {hist['signals']:,} "
+                                                  f"signals → {hist['stress_runs']} simulated stress runs", 16,
+                                                  False, INK)]])
+    text(s, MARGIN, Inches(6.45), Inches(4.9), Inches(0.5), STRESS_DISCLAIMER, size=12, color=RISK["RED"], bold=True)
+    pic = picture(s, ASSETS / "stress_waterfall.png", Inches(5.6), y2, w=Inches(7.15))
+    caption(s, Inches(5.6), y2 + pic.height + Inches(0.03), Inches(7.15),
+            f"Before → after, corroborated geopolitical shock · {illus}")
+    footer(s, 5, note=f"Demo losses: simulated, {illus.lower()} · not investment advice")
     notes(s, "State the caveat plainly: the evaluation labels were drafted by an AI assistant and are pending human "
              "review, and the same assistant wrote the rules, so those numbers are a smoke test. Replaying 911 real "
-             "captured documents, our false-trigger fixes cut simulated stress runs from 84 to 50 and removed every "
-             "run triggered by social posts alone. The watchlist is the credit analyst's view on real captured news; "
-             "the credit brief is filled from templates, not generated by a language model.")
+             "captured documents, our false-trigger fixes cut simulated stress runs from 84 to 50. Read the "
+             "disclaimer aloud.")
 
-    # 7 ── innovation + limitations + future + takeaway
+    # 6 ── domain impact and business value
     s = prs.slides.add_slide(blank)
-    title(s, "What is new, what is not, what is next")
-    cols = [("Innovation", ["Provenance on every record", "One pipeline for live, replay and demo",
-                            "Corroboration escalates severity", "Trigger audit trail with the cause"]),
-            ("Limitations", ["Weights are uncalibrated priors", "Keyword rules still misfire",
-                             "Headline-only news text", "Small AI-labelled eval set", "Illustrative stress model"]),
-            ("Next", ["Kafka streaming", "Calibrate impact on market moves", "Licensed full-text news",
-                      "Backtesting, full revaluation"])]
+    title(s, "Domain impact and business value", "Decision support for credit and portfolio risk")
+    who = [("Credit analysts", "see which held names need attention and the rule that fired"),
+           ("Risk managers", "get an audited, simulated portfolio view when news breaks"),
+           ("Portfolio managers", "see linked exposure and test their own shocks instantly")]
+    cw = Inches(3.95)
+    for i, (head, body) in enumerate(who):
+        x = MARGIN + i * (cw + Inches(0.12))
+        card(s, x, BODY_TOP, cw, Inches(1.3))
+        text(s, x + Inches(0.2), BODY_TOP + Inches(0.1), cw - Inches(0.35), Inches(0.45), head, size=19, bold=True,
+             color=NAVY)
+        text(s, x + Inches(0.2), BODY_TOP + Inches(0.55), cw - Inches(0.35), Inches(0.7), body, size=15)
+    y3 = BODY_TOP + Inches(1.55)
+    hh = Inches(2.25)
+    p1 = picture(s, ASSETS / "watchlist.png", MARGIN, y3, h=hh)
+    p2 = picture(s, ASSETS / "credit_brief.png", MARGIN + p1.width + Inches(0.15), y3, h=hh)
+    gx = p2.left + p2.width + Inches(0.15)
+    p3 = picture(s, ASSETS / "propagation_graph.png", gx, y3, w=W - MARGIN - gx)
+    caption(s, MARGIN, y3 + hh + Inches(0.04), p1.width, "Early-warning watchlist on real news")
+    caption(s, p2.left, y3 + hh + Inches(0.04), p2.width, "One-click credit brief (template, no LLM; PDF)")
+    caption(s, p3.left, y3 + p3.height + Inches(0.04), p3.width, "Propagation over curated links")
+    footer(s, 6)
+    notes(s, "Business value without invented numbers: earlier attention on held names, triage by materiality with the "
+             "reason shown, and an immediate, audited portfolio view. Linked exposure is an attention measure, not a "
+             "contagion model.")
+
+    # 7 ── limitations and future work
+    s = prs.slides.add_slide(blank)
+    title(s, "Limitations and future work")
+    cols = [("Limitations", ["Impact weights are uncalibrated priors", "Keyword rules still misfire on real data",
+                             "Headline-only news text", "Small AI-labelled evaluation set",
+                             "Illustrative stress model, synthetic portfolio"]),
+            ("Future work", ["Calibrate impact on market moves", "Licensed full-text news",
+                             "Fine-tuned models on public labels (notebook ready)", "Kafka streaming",
+                             "Backtesting and full revaluation"]),
+            ("What already works", ["Provenance on every record", "One pipeline for every input",
+                                    "Real-data time machine", "Trigger audit trail", "Offline demo on a laptop"])]
     cw = Inches(3.9)
     for i, (head, items) in enumerate(cols):
         x = MARGIN + i * (cw + Inches(0.17))
-        card(s, x, BODY_TOP - Inches(0.25), cw, Inches(3.85))
+        card(s, x, BODY_TOP - Inches(0.25), cw, Inches(3.95))
         text(s, x + Inches(0.3), BODY_TOP - Inches(0.05), cw - Inches(0.5), Inches(0.5), head, size=22, bold=True,
-             color=TEAL if i != 1 else NAVY)
-        bullets(s, x + Inches(0.3), BODY_TOP + Inches(0.55), cw - Inches(0.55), Inches(2.9), items, size=18,
+             color=NAVY if i == 0 else TEAL)
+        bullets(s, x + Inches(0.3), BODY_TOP + Inches(0.55), cw - Inches(0.55), Inches(3.0), items, size=17,
                 space_after=6)
-    card(s, MARGIN, Inches(5.45), W - 2 * MARGIN, Inches(1.2), fill=NAVY)
-    text(s, MARGIN + Inches(0.4), Inches(5.45), W - 2 * MARGIN - Inches(0.8), Inches(1.2),
+    card(s, MARGIN, Inches(5.5), W - 2 * MARGIN, Inches(1.15), fill=NAVY)
+    text(s, MARGIN + Inches(0.4), Inches(5.5), W - 2 * MARGIN - Inches(0.8), Inches(1.15),
          "An honest, explainable bridge from text to portfolio risk that runs offline on a laptop.",
          size=24, bold=True, color=WHITE, anchor=MSO_ANCHOR.MIDDLE)
     footer(s, 7)
-    notes(s, "Close on the takeaway and invite the judges to type their own headline into the dashboard. If asked "
-             "about weaknesses, the limitations column is the honest list; docs/judge_qa.md has the answers.")
+    notes(s, "Close on the takeaway. If asked about weaknesses, the limitations column is the honest list; "
+             "docs/judge_qa.md has the answers.")
     return prs
 
 
