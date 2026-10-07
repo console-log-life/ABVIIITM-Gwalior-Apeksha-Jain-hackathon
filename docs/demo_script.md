@@ -1,4 +1,36 @@
-# 5-minute demo script
+# Demo scripts
+
+Two versions of the same demo:
+
+- **(a) Recorded video, about 6.5 minutes** (YouTube, unlisted), following the submission guideline flow: intro,
+  setup from the README commands, walkthrough from data input to output, results.
+- **(b) Live jury demo, 5 minutes** (the problem statement caps the live demonstration at 5 minutes).
+
+What is real in both: every page before the scenario shows CACHED_REAL data (real captured news, badged with its
+capture time); the Tata Motors and invasion headlines are SYNTHETIC; the portfolio is SYNTHETIC and every stress result
+is simulated with an illustrative model.
+
+## (a) Recorded video (~6.5 min)
+
+**Recording setup:** 1920×1080 screen recording (OBS or the Windows Game Bar, `Win+Alt+R`), microphone on, browser
+zoom 110%, other apps closed (the demo needs ~2 GB of free RAM). Before recording, run the setup once so the models are
+downloaded (the video shows the commands, not the 10-minute download).
+
+| Time | Screen | What you say / do |
+|---|---|---|
+| **0:00 – 0:30** Intro | Slide 1, then slide 2 of `docs/presentation.pdf` | "Risk Signal Engine turns news and social posts into explainable risk signals and stress-tests a portfolio the moment something material happens. It is an individual submission for Module B, strategic portfolio stress testing. Everything on screen is labelled LIVE, CACHED_REAL or SYNTHETIC." |
+| **0:30 – 1:15** Setup from the README | README **Quickstart** on GitHub, then a PowerShell window in the cloned folder | Show the Quickstart section. Run `powershell -ExecutionPolicy Bypass -File tasks.ps1 setup` (already done: it only checks the packages and models, a few seconds), then `tasks.ps1 preflight` (GO), then `tasks.ps1 demo-offline`. "No API keys and no network needed: the models are local." Wait for "ready on REAL data". |
+| **1:15 – 1:45** Data input | News & Social Feed | "The input: real headlines and posts captured from Google News, Reddit and Mastodon; each row shows its source, provenance and capture time." Filter to social. |
+| **1:45 – 2:30** NLP output | NLP Risk Signals, then Explainability → **Analyse your own headline** | "Every item becomes a RiskSignal: entity, sentiment, event type and a 1–10 impact." Type a headline, e.g. "Moody's downgrades Reliance Industries as SEBI opens probe", click **Analyse**: probabilities, evidence words, the impact formula with the actual numbers. Optionally show the same call in Swagger (`POST /analyze`) to show the JSON output. |
+| **2:30 – 3:15** Credit view | Home (time machine), Early Warning Watchlist, **Explain →** | "As of the latest captured news: 326 signals in 24 hours, 18 of 23 held issuers on watch." Drag the time machine back a day and return. "HDFC Bank is WATCH-NEGATIVE; the rule that fired is in the row." Click **Explain →**. |
+| **3:15 – 3:45** Contagion | Risk Propagation | "Direct versus second-order exposure over hand-curated links; click a node for its positions. Curated, not inferred; an attention measure, not a contagion model." |
+| **3:45 – 5:00** Output: stress test | sidebar **▶ Scenario demo**, Stress Test, Watchlist | "A scripted, SYNTHETIC story for the climax." Tata Motors downgrade → issuer stress 0.41% GREEN (CDS hedge). Watchlist: Tata Motors WATCH-NEGATIVE, peers flagged by propagation. Invasion → 1.32% AMBER; second source → 2.45% RED. Show the waterfall, top-10 positions, heatmap and audit log; read the disclaimer. |
+| **5:00 – 5:30** What-if + brief | Stress Test → What-if; Watchlist → **Credit brief** → Download PDF | Move the HY spread slider and compare with the triggered run. Open the credit brief and download the PDF. |
+| **5:30 – 6:30** Results | README **Key Results & Domain Impact**, `docs/evaluation.md`, slide 5 | "Measured by scripts, with n: sentiment accuracy 0.653, event 0.81, entity 0.898 on 147 headlines, labels still preliminary; median latency 204.7 ms per document; on 911 real documents our false-trigger fixes cut simulated stress runs from 84 to 50." Close: "Decision support, not investment advice. Thank you." |
+
+Upload to YouTube as **Unlisted**, then put the link in the README (`Demo Video Link`) and in the DoSelect answer.
+
+## (b) Live jury demo (5 min)
 
 **Before you start (T−10 min):**
 1. `powershell -ExecutionPolicy Bypass -File tasks.ps1 preflight` → GO (the REAL history cache must be fresh; if not,

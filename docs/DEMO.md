@@ -25,7 +25,7 @@ sidebar (**Mode & demo control → ▶ Scenario demo**). `--play-story` plays it
 | Scenario demo: steps 1–4 (Nvidia launch, Tata Motors downgrade, invasion ×2) | **SYNTHETIC** scripted headlines |
 | Portfolio (49 positions, seed 42), what-if results, credit-brief stress figures | **SYNTHETIC** portfolio, **simulated** results |
 
-## The 5-minute flow (timed script with talking points: `docs/demo_script.md`)
+## The 5-minute live flow (timed scripts: `docs/demo_script.md` has (a) the ~6.5-minute recorded video and (b) this live version)
 
 | Time | Screen | What happens |
 |---|---|---|
