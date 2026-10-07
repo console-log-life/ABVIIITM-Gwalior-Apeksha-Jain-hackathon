@@ -161,3 +161,16 @@ deck renderer's default paths, and white space around the architecture image.
   committed numbers come from the earlier full run.
 - `tasks.ps1 capture` was run only against a temporary cache directory (the real cache is the REPLAY data).
 - `import_trained_models.py` waits for `trained_models.zip` from the GPU notebook run.
+
+## 9. Final freeze checks (2026-10-07/08)
+
+| check | result |
+|---|---|
+| fast tests, one pytest process per file (`tasks.ps1 test` → `src/scripts/run_tests.py`) | PASS: 270 passed, 0 failed, coverage 93% |
+| FinBERT model tests, one process per file | PASS: 5 passed (after the `low_cpu_mem_usage` loading change) |
+| preflight RAM check | NO-GO below 1.5 GB free, lists the processes using the most memory (verified at 0.4 GB free) |
+| int8 quantisation (`src/scripts/measure_quantization.py`) | kept OFF: our set n = 147 accuracy 0.653 → 0.605; public split n = 2,388 accuracy 0.687 → 0.724 but macro-F1 0.639 → 0.605; more RAM, not less ([quantization.md](quantization.md)) |
+| demo RAM (`src/scripts/measure_demo_ram.py`) | PASS with 0.79 GB free at start: ready in 32 s, peak 0.88 GB (API + dashboard), story GREEN → AMBER → RED, clean logs ([verification/demo_ram.md](verification/demo_ram.md)) |
+| deck | 7 slides in the official order, 0 text runs under 18 pt, every slide inspected, speaker notes 658 words (~4.7 min) |
+| **fresh clone from GitHub** (`git clone https://github.com/console-log-life/ABVIIITM-Gwalior-Apeksha-Jain-hackathon.git`, commit `7ac56de`), README Quickstart exactly | `tasks.ps1 setup`: exit 0 in 25.1 min, all models ready offline · `tasks.ps1 test`: PASS, 267 fast passed + label-review module skipped (needs `requirements-dev.txt`), coverage 93%, FinBERT 5 passed · offline demo: ready in 53 s (REAL history built from the 50-headline sample), 9/9 pages HTTP 200, story 0.41% GREEN → 1.32% AMBER → 2.45% RED, no log errors, peak 0.91 GB with 0.61 GB free at start |
+| `tasks.ps1 submission` | 22/22 checks; only `[DEMO VIDEO LINK]` remains (README and DoSelect answer) |
