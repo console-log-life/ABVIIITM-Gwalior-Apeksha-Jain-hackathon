@@ -1,27 +1,23 @@
-# FinBERT int8 dynamic quantisation: kept OFF
+# FinBERT int8 dynamic quantisation
 
-**Decision: `MODEL_QUANTIZE_INT8=false` (default).** Rule: int8 would become the default only if sentiment accuracy on
-our evaluation set dropped by at most 1 point (0.01). It dropped by 4.8 points.
+Measured by `src/scripts/measure_quantization.py` on 2026-10-07 (CPU, 2 torch threads; each variant in its own process). Our evaluation labels are still preliminary (draft, not yet human reviewed).
 
-| variant | data set | n | sentiment accuracy | macro-F1 | source |
-|---|---|---:|---:|---:|---|
-| fp32 (default) | our evaluation set | 147 | 0.653 | 0.648 | `src/scripts/evaluate.py` (`docs/evaluation.md`) |
-| int8 dynamic (Linear layers) | our evaluation set | 147 | 0.605 | 0.582 | `src/scripts/measure_quantization.py --worker int8`, 2026-10-07 |
+| data set | n | accuracy fp32 | accuracy int8 | macro-F1 fp32 | macro-F1 int8 | ms/doc fp32 | ms/doc int8 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| our evaluation set | 147 | 0.653 | 0.605 | 0.648 | 0.582 | 87.9 | 88.4 |
+| public test split (twitter-financial-news-sentiment) | 2388 | 0.687 | 0.724 | 0.639 | 0.605 | 108.5 | 64.6 |
 
-Labels of our set are still preliminary (draft, not yet human reviewed). Measured on the development laptop (CPU, 2 torch
-threads): int8 used 209 MB of model RAM in its process and 67.4 ms per document on our set. The int8 confusion matrix
-shows the loss is mostly negative headlines predicted as neutral (30 of 50 negatives), the class that matters most for
-credit risk.
+| memory | fp32 | int8 |
+|---|---:|---:|
+| model RAM (process RSS after load minus before) | 645 MB | 936 MB |
+| peak process working set | 867 MB | 1318 MB |
+| load time | 4.6 s | 10.3 s |
 
-What keeps memory low instead (all on by default):
+Same label for 72.1% of our 147 items. Accuracy change on our set: -0.048. Rule: int8 is the default only if accuracy drops by at most 0.01. **Decision: int8 stays OFF by default** (`MODEL_QUANTIZE_INT8` in `.env` overrides it).
 
-- each model is loaded **once per process** and shared by every engine (`load_finbert` cache);
-- `TORCH_THREADS=2`;
-- models load with `low_cpu_mem_usage=True` (via `accelerate`), so the weights are not held twice in RAM during start-up;
-- `src/scripts/preflight.py` says NO-GO below 1.5 GB free RAM and lists the processes using the most memory;
-- `tasks.ps1 test` runs every test file in its own process (`src/scripts/run_tests.py`).
+Notes:
 
-Pending: the full side-by-side run (`python src/scripts/measure_quantization.py`: fp32 and int8 in separate processes,
-our set plus the 2,388-item public sentiment test split, RAM and latency) needs ~2 GB of free RAM; it will replace this
-table with `data/eval/quantization_results.json`. `MODEL_QUANTIZE_INT8=true` in `.env` still enables int8 for a machine
-that cannot load fp32 at all.
+- On the larger public split int8 is mixed: accuracy +0.037, macro-F1 -0.034. The rule uses our set because it is the domain the app serves (credit headlines and posts).
+- Dynamic quantisation does NOT save RAM here: the int8 copy is built while the fp32 weights are still loaded, so model RAM and the peak are higher. It only speeds up longer texts.
+
+What keeps memory low instead (all on by default): each model is loaded once per process and shared; `TORCH_THREADS=2`; models load with `low_cpu_mem_usage=True` (no second weight copy during start-up); `src/scripts/preflight.py` says NO-GO below 1.5 GB free RAM and lists the processes using the most memory; `tasks.ps1 test` runs every test file in its own process (`src/scripts/run_tests.py`).

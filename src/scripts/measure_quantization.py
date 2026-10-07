@@ -71,10 +71,15 @@ def worker(variant: str) -> dict:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--worker", choices=["fp32", "int8"], help=argparse.SUPPRESS)
+    ap.add_argument("--report-only", action="store_true",
+                    help="re-render docs/quantization.md from data/eval/quantization_results.json (loads no model)")
     args = ap.parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     if args.worker:
         print(json.dumps(worker(args.worker)))
+        return 0
+    if args.report_only:
+        write_report(json.loads(OUT_JSON.read_text(encoding="utf-8")))
         return 0
 
     res: dict = {"generated_at": datetime.now(UTC).isoformat(), "max_accuracy_drop": MAX_DROP}
@@ -93,6 +98,12 @@ def main() -> int:
     res["accuracy_drop_ours"] = drop
     res["int8_default"] = drop <= MAX_DROP
     OUT_JSON.write_text(json.dumps(res, indent=2), encoding="utf-8")
+    write_report(res)
+    return 0
+
+
+def write_report(res: dict) -> None:
+    a, b, drop = res["fp32"], res["int8"], res["accuracy_drop_ours"]
 
     def row(name: str, key: str) -> str:
         x, y = a.get(key), b.get(key)
@@ -117,10 +128,22 @@ def main() -> int:
           f"Same label for {res['prediction_agreement_ours']:.1%} of our {a['ours']['n']} items. Accuracy change on "
           f"our set: {-drop:+.3f}. Rule: int8 is the default only if accuracy drops by at most {MAX_DROP:.2f}. "
           f"**Decision: {'int8 ON by default' if res['int8_default'] else 'int8 stays OFF by default'}** "
-          "(`MODEL_QUANTIZE_INT8` in `.env` overrides it)."]
-    OUT_MD.write_text("\n".join(x for x in md if x is not None) + "\n", encoding="utf-8")
+          "(`MODEL_QUANTIZE_INT8` in `.env` overrides it).", "",
+          "Notes:", ""]
+    if a.get("public_test"):
+        pa, pb = a["public_test"], b["public_test"]
+        md.append(f"- On the larger public split int8 is mixed: accuracy {pb['accuracy'] - pa['accuracy']:+.3f}, "
+                  f"macro-F1 {pb['macro_f1'] - pa['macro_f1']:+.3f}. The rule uses our set because it is the domain "
+                  "the app serves (credit headlines and posts).")
+    if b["model_rss_mb"] >= a["model_rss_mb"]:
+        md.append("- Dynamic quantisation does NOT save RAM here: the int8 copy is built while the fp32 weights are "
+                  "still loaded, so model RAM and the peak are higher. It only speeds up longer texts.")
+    md += ["", "What keeps memory low instead (all on by default): each model is loaded once per process and shared; "
+           "`TORCH_THREADS=2`; models load with `low_cpu_mem_usage=True` (no second weight copy during start-up); "
+           "`src/scripts/preflight.py` says NO-GO below 1.5 GB free RAM and lists the processes using the most "
+           "memory; `tasks.ps1 test` runs every test file in its own process (`src/scripts/run_tests.py`)."]
+    OUT_MD.write_text("\n".join(md) + "\n", encoding="utf-8")
     print(OUT_MD.read_text(encoding="utf-8"))
-    return 0
 
 
 if __name__ == "__main__":

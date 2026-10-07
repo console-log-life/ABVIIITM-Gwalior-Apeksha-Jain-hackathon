@@ -1,0 +1,133 @@
+{
+  "generated_at": "2026-10-07T17:13:31.867360+00:00",
+  "max_accuracy_drop": 0.01,
+  "fp32": {
+    "variant": "fp32",
+    "load_s": 4.6,
+    "model_rss_mb": 645,
+    "process_rss_mb": 807,
+    "ours": {
+      "n": 147,
+      "accuracy": 0.653,
+      "macro_f1": 0.648,
+      "labels": [
+        "Positive",
+        "Neutral",
+        "Negative"
+      ],
+      "confusion": [
+        [
+          24,
+          9,
+          5
+        ],
+        [
+          5,
+          42,
+          12
+        ],
+        [
+          9,
+          11,
+          30
+        ]
+      ],
+      "ms_per_doc": 87.9
+    },
+    "public_test": {
+      "n": 2388,
+      "accuracy": 0.687,
+      "macro_f1": 0.639,
+      "labels": [
+        "Positive",
+        "Neutral",
+        "Negative"
+      ],
+      "confusion": [
+        [
+          294,
+          131,
+          50
+        ],
+        [
+          216,
+          1079,
+          271
+        ],
+        [
+          16,
+          64,
+          267
+        ]
+      ],
+      "ms_per_doc": 108.5
+    },
+    "peak_process_mb": 867
+  },
+  "int8": {
+    "variant": "int8",
+    "load_s": 10.3,
+    "model_rss_mb": 936,
+    "process_rss_mb": 1096,
+    "ours": {
+      "n": 147,
+      "accuracy": 0.605,
+      "macro_f1": 0.582,
+      "labels": [
+        "Positive",
+        "Neutral",
+        "Negative"
+      ],
+      "confusion": [
+        [
+          23,
+          15,
+          0
+        ],
+        [
+          6,
+          51,
+          2
+        ],
+        [
+          5,
+          30,
+          15
+        ]
+      ],
+      "ms_per_doc": 88.4
+    },
+    "public_test": {
+      "n": 2388,
+      "accuracy": 0.724,
+      "macro_f1": 0.605,
+      "labels": [
+        "Positive",
+        "Neutral",
+        "Negative"
+      ],
+      "confusion": [
+        [
+          254,
+          218,
+          3
+        ],
+        [
+          169,
+          1362,
+          35
+        ],
+        [
+          21,
+          214,
+          112
+        ]
+      ],
+      "ms_per_doc": 64.6
+    },
+    "peak_process_mb": 1318
+  },
+  "prediction_agreement_ours": 0.721,
+  "accuracy_drop_ours": 0.048,
+  "int8_default": false
+}
