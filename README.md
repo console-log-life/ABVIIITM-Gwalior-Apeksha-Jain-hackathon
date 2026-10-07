@@ -76,7 +76,7 @@ Requirements: Python **3.11**, git, ~3 GB of disk for the models, 8 GB RAM recom
 git clone <repository-url> risk-signal-engine
 cd risk-signal-engine
 powershell -ExecutionPolicy Bypass -File tasks.ps1 setup         # venv, pinned packages, FinBERT + spaCy into ./models
-powershell -ExecutionPolicy Bypass -File tasks.ps1 test          # 259 fast tests + 4 FinBERT tests
+powershell -ExecutionPolicy Bypass -File tasks.ps1 test          # 270 fast tests (3 need requirements-dev.txt) + 5 FinBERT tests
 powershell -ExecutionPolicy Bypass -File tasks.ps1 demo-offline  # API :8000 + dashboard :8501, no network needed
 ```
 
@@ -86,7 +86,7 @@ powershell -ExecutionPolicy Bypass -File tasks.ps1 demo-offline  # API :8000 + d
 git clone <repository-url> risk-signal-engine
 cd risk-signal-engine
 make setup           # python3.11 venv, pinned packages, FinBERT + spaCy into ./models
-make test            # 259 fast tests + 4 FinBERT tests
+make test            # 270 fast tests (3 need requirements-dev.txt) + 5 FinBERT tests
 make demo-offline    # API :8000 + dashboard :8501, no network needed
 ```
 
@@ -296,9 +296,11 @@ powershell -ExecutionPolicy Bypass -File tasks.ps1 test-fast  # without model-de
 powershell -ExecutionPolicy Bypass -File tasks.ps1 drill      # offline / outage drill against the real API
 ```
 
-- **Test suite:** 263 tests (259 fast + 4 FinBERT model tests, run in a separate process; pytest, no network in
-  unit tests). Coverage on the fast suite is 90% (`--cov=risk_engine --cov=portfolio --cov=app`). It includes
+- **Test suite:** 275 tests (270 fast + 5 FinBERT model tests, run in a separate process; pytest, no network in
+  unit tests). Coverage on the fast suite is 93% (`--cov=risk_engine --cov=portfolio --cov=app`). It includes
   regression tests for the real headlines that misfired, and the watchlist rules and endpoint.
+- **Full verification:** every API endpoint (87/87 checks), every dashboard page and control in a real browser
+  (55/55 steps), every script and the fresh-clone Quickstart: [docs/VERIFICATION.md](docs/VERIFICATION.md).
 - **Failure drill:** `src/scripts/failure_drill.py` passed 7/7 checks with every outbound HTTP request blocked.
 
 ## Detailed results

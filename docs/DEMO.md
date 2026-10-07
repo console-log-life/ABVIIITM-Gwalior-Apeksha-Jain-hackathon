@@ -59,7 +59,8 @@ risk model.
 
 `tasks.ps1 demo-offline` needs no network. `docs/screenshots/1366x768/` and `1920x1080/` hold every page at projector
 sizes. A **silent backup recording** is in `docs/demo/demo_walkthrough.webm` (captions on screen; caption times in
-`docs/demo/demo_walkthrough_captions.json`). It still shows the PREVIOUS flow (scenario story, watchlist and
-explainability, 3:04): the recorder (`src/scripts/record_demo_video.py`) is already updated for the new flow, but
-re-recording needs ~2 GB of free RAM; run `tasks.ps1 video` with other applications closed. A narrated recording still
-has to be made by a person.
+`docs/demo/demo_walkthrough_captions.json`), recorded on 2026-10-07 with `src/scripts/record_demo_video.py`: the
+current flow (REAL-data KPIs, time machine, watchlist, Explain, propagation, then the SYNTHETIC story GREEN → AMBER →
+RED, what-if and the credit brief), about 4:19. The recorder waits for each step on the live API; on the 8 GB laptop
+those waits took up to two minutes, so the raw 9-minute capture was cut to the captioned scenes (each with its lead-in)
+and re-encoded; nothing inside a scene was changed. A narrated recording still has to be made by a person.
