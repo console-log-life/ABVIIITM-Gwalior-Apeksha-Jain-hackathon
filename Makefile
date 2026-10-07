@@ -7,6 +7,8 @@ else
 PY := .venv/bin/python
 BOOT := python3.11
 endif
+# packages live in src/ (python -m risk_engine..., portfolio...)
+export PYTHONPATH := src
 
 .PHONY: setup venv install models probe test test-fast lint capture replay ingest-once api dashboard demo demo-offline drill check-dashboard screenshots portfolio evaluate benchmark submission test-model preflight label-review import-labels
 

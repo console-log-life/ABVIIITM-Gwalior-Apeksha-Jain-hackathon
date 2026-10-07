@@ -3,7 +3,7 @@
 RawDocument -> clean -> entity resolution -> FinBERT sentiment -> rule event classification
             -> corroboration -> impact score -> RiskSignal
 
-CLI:  python -m risk_engine.pipeline "Moody's downgrades Tata Motors to junk" [--source google_news]
+CLI (PYTHONPATH=src):  python -m risk_engine.pipeline "Moody's downgrades Tata Motors to junk" [--source google_news]
 """
 
 from __future__ import annotations

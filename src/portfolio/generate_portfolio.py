@@ -6,7 +6,8 @@ No sample transaction data was provided, so positions are generated. Target mix,
 Includes CDS protection bought on two held high-yield issuers (hedges). Values in USD (INR positions are
 expressed in USD equivalent). Every number here is synthetic.
 
-Usage:  python -m portfolio.generate_portfolio [--seed 42] [--out data/portfolio/portfolio_data.csv]
+Usage (PYTHONPATH=src; `tasks.ps1 portfolio` sets it):
+  python -m portfolio.generate_portfolio [--seed 42] [--out data/portfolio/portfolio_data.csv]
 """
 
 from __future__ import annotations

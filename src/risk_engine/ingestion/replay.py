@@ -95,7 +95,7 @@ async def run_replay(cache_dir: Path, sink: Callable[[list[RawDocument]], Awaita
 
 
 def main() -> int:
-    """CLI: python -m risk_engine.ingestion.replay [--limit 10] [--delay 0.5]"""
+    """CLI (PYTHONPATH=src): python -m risk_engine.ingestion.replay [--limit 10] [--delay 0.5]"""
     import argparse
     import sys
 

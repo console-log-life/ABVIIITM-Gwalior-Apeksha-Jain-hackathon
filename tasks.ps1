@@ -8,6 +8,7 @@ param([Parameter(Mandatory = $true)][ValidateSet(
 $ErrorActionPreference = "Stop"
 Set-Location -LiteralPath $PSScriptRoot  # path may contain spaces ("GT LAB")
 $py = Join-Path $PSScriptRoot ".venv\Scripts\python.exe"
+$env:PYTHONPATH = Join-Path $PSScriptRoot "src"  # packages live in src/ (python -m risk_engine..., portfolio...)
 
 function Invoke-Install { & $py -m pip install --upgrade pip; & $py -m pip install -r requirements.txt }
 

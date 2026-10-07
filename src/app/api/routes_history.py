@@ -34,9 +34,10 @@ def parse_as_of(as_of: datetime | None) -> datetime:
 @router.get("/history", summary="REAL history status, provenance and the known-time range for the time machine",
             responses={200: {"content": {"application/json": {"example": HISTORY_EXAMPLE}}}})
 async def history(rt: Runtime = Depends(get_runtime)) -> dict[str, Any]:
+    status = dict(rt.history_status)  # snapshot BEFORE the range: "ready" must imply the range includes the history
     lo, hi = await asyncio.to_thread(rt.store.event_time_range)
     path = history_path(rt.settings)
-    return {"status": rt.history_status, "fresh": await asyncio.to_thread(is_fresh, rt.settings),
+    return {"status": status, "fresh": await asyncio.to_thread(is_fresh, rt.settings),
             "event_from": lo.isoformat() if lo else None, "event_to": hi.isoformat() if hi else None,
             "meta": read_meta(path), "note": "Signals with origin 'real' come from captured real documents "
             "(CACHED_REAL); the time machine replays them by publication (event) time, although they were collected at "

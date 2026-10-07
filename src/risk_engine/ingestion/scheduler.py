@@ -3,7 +3,7 @@
 The sink is the single entry point into the NLP pipeline (wired in M3). Adapter failures are already
 converted to statuses by BaseAdapter.fetch(); this loop additionally guards against hangs with a timeout.
 
-CLI (one cycle, prints a report):  python -m risk_engine.ingestion.scheduler --once
+CLI (one cycle, prints a report; PYTHONPATH=src):  python -m risk_engine.ingestion.scheduler --once
 """
 
 from __future__ import annotations
