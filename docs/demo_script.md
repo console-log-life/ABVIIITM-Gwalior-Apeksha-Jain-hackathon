@@ -1,64 +1,79 @@
 # Demo scripts
 
-Two versions of the same demo:
+- **(a) Recorded video, 6–7 minutes** (YouTube, unlisted): intro → setup from the README → walkthrough from data input
+  to output → results → close. Exact words for each scene, and which page or button to click.
+- **(b) Live jury pitch, 5 minutes** (slides + live demo), plus a **60-second backup** if the laptop fails (slides only).
+- One-page Q&A and numbers: [JURY_CHEATSHEET.md](JURY_CHEATSHEET.md).
 
-- **(a) Recorded video, about 6.5 minutes** (YouTube, unlisted), following the submission guideline flow: intro,
-  setup from the README commands, walkthrough from data input to output, results.
-- **(b) Live jury demo, 5 minutes** (the problem statement caps the live demonstration at 5 minutes).
+What is real: every page before the scenario shows CACHED_REAL data (real captured news, badged with its capture time);
+the Tata Motors and invasion headlines are SYNTHETIC; the portfolio is SYNTHETIC and every stress result is simulated
+with an illustrative model. Say this; never call cached data "live".
 
-What is real in both: every page before the scenario shows CACHED_REAL data (real captured news, badged with its
-capture time); the Tata Motors and invasion headlines are SYNTHETIC; the portfolio is SYNTHETIC and every stress result
-is simulated with an illustrative model.
+## (a) Recorded video (6–7 min)
 
-## (a) Recorded video (~6.5 min)
+**Before recording**
 
-**Recording setup:** 1920×1080 screen recording (OBS or the Windows Game Bar, `Win+Alt+R`), microphone on, browser
-zoom 110%, other apps closed (the demo needs ~2 GB of free RAM). Before recording, run the setup once so the models are
-downloaded (the video shows the commands, not the 10-minute download).
+1. Close everything you can (Docker can stay). Run `powershell -ExecutionPolicy Bypass -File tasks.ps1 preflight`: it
+   must say **GO** (it is NO-GO below 1.5 GB free RAM and lists what to close).
+2. Start the app once so the models are warm: `powershell -ExecutionPolicy Bypass -File tasks.ps1 demo-offline`. Wait
+   for `ready on REAL data`, open <http://127.0.0.1:8501>, click through every page once, then leave it running.
+3. Recorder: OBS or the Windows Game Bar (`Win+Alt+R`), 1920×1080, microphone on, browser zoom 110%.
+4. Have open: `docs/presentation.pdf` (slide 1), the GitHub README at **Quickstart**, a PowerShell window in the repo
+   folder, and the dashboard.
 
-| Time | Screen | What you say / do |
+| Time | Screen and clicks | Say exactly |
 |---|---|---|
-| **0:00 – 0:30** Intro | Slide 1, then slide 2 of `docs/presentation.pdf` | "Risk Signal Engine turns news and social posts into explainable risk signals and stress-tests a portfolio the moment something material happens. It is an individual submission for Module B, strategic portfolio stress testing. Everything on screen is labelled LIVE, CACHED_REAL or SYNTHETIC." |
-| **0:30 – 1:15** Setup from the README | README **Quickstart** on GitHub, then a PowerShell window in the cloned folder | Show the Quickstart section. Run `powershell -ExecutionPolicy Bypass -File tasks.ps1 setup` (already done: it only checks the packages and models, a few seconds), then `tasks.ps1 preflight` (GO), then `tasks.ps1 demo-offline`. "No API keys and no network needed: the models are local." Wait for "ready on REAL data". |
-| **1:15 – 1:45** Data input | News & Social Feed | "The input: real headlines and posts captured from Google News, Reddit and Mastodon; each row shows its source, provenance and capture time." Filter to social. |
-| **1:45 – 2:30** NLP output | NLP Risk Signals, then Explainability → **Analyse your own headline** | "Every item becomes a RiskSignal: entity, sentiment, event type and a 1–10 impact." Type a headline, e.g. "Moody's downgrades Reliance Industries as SEBI opens probe", click **Analyse**: probabilities, evidence words, the impact formula with the actual numbers. Optionally show the same call in Swagger (`POST /analyze`) to show the JSON output. |
-| **2:30 – 3:15** Credit view | Home (time machine), Early Warning Watchlist, **Explain →** | "As of the latest captured news: 326 signals in 24 hours, 18 of 23 held issuers on watch." Drag the time machine back a day and return. "HDFC Bank is WATCH-NEGATIVE; the rule that fired is in the row." Click **Explain →**. |
-| **3:15 – 3:45** Contagion | Risk Propagation | "Direct versus second-order exposure over hand-curated links; click a node for its positions. Curated, not inferred; an attention measure, not a contagion model." |
-| **3:45 – 5:00** Output: stress test | sidebar **▶ Scenario demo**, Stress Test, Watchlist | "A scripted, SYNTHETIC story for the climax." Tata Motors downgrade → issuer stress 0.41% GREEN (CDS hedge). Watchlist: Tata Motors WATCH-NEGATIVE, peers flagged by propagation. Invasion → 1.32% AMBER; second source → 2.45% RED. Show the waterfall, top-10 positions, heatmap and audit log; read the disclaimer. |
-| **5:00 – 5:30** What-if + brief | Stress Test → What-if; Watchlist → **Credit brief** → Download PDF | Move the HY spread slider and compare with the triggered run. Open the credit brief and download the PDF. |
-| **5:30 – 6:30** Results | README **Key Results & Domain Impact**, `docs/evaluation.md`, slide 5 | "Measured by scripts, with n: sentiment accuracy 0.653, event 0.81, entity 0.898 on 147 headlines, labels still preliminary; median latency 204.7 ms per document; on 911 real documents our false-trigger fixes cut simulated stress runs from 84 to 50." Close: "Decision support, not investment advice. Thank you." |
+| **0:00–0:30** Intro | `docs/presentation.pdf`, slide 1 | "Hello, I am Apeksha Jain from ABV-IIITM Gwalior. This is Risk Signal Engine, my individual submission for Module B, strategic portfolio stress testing. It reads news and social posts, turns each item into an explainable risk signal, and stress-tests a portfolio the moment something material happens. Everything on screen is labelled LIVE, CACHED_REAL or SYNTHETIC, and every stress result is simulated." |
+| **0:30–1:00** Setup | GitHub README → **Quickstart**; then the PowerShell window | "Setup is three commands from the README: clone, `tasks.ps1 setup`, which creates the virtual environment, installs the pinned packages and downloads FinBERT and spaCy, and `tasks.ps1 demo-offline`. I installed it before recording, so you won't watch a ten-minute download. No API keys and no network are needed during the demo." Show the running window with `ready on REAL data`. |
+| **1:00–1:30** Data input | **News Social Feed** | "This is the input: real headlines and posts captured from Google News, Reddit and Mastodon. Each row shows the source, the provenance badge CACHED_REAL, and when it was captured." Remove one **Source type** filter tag to show only news, then add it back. |
+| **1:30–2:15** NLP output | **NLP Risk Signals**; then **Explainability** → tab **Analyse your own headline** | "Every item becomes a RiskSignal: the company, sentiment from FinBERT, one of eleven event types, and an impact score from one to ten." Switch page. Type `Moody's downgrades Reliance Industries as SEBI opens probe into accounts`, ticker hint `RELIANCE.NS`, click **Analyse**. "Here is why: negative probability 0.93, the evidence words, the weighted factors, and the impact formula with the actual numbers." |
+| **2:15–3:00** Credit view | **Home**; drag the **time machine** slider left, then click **Latest**; **Early Warning Watchlist** → **Explain →** | "As of the latest captured news, 326 signals in 24 hours and 18 of our 23 held issuers need a look. The time machine replays the same dashboard a day earlier, by publication time." Click Latest. "The watchlist: HDFC Bank is WATCH-NEGATIVE, and the rule that fired is in the row." Click **Explain →**: "one click to the reason." |
+| **3:00–3:30** Linked exposure | **Risk Propagation** | "What else in the book is connected? Direct versus propagated exposure over hand-curated links. They are curated, not inferred, and this is an attention measure, not a contagion model." Pick another issuer in **Issuer (held)**. |
+| **3:30–4:45** Output: stress test | sidebar **Mode & demo control** → **▶ Scenario demo**; then **Stress Test**, **Early Warning Watchlist**, **Stress Test** again | "Now a scripted, SYNTHETIC story. A Moody's downgrade of Tata Motors, a held issuer, triggers an issuer-only stress test: 0.41 percent, GREEN, because our CDS hedge offsets most of it. On the watchlist, Tata Motors is WATCH-NEGATIVE and its peers Ford and Tesla are flagged through propagation. Then an invasion headline: a moderate geopolitical scenario, 1.32 percent, AMBER. A second, independent source corroborates it: severe, 2.45 percent, RED, above our 2 percent appetite." Scroll to the waterfall and the audit log. "Every run is logged with the headline that triggered it. This is a simplified, illustrative model, not a production risk model." |
+| **4:45–5:15** What-if and brief | **Stress Test** → what-if: **Start from**, move **HY spread**; **Early Warning Watchlist** → Tata Motors → **Credit brief** → **⬇ Download PDF** | "Analysts can test their own shock: start from the severe scenario and widen high-yield spreads; it reprices instantly and saves nothing. And one click gives a one-page credit brief, from templates, with no language model." |
+| **5:15–6:15** Results | README **Key Results & Domain Impact**; then slide 5 | "The numbers, all measured by scripts in the repository, with n. On 147 real headlines and posts: sentiment accuracy 0.653, event classification 0.81, entity resolution 0.898. The labels are still preliminary, so treat these as a smoke test. Median latency is 204.7 milliseconds per document on a CPU laptop, over 200 documents. Replaying 911 real captured documents, our false-trigger fixes cut simulated stress runs from 84 to 50. And everything is verified: 275 tests, every API endpoint and every dashboard control." |
+| **6:15–6:35** Close | slide 7 | "Risk Signal Engine is an honest, explainable bridge from text to portfolio risk that runs offline on a laptop. It is decision support, not investment advice. The code, the deck and this video are linked in the README. Thank you." |
 
-Upload to YouTube as **Unlisted**, then put the link in the README (`Demo Video Link`) and in the DoSelect answer.
+After recording: upload to YouTube as **Unlisted**, open the link in a private window to check it plays, then send it
+to be filled into the README (`Demo Video Link`) and the DoSelect answer.
 
-## (b) Live jury demo (5 min)
+## (b) Live jury pitch (5 min)
 
-**Before you start (T−10 min):**
-1. `powershell -ExecutionPolicy Bypass -File tasks.ps1 preflight` → GO (the REAL history cache must be fresh; if not,
-   run `tasks.ps1 real-history` first, ~7 min).
-2. `powershell -ExecutionPolicy Bypass -File tasks.ps1 demo-offline`. Wait for "ready on REAL data" and leave it
-   running.
-3. Open <http://127.0.0.1:8501>. Browser zoom 110–125% for the projector. Auto-refresh (sidebar) **on** before 2:30.
+**T−10 min:** `tasks.ps1 preflight` → GO; `tasks.ps1 demo-offline` → `ready on REAL data`; dashboard open at zoom
+110–125%; `docs/presentation.pdf` open in a second window. The speaker notes in the deck are a slides-only 5-minute
+version if the jury asks for slides without a demo.
 
-What is real: everything until 2:30 is CACHED_REAL (real captured news, badged with capture time); the portfolio and
-all stress results are SYNTHETIC / simulated. The Tata Motors and invasion headlines are SYNTHETIC.
-
-| Time | Screen | What you say / do |
+| Time | Screen | Say / do |
 |---|---|---|
-| **0:00 – 0:45** Real data | Home | "This is 1,325 real headlines and posts we captured, run through our pipeline: in the last 24 hours of that news, 326 signals and 18 of our 23 held issuers need a look; 7 are WATCH-NEGATIVE. Every row says LIVE, CACHED_REAL or SYNTHETIC." Drag the **time machine** back a day: "the same dashboard a day earlier, replayed by publication time"; click **Latest**. Point at the latest stress run: "this RED rate-shock run came from an opinion piece about a past hike; a false positive we show rather than hide." |
-| **0:45 – 1:45** Watchlist → why | Early Warning Watchlist, then **Explain →** | "The credit analyst's view: HDFC Bank is WATCH-NEGATIVE, worst impact 8.1, sentiment −0.95; the rule that fired is in the row; the sparkline is impact over 24 hours with a 6-hour rolling max." Click **Explain →**: "FinBERT probabilities, the evidence words, the weighted factors and the formula with the actual numbers." |
-| **1:45 – 2:30** Contagion | Risk Propagation (HDFC Bank) | "What else in the book is connected? Direct exposure versus propagated exposure over hand-curated links (HDFC's peer SBI). Node size is exposure, colour is watch status; click a node to see its positions. The links are curated, not inferred, and the weights are attention weights, not default correlations." |
-| **2:30 – 3:45** Stress climax | sidebar **▶ Scenario demo**, then Watchlist and Stress Test | "Now a scripted, SYNTHETIC story." Tata Motors downgrade (8.7) → Stress: "issuer-only shock, 0.41% GREEN; our CDS hedge offsets most of it." The story pauses 20 s → Watchlist: "Tata Motors WATCH-NEGATIVE, and its peers Ford and Tesla are flagged by propagation." Invasion headline → "moderate geopolitical, 1.32% AMBER"; second source → "corroborated: severe, 2.45% RED, above our 2% appetite." Show the waterfall and the audit log. Read the disclaimer. |
-| **3:45 – 4:20** What-if | Stress Test → What-if builder | "Your shock: start from geopolitical severe and widen high-yield spreads." Let a judge pick; the comparison with the triggered run updates instantly; nothing is saved. |
-| **4:20 – 5:00** Brief + close | Watchlist → Tata Motors → **Credit brief** → Download PDF | "One click: a one-page brief from templates, no language model; every sentence comes from stored data." Close: "Real news to an explainable portfolio view in seconds, every record labelled. Decision support, not investment advice." |
+| **0:00–0:40** | Slides 1–2 | "Risk Signal Engine, Module B, individual submission. Credit risk shows up in text before it shows up in data: downgrades, probes, sanctions, rate surprises. Today an analyst reads the headline and a stress test runs later, by hand. Here, every item is scored and explained, and a material one reprices the book." |
+| **0:40–1:05** | Slide 3 | "One pipeline for live, replayed, scripted and API input: entities, FinBERT sentiment, event rules with evidence, a 1-to-10 impact score; the stress engine subscribes to the signals. Every record is labelled, and it runs offline." |
+| **1:05–1:45** | Dashboard: **Home**, **Early Warning Watchlist**, **Explain →** | "This is real captured news, 1,325 items: 18 of 23 held issuers need a look. HDFC Bank is WATCH-NEGATIVE; the rule is in the row." Click **Explain →**: "sentiment probabilities, evidence words, and the formula with the numbers." |
+| **1:45–3:15** | sidebar **▶ Scenario demo**; **Stress Test**; **Watchlist** | "A scripted, SYNTHETIC story. Tata Motors downgrade: issuer stress 0.41% GREEN, hedged by CDS; Tata and its peers flagged on the watchlist. Invasion headline: 1.32% AMBER. A second source corroborates: 2.45% RED, above our 2% appetite." Show the waterfall and the audit log. "Simulated, illustrative model, synthetic portfolio." |
+| **3:15–3:45** | **Stress Test** → what-if | Let a judge choose a shock (e.g. HY spreads +300 bp): "it reprices instantly; nothing is saved." |
+| **3:45–4:30** | Slide 5 | "Measured, with n: sentiment 0.653, events 0.81, entities 0.898 on 147 items, labels preliminary. Median 204.7 ms per document. Our false-trigger fixes cut stress runs on 911 real documents from 84 to 50." |
+| **4:30–5:00** | Slide 7 | "Limits: uncalibrated weights, headline-only news, a small AI-labelled eval set, an illustrative stress model. Next: calibration, full-text news, fine-tuned models. Decision support, not investment advice. Thank you." |
+
+### 60-second backup (laptop fails; slides only, from any machine)
+
+Open `docs/presentation.pdf` from the GitHub repository (`…/blob/main/docs/presentation.pdf`).
+
+> (Slide 1) "Risk Signal Engine turns news and social posts into explainable risk signals and stress-tests a portfolio
+> when something material happens. (Slide 3) One pipeline: entities, FinBERT sentiment, eleven event types with
+> evidence, an impact score from one to ten, and an event-driven stress engine. (Slide 5) In our scripted demo a Tata
+> Motors downgrade gives 0.41% GREEN thanks to a CDS hedge; a corroborated invasion gives 2.45% RED. Measured on 147
+> items: sentiment 0.653, events 0.81, entities 0.898, preliminary labels; median 204.7 ms per document. (Slide 7)
+> It is illustrative decision support that runs offline on a laptop, and the README has a recorded walkthrough. Thank
+> you."
 
 ## Backup plan
 
 | Failure | Fallback |
 |---|---|
+| Preflight NO-GO (RAM) | Close the apps it lists; Docker can stay. Re-run preflight. |
 | No internet / venue Wi-Fi down | Nothing to do: `tasks.ps1 demo-offline` needs no network (verified by `src/scripts/failure_drill.py`). |
 | REAL history still building at start | The sidebar shows the progress; start the **Scenario demo** first (it is independent), then return to the real-data part. |
 | Live sources failing | Expected and fine: Source Health shows them DEGRADED/BACKOFF while the app keeps running. |
 | FinBERT won't load | The sidebar badge shows the lexicon fallback and /health says why. Continue; scores are confidence-capped. |
 | API or dashboard crashes | Rerun `tasks.ps1 demo-offline` (the cached history loads in seconds). Meanwhile show `docs/screenshots/1920x1080/`. |
-| Laptop dies | Present from the slides, then play `docs/demo/demo_walkthrough.webm` (silent backup recording) from another machine. |
-| Time overrun | Skip the time-machine drag (15 s) and the what-if (35 s). |
+| Laptop dies | The 60-second backup above, then play `docs/demo/demo_walkthrough.webm` or the YouTube video from another machine. |
+| Time overrun | Skip the what-if (30 s) and the propagation page. |

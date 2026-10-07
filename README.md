@@ -282,7 +282,7 @@ curl -s "http://127.0.0.1:8000/credit-brief/IN-TATAMOTORS?format=pdf" -o brief.p
 
 ## Demo
 
-See [docs/DEMO.md](docs/DEMO.md) and the timed script in [docs/demo_script.md](docs/demo_script.md). The 5-minute flow starts
+See [docs/DEMO.md](docs/DEMO.md), the scripts in [docs/demo_script.md](docs/demo_script.md) and the one-page [docs/JURY_CHEATSHEET.md](docs/JURY_CHEATSHEET.md). The 5-minute flow starts
 on REAL data (home with the time machine, watchlist, explainability, risk propagation), then plays the SYNTHETIC
 scenario for the stress climax (Tata Motors downgrade → 0.41% GREEN → invasion → 1.32% AMBER → corroborated →
 2.45% RED), then the what-if builder and a credit brief PDF. docs/DEMO.md lists which parts are CACHED_REAL and which are
