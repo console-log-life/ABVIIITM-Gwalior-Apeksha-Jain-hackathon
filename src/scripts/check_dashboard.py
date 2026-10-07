@@ -7,6 +7,7 @@ Exit code 1 if any page raised an exception or showed an error box.
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -35,6 +36,7 @@ def check(page: Path) -> tuple[bool, str]:
 
 
 def main() -> int:
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     pages = [DASH / "Home.py", *sorted((DASH / "pages").glob("*.py"))]
     failed = 0

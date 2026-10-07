@@ -10,6 +10,7 @@ The topic -> event mapping is inlined from taxonomy.yaml (topic_map).
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -358,6 +359,7 @@ print(json.dumps({"sentiment": {k: RESULTS["sentiment"][k]["macro_f1"] for k in 
 
 
 def main() -> int:
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     cells = build_cells()
     NB_DIR.mkdir(exist_ok=True)
     nb = {"nbformat": 4, "nbformat_minor": 5,

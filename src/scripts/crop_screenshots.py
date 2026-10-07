@@ -9,6 +9,7 @@ Usage:  python src/scripts/crop_screenshots.py
 
 from __future__ import annotations
 
+import argparse
 import sys
 from pathlib import Path
 
@@ -36,6 +37,7 @@ README_CROPS = {  # the three images at the top of README.md
 
 
 def main() -> int:
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     OUT.mkdir(parents=True, exist_ok=True)
     made = []
     for name, (src, box) in CROPS.items():

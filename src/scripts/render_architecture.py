@@ -3,6 +3,7 @@
 Usage:  python src/scripts/render_architecture.py      (requires requirements-dev.txt: playwright)
 """
 
+import argparse
 import os
 from pathlib import Path
 
@@ -12,6 +13,7 @@ from playwright.sync_api import sync_playwright  # noqa: E402
 
 
 def main() -> None:
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     with sync_playwright() as p:
         b = p.chromium.launch(channel="msedge", headless=True)
         pg = b.new_page(viewport={"width": 1920, "height": 1080}, device_scale_factor=2)

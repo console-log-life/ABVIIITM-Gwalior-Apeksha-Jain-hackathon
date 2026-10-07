@@ -10,6 +10,7 @@ Writes:
 
 from __future__ import annotations
 
+import argparse
 import csv
 import json
 import sys
@@ -106,7 +107,10 @@ def write_md(results: list[dict]) -> None:
 
 def main() -> int:
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
-    keys = sys.argv[1:] or ["sentiment", "topic"]
+    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap.add_argument("datasets", nargs="*", choices=["sentiment", "topic"], default=["sentiment", "topic"],
+                    help="which datasets to prepare (default: both)")
+    keys = ap.parse_args().datasets or ["sentiment", "topic"]
     results = []
     for k in keys:
         r = prepare(k)

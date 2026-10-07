@@ -10,6 +10,7 @@ Exit code 0 only if every check passes.
 
 from __future__ import annotations
 
+import argparse
 import os
 import subprocess
 import sys
@@ -38,6 +39,7 @@ def wait_status(predicate, timeout: float, every: float = 1.0):
 
 
 def main() -> int:
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     tmp = ROOT / ".tmp" / "drill"
     tmp.mkdir(parents=True, exist_ok=True)

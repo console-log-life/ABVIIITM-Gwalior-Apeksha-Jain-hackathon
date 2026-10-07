@@ -13,6 +13,7 @@ Usage:  python src/scripts/build_presentation.py        (requires requirements-d
 
 from __future__ import annotations
 
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -429,6 +430,7 @@ def build(nums: dict) -> Presentation:
 
 
 def main() -> int:
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     nums = load_numbers()
     prs = build(nums)

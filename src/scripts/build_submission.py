@@ -8,6 +8,7 @@ remain).
 
 from __future__ import annotations
 
+import argparse
 import html
 import json
 import re
@@ -127,6 +128,7 @@ def allowed_numbers() -> set[str]:
 
 # ------------------------------------------------------------------ checks
 def main() -> int:
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     md = MD.read_text(encoding="utf-8")
     out_html = render(md)

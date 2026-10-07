@@ -18,6 +18,7 @@ Usage:  python src/scripts/record_demo_video.py        (requires requirements-de
 
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import shutil
@@ -155,6 +156,7 @@ def wait_http(url: str, timeout: float) -> None:
 
 
 def main() -> int:
+    argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter).parse_args()
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     for port in (8000, 8501):
         with socket.socket() as s:
