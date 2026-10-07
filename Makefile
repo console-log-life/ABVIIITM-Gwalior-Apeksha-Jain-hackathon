@@ -27,9 +27,8 @@ models:
 probe:
 	"$(PY)" src/scripts/probe_sources.py
 
-test:  # fast suite with coverage, then FinBERT tests in a separate process
-	"$(PY)" -m pytest -q -m "not model" --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing --cov-report=xml
-	"$(PY)" -m pytest -q -m model
+test:  # one pytest process per test file + coverage, then the FinBERT tests; PASS/FAIL table
+	"$(PY)" src/scripts/run_tests.py
 
 test-model:
 	"$(PY)" -m pytest -q -m model
@@ -38,7 +37,7 @@ preflight:
 	"$(PY)" src/scripts/preflight.py
 
 test-fast:
-	"$(PY)" -m pytest -q -m "not model"
+	"$(PY)" src/scripts/run_tests.py --no-model --no-cov
 
 lint:
 	"$(PY)" -m ruff check .

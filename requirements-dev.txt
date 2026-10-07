@@ -4,4 +4,3 @@ openpyxl==3.1.5        # label-review spreadsheet (src/scripts/build_label_revie
 python-pptx==1.0.2     # 7-slide deck (src/scripts/build_presentation.py)
 playwright==1.49.1     # silent demo recording (src/scripts/record_demo_video.py); uses the installed Edge, no browser download
 datasets==3.0.1        # public human-labelled datasets (src/scripts/datasets/prepare_public.py)
-accelerate==1.2.1      # HF Trainer, only for the local smoke run of src/notebooks/train_models.ipynb

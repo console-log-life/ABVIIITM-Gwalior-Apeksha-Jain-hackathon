@@ -38,7 +38,8 @@ class LearnedEventModel:
         self._torch = torch
         self.path = str(model_dir)
         self.tok = AutoTokenizer.from_pretrained(str(model_dir), local_files_only=True)
-        self.model = AutoModelForSequenceClassification.from_pretrained(str(model_dir), local_files_only=True).eval()
+        self.model = AutoModelForSequenceClassification.from_pretrained(
+            str(model_dir), local_files_only=True, low_cpu_mem_usage=True).eval()
         self.quantized = bool(settings.model_quantize_int8)
         if self.quantized:
             self.model = quantize_int8(self.model)

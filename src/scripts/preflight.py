@@ -1,8 +1,8 @@
 """Pre-demo checklist. Prints GO / NO-GO.
 
-NO-GO (blocking):  models missing for offline use · database not writable · port 8000 or 8501 busy ·
-                   demo story or portfolio missing.
-WARN (non-blocking): free RAM < 2 GB · live sources failing (probe; the demo itself needs no network) ·
+NO-GO (blocking):  free RAM < 1.5 GB (the processes using the most memory are listed) · models missing for offline
+                   use · database not writable · port 8000 or 8501 busy · demo story or portfolio missing.
+WARN (non-blocking): free RAM 1.5-2 GB · live sources failing (probe; the demo itself needs no network) ·
                    no local captures (REPLAY then uses the committed 50-headline sample).
 
 Usage:  python src/scripts/preflight.py [--skip-probe]
@@ -25,7 +25,9 @@ sys.path.insert(0, str(ROOT / "src"))
 
 from app.config import get_settings  # noqa: E402
 
-MIN_FREE_GB = 2.0
+MIN_FREE_GB = 2.0  # below this: WARN
+NO_GO_FREE_GB = 1.5  # below this: NO-GO (FinBERT + API + dashboard + browser need ~1.5 GB on top of the OS)
+TOP_N = 8
 PROBE_TIMEOUT_S = 60
 
 
@@ -49,6 +51,23 @@ def free_ram_gb() -> float | None:
     except OSError:
         return None
     return None
+
+
+def top_memory_users(n: int = TOP_N) -> list[tuple[str, int, float]]:
+    """(name, process count, MB of private memory) of the n process names using the most memory."""
+    try:
+        import psutil
+    except ImportError:
+        return []
+    by_name: dict[str, list[float]] = {}
+    for p in psutil.process_iter(["name", "memory_info"]):
+        mi = p.info.get("memory_info")
+        if mi is None:
+            continue
+        used = getattr(mi, "private", None) or mi.rss  # Windows: private bytes (commit), else resident set
+        by_name.setdefault(p.info.get("name") or "?", []).append(used / 2**20)
+    rows = [(name, len(v), sum(v)) for name, v in by_name.items()]
+    return sorted(rows, key=lambda r: -r[2])[:n]
 
 
 def finbert_files_ok(models_dir: Path, name: str) -> tuple[bool, str]:
@@ -100,9 +119,10 @@ def main() -> int:
     rows: list[tuple[str, str, str]] = []  # (status, check, detail); status in OK/WARN/FAIL
 
     gb = free_ram_gb()
-    rows.append(("OK" if gb is None or gb >= MIN_FREE_GB else "WARN", "free RAM",
-                 "unknown" if gb is None else f"{gb:.1f} GB free (want >= {MIN_FREE_GB:.0f} GB; close browsers/IDE "
-                 "tabs if lower)"))
+    ram_status = "OK" if gb is None or gb >= MIN_FREE_GB else ("WARN" if gb >= NO_GO_FREE_GB else "FAIL")
+    rows.append((ram_status, "free RAM",
+                 "unknown" if gb is None else f"{gb:.1f} GB free (NO-GO below {NO_GO_FREE_GB} GB, want >= "
+                 f"{MIN_FREE_GB:.0f} GB; close the apps listed below)"))
     ok, detail = finbert_files_ok(s.models_dir, s.finbert_model)
     rows.append(("OK" if ok else "FAIL", "FinBERT available offline", detail))
     spacy_ok = importlib.util.find_spec("en_core_web_sm") is not None
@@ -160,6 +180,10 @@ def main() -> int:
     print("\nPRE-FLIGHT")
     for status, check, detail in rows:
         print(f"  {status:<4}  {check:<{width}}  {detail}")
+    if ram_status != "OK":
+        print("\n  Processes using the most memory (private MB):")
+        for name, count, mb in top_memory_users():
+            print(f"    {mb:>7,.0f} MB  {name}{f' (x{count})' if count > 1 else ''}")
     fails = [r for r in rows if r[0] == "FAIL"]
     warns = [r for r in rows if r[0] == "WARN"]
     print("\n" + ("NO-GO: fix the FAIL lines above." if fails else

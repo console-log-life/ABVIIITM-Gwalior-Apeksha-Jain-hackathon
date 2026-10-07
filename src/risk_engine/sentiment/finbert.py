@@ -111,7 +111,8 @@ class _FinBertModel:
         if ft is not None:
             try:
                 self.tok = AutoTokenizer.from_pretrained(str(ft), local_files_only=True)
-                self.model = AutoModelForSequenceClassification.from_pretrained(str(ft), local_files_only=True)
+                self.model = AutoModelForSequenceClassification.from_pretrained(str(ft), local_files_only=True,
+                                                                                low_cpu_mem_usage=True)
                 map_logits_to_probs([0.0] * self.model.config.num_labels, dict(self.model.config.id2label))
                 self.variant, self.source, loaded = "fine-tuned", str(ft), True
             except Exception as exc:  # never silently: logged and reported by status()
@@ -121,12 +122,14 @@ class _FinBertModel:
             try:  # local first: no network round-trip when weights are already cached
                 self.tok = AutoTokenizer.from_pretrained(name, cache_dir=cache, local_files_only=True)
                 self.model = AutoModelForSequenceClassification.from_pretrained(name, cache_dir=cache,
-                                                                                local_files_only=True)
+                                                                                local_files_only=True,
+                                                                                low_cpu_mem_usage=True)
             except OSError:
                 if os.environ.get("HF_HUB_OFFLINE") == "1" or os.environ.get("TRANSFORMERS_OFFLINE") == "1":
                     raise
                 self.tok = AutoTokenizer.from_pretrained(name, cache_dir=cache)
-                self.model = AutoModelForSequenceClassification.from_pretrained(name, cache_dir=cache)
+                self.model = AutoModelForSequenceClassification.from_pretrained(name, cache_dir=cache,
+                                                                                low_cpu_mem_usage=True)
         self.model.eval()
         self.quantized = bool(settings.model_quantize_int8)
         if self.quantized:

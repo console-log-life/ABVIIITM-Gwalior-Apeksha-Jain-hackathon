@@ -313,6 +313,7 @@ powershell -ExecutionPolicy Bypass -File tasks.ps1 drill      # offline / outage
 |---|---:|---:|
 | Sentiment accuracy, FinBERT (headline only) | 0.653 | 147 |
 | Sentiment macro-F1, FinBERT | 0.648 | 147 |
+| Sentiment accuracy, FinBERT int8 (kept OFF: −4.8 points, [docs/quantization.md](docs/quantization.md)) | 0.605 | 147 |
 | Event classification accuracy, rules | 0.81 | 147 |
 | Event classification macro-F1, rules | 0.795 | 147 |
 | Entity resolution accuracy | 0.898 | 147 |

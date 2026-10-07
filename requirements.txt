@@ -11,6 +11,8 @@ SQLAlchemy==2.0.36
 # --- NLP ---
 torch==2.5.1
 transformers==4.47.1
+accelerate==1.2.1      # low_cpu_mem_usage model loading: no second weight copy in RAM at start-up
+psutil==7.2.2          # preflight: free RAM and the processes using the most memory
 spacy==3.8.3
 rapidfuzz==3.11.0
 langdetect==1.0.9

@@ -22,10 +22,10 @@ switch ($Target) {
     "models" { & $py src/scripts/setup_models.py }
     "probe" { & $py src/scripts/probe_sources.py }
     "test" {
-        # fast suite first (with coverage), then the FinBERT tests in a SEPARATE process (one model load, less RAM)
-        & $py -m pytest -q -m "not model" --cov=risk_engine --cov=portfolio --cov=app --cov-report=term-missing --cov-report=xml
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-        & $py -m pytest -q -m model
+        # one pytest process per test file (a MemoryError cannot hide failures), coverage, then the FinBERT tests;
+        # prints a PASS/FAIL table and exits non-zero if any file failed
+        & $py src/scripts/run_tests.py
+        exit $LASTEXITCODE
     }
     "test-model" { & $py -m pytest -q -m model }
     "preflight" { & $py src/scripts/preflight.py }
@@ -38,7 +38,7 @@ switch ($Target) {
         & $py src/scripts/build_presentation.py
         if ($LASTEXITCODE -eq 0) { & powershell -NoProfile -ExecutionPolicy Bypass -File src/scripts/render_slides.ps1 }
     }
-    "test-fast" { & $py -m pytest -q -m "not model" }
+    "test-fast" { & $py src/scripts/run_tests.py --no-model --no-cov; exit $LASTEXITCODE }
     "lint" { & $py -m ruff check . }
     "capture" { & $py src/scripts/capture_cache.py }
     "replay" { & $py -m risk_engine.ingestion.replay --limit 20 }
