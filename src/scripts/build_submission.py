@@ -22,7 +22,14 @@ HTML_OUT = ROOT / "docs" / "submission" / "doselect_answer.html"
 PROBE = ROOT / "data" / "probe_results.json"
 EVAL = ROOT / "data" / "eval" / "eval_results.json"
 BENCH = ROOT / "data" / "eval" / "benchmark_results.json"
-PLACEHOLDERS = ["[GITHUB REPOSITORY LINK]", "[LIVE DEMO LINK]", "[PRESENTATION LINK]"]
+PLACEHOLDERS = ["[GITHUB REPOSITORY LINK]", "[DEMO VIDEO LINK]"]
+README_PLACEHOLDERS = ["[CANDIDATE NAME]", "[COLLEGE EMAIL]", "[COLLEGE]", "[YOUTUBE UNLISTED LINK]"]
+# mandatory README headings (official submission guidelines), in this order
+README_HEADINGS = ["Candidate Name:", "College Email ID:", "College / Campus:", "Demo Video Link:", "Project Overview",
+                   "Architecture & Tech Stack", "Dataset Description", "Quickstart", "Key Results & Domain Impact",
+                   "Presentation link"]
+REQUIRED_PATHS = ["README.md", "requirements.txt", "LICENSE", "src", "data", "docs/presentation.pdf",
+                  "docs/architecture.png", "src/app", "src/risk_engine", "src/portfolio", "src/scripts"]
 SECTIONS = ["Executive summary", "Solution overview", "Downstream module", "Technical architecture",
             "AI/NLP methodology", "Data sources", "Key features", "Results", "Business impact", "Limitations",
             "Future scope", "Deliverables"]
@@ -164,8 +171,11 @@ def main() -> int:
           "Module B: Strategic Portfolio Stress Testing was implemented." in md and "trigger" in low, "")
     check("Dashboard addressed", "dashboard" in low, "")
     deliv = secs.get("Deliverables", "")
-    check("GitHub, live demo and 7-slide presentation addressed",
-          all(k in deliv for k in ("GitHub repository:", "Live demonstration:", "Presentation (7 slides):")), "")
+    check("GitHub repo, demo video and 7-slide PDF listed; individual submission stated",
+          all(k in deliv for k in ("GitHub repository:", "Demo video (YouTube, unlisted):",
+                                   "Presentation (7 slides, PDF):", "individual submission")) and
+          "/blob/main/docs/presentation.pdf" in deliv and not re.search(r"drive\.google|onedrive|1drv\.ms", deliv),
+          "")
     allowed = allowed_numbers()
     res_nums = numbers_in(secs.get("Results", ""))
     untraced = [n for n in res_nums if n not in allowed]
@@ -174,8 +184,27 @@ def main() -> int:
     remaining = [p for p in PLACEHOLDERS if p in md]
     other_ph = [p for p in re.findall(r"\[[A-Z][A-Z0-9 ()/-]{3,}\]", md) if p not in PLACEHOLDERS]
     urls = re.findall(r"https?://\S+", md)
-    check("No fabricated links; only the 3 allowed placeholders", not other_ph and (not urls or not remaining),
+    check("No fabricated links; only the allowed link placeholders", not other_ph and (not urls or not remaining),
           f"placeholders remaining: {len(remaining)}; other placeholders: {other_ph}; urls: {len(urls)}")
+
+    # repository layout + README (official submission guidelines)
+    missing = [p for p in REQUIRED_PATHS if not (ROOT / p).exists()]
+    stray = [p for p in ("app", "risk_engine", "portfolio", "scripts") if (ROOT / p).is_dir()]
+    check("Repository layout: README, requirements, LICENSE, src/, data/, docs/ (PDF + architecture.png)",
+          not missing and not stray, f"missing {missing}; packages outside src/ {stray}")
+    if (ROOT / "docs/architecture.png").exists():
+        from PIL import Image
+
+        aw = Image.open(ROOT / "docs/architecture.png").size[0]
+        check("docs/architecture.png is at least 1600 px wide", aw >= 1600, f"{aw} px")
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    heads = [h.strip() for h in re.findall(r"^## (.+)$", readme, re.M)]
+    found = [next((i for i, h in enumerate(heads) if h.startswith(r)), -1) for r in README_HEADINGS]
+    check("README mandatory headings present, in order",
+          -1 not in found and found == sorted(found) and found == list(range(len(README_HEADINGS))),
+          f"positions {found}")
+    readme_ph = [p for p in README_PLACEHOLDERS if p in readme]
+    remaining += readme_ph
     check("Synthetic, cached and simulated data clearly identified",
           all(k in md for k in ("SYNTHETIC", "CACHED_REAL")) and "simulated" in low, "")
     check("Business value explained; 'not investment advice' present",
@@ -190,9 +219,12 @@ def main() -> int:
 
     # capture dates of whatever REPLAY uses: local captures, or the committed sample on a fresh clone
     fmt = sorted({d.captured_at.date().isoformat() for d in load_cached_documents(get_settings().cache_path)})
-    expected = (f"captured on {fmt[0]}" if len(fmt) == 1 else f"captured between {fmt[0]} and {fmt[-1]}") if fmt else ""
-    check("Cached-data capture date matches the replay cache", bool(expected) and expected in md,
-          f"expected phrase: '{expected}'")
+    stated = re.search(r"captured (?:on (\d{4}-\d{2}-\d{2})|between (\d{4}-\d{2}-\d{2}) and (\d{4}-\d{2}-\d{2}))", md)
+    lo, hi = (stated.group(1), stated.group(1)) if stated and stated.group(1) else (
+        (stated.group(2), stated.group(3)) if stated else (None, None))
+    # the stated range must cover every capture date REPLAY can see (local captures, or the sample on a fresh clone)
+    check("Cached-data capture dates fall inside the stated range", bool(fmt and lo) and lo <= fmt[0] and fmt[-1] <= hi,
+          f"stated {lo} to {hi}; cache dates {fmt[0] if fmt else '-'} to {fmt[-1] if fmt else '-'}")
     ev = json.loads(EVAL.read_text(encoding="utf-8"))
     check("Unreviewed labels flagged PRELIMINARY", (not ev["preliminary"]) or "PRELIMINARY" in secs.get("Results", ""),
           f"eval preliminary={ev['preliminary']}")
@@ -203,7 +235,7 @@ def main() -> int:
     failed = [c for c in checks if not c[1]]
     print(f"\n{len(checks) - len(failed)}/{len(checks)} checks passed · wrote {HTML_OUT.relative_to(ROOT)}")
     if remaining:
-        print(f"NOT READY TO SUBMIT: {len(remaining)} link placeholder(s) remain: {', '.join(remaining)}")
+        print(f"NOT READY TO SUBMIT: {len(remaining)} placeholder(s) remain: {', '.join(remaining)}")
     return 1 if failed else 0
 
 

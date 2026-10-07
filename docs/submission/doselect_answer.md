@@ -15,12 +15,12 @@ Downgrades, regulatory probes, sanctions and rate shocks surface first in unstru
 
 ### Downstream module
 
-Module B: Strategic Portfolio Stress Testing was implemented. The stress engine subscribes to every new signal on an internal event bus and reads its event type and impact score.
+Module B: Strategic Portfolio Stress Testing was implemented. The stress engine subscribes to every new signal on an internal event bus.
 
 - **Systemic trigger:** a Geopolitical, Macroeconomic or Credit Event that is market-wide or confirmed by at least two independent sources, with impact of at least 7.0, reported by a news source; social posts only add corroboration. It runs a moderate scenario, or a severe one from 8.5.
 - **Idiosyncratic trigger:** a Credit, Regulatory or Litigation event on a held issuer with impact of at least 6.0 and negative sentiment. It shocks only that issuer's bonds, loans, equity and credit protection.
 
-A cooldown prevents repeated runs, and every run stores its triggering signal as an audit trail. Outputs show the value before and after the shock, the loss by asset class, sector, issuer and country, the top-10 positions, the hedge offset, concentration and a red/amber/green status against a 2% risk appetite.
+A cooldown prevents repeated runs and every run stores its triggering signal. Outputs show the value before and after the shock, losses by asset class, sector and issuer, the top-10 positions, hedge offset, concentration and a red/amber/green status against a 2% risk appetite.
 
 **Credit-risk views:** an early warning watchlist gives every held issuer a rules-based status (WATCH-NEGATIVE, MONITOR or STABLE) from its recent signals; risk propagation adds the decay-weighted exposure of 16 hand-curated linked issuers; a what-if builder reprices the book instantly for any shock; and a one-click, template-based credit brief (HTML or PDF) summarises an issuer.
 
@@ -47,7 +47,7 @@ Data sources → ingestion → NLP → risk signals → store/API → stress eng
 Sources used (each passed our source probe): Google News RSS (news), Reddit subreddit RSS (social), Mastodon hashtag timelines (social).
 
 - **Real, live:** fetched during a session (label: LIVE).
-- **Real, cached:** real items captured between 2026-10-03 and 2026-10-05, shown with capture time (label: CACHED_REAL). The dashboard opens on all 1,325 of them, processed through the same pipeline, with a time machine that replays them by publication time. The public repository ships only a news-headline sample.
+- **Real, cached:** real items captured between 2026-10-03 and 2026-10-05, shown with capture time (label: CACHED_REAL). The dashboard opens on all 1,325 of them, with a time machine that replays them by publication time. The public repository ships only a news-headline sample.
 - **Synthetic:** the demo story, user-typed text and the generated portfolio (seed 42, 49 positions), labelled SYNTHETIC.
 - **Simulated:** every stress-test result, produced by an illustrative model.
 
@@ -87,15 +87,17 @@ Risk teams get earlier warning and materiality-based triage; credit analysts see
 
 ### Future scope
 
-- Production streaming ingestion with Kafka.
-- Calibrating the impact score against observed market reactions.
+- Kafka streaming ingestion.
+- Calibrating impact against market reactions.
 - Licensed full-text news.
-- Historical backtesting of triggers and signals.
+- Backtesting triggers and signals.
 - Full revaluation with correlated scenarios.
 - Scalability, security and access control.
 
 ### Deliverables
 
+This is an individual submission.
+
 - GitHub repository: [GITHUB REPOSITORY LINK]
-- Live demonstration: [LIVE DEMO LINK]
-- Presentation (7 slides): [PRESENTATION LINK]
+- Demo video (YouTube, unlisted): [DEMO VIDEO LINK]
+- Presentation (7 slides, PDF): [GITHUB REPOSITORY LINK]/blob/main/docs/presentation.pdf
