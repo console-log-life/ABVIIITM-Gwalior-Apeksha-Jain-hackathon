@@ -15,7 +15,7 @@ from risk_engine.ingestion.scenario import load_scenario, run_scenario
 from risk_engine.ingestion.scheduler import IngestionScheduler
 from risk_engine.schemas import Provenance, RawDocument, Source, SourceType
 
-sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src" / "scripts"))
 import capture_cache  # noqa: E402
 
 REDDIT_ATOM = b"""<?xml version="1.0" encoding="UTF-8"?><feed xmlns="http://www.w3.org/2005/Atom">

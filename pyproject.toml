@@ -6,7 +6,7 @@ requires-python = ">=3.11,<3.12"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-pythonpath = ["src", "."]
+pythonpath = ["src", "src/scripts", "."]  # src/scripts: tests import capture_cache, import_label_review, ...
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 markers = [
