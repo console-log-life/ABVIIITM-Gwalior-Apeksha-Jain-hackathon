@@ -23,8 +23,10 @@ HTML_OUT = ROOT / "docs" / "submission" / "doselect_answer.html"
 PROBE = ROOT / "data" / "probe_results.json"
 EVAL = ROOT / "data" / "eval" / "eval_results.json"
 BENCH = ROOT / "data" / "eval" / "benchmark_results.json"
+REPO_URL = "https://github.com/console-log-life/ABVIIITM-Gwalior-Apeksha-Jain-hackathon"
 PLACEHOLDERS = ["[GITHUB REPOSITORY LINK]", "[DEMO VIDEO LINK]"]
-README_PLACEHOLDERS = ["[CANDIDATE NAME]", "[COLLEGE EMAIL]", "[COLLEGE]", "[YOUTUBE UNLISTED LINK]"]
+README_PLACEHOLDERS = ["[CANDIDATE NAME]", "[COLLEGE EMAIL]", "[COLLEGE]", "[YOUTUBE UNLISTED LINK]",
+                       "[DEMO VIDEO LINK]"]
 # mandatory README headings (official submission guidelines), in this order
 README_HEADINGS = ["Candidate Name:", "College Email ID:", "College / Campus:", "Demo Video Link:", "Project Overview",
                    "Architecture & Tech Stack", "Dataset Description", "Quickstart", "Key Results & Domain Impact",
@@ -186,8 +188,12 @@ def main() -> int:
     remaining = [p for p in PLACEHOLDERS if p in md]
     other_ph = [p for p in re.findall(r"\[[A-Z][A-Z0-9 ()/-]{3,}\]", md) if p not in PLACEHOLDERS]
     urls = re.findall(r"https?://\S+", md)
-    check("No fabricated links; only the allowed link placeholders", not other_ph and (not urls or not remaining),
-          f"placeholders remaining: {len(remaining)}; other placeholders: {other_ph}; urls: {len(urls)}")
+    # links are allowed only into this repository, or a YouTube video once the demo link is filled in
+    youtube = re.compile(r"https://(www\.)?(youtube\.com|youtu\.be)/")
+    foreign = [u for u in urls if not u.startswith(REPO_URL) and not youtube.match(u)]
+    check("No fabricated links; only the allowed link placeholders", not other_ph and not foreign,
+          f"placeholders remaining: {len(remaining)}; other placeholders: {other_ph}; urls: {len(urls)}; "
+          f"foreign urls: {foreign}")
 
     # repository layout + README (official submission guidelines)
     missing = [p for p in REQUIRED_PATHS if not (ROOT / p).exists()]

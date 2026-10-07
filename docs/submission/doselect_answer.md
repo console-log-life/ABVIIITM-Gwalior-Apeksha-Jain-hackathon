@@ -98,6 +98,6 @@ Risk teams get earlier warning and materiality-based triage; credit analysts see
 
 This is an individual submission.
 
-- GitHub repository: [GITHUB REPOSITORY LINK]
+- GitHub repository: https://github.com/console-log-life/ABVIIITM-Gwalior-Apeksha-Jain-hackathon
 - Demo video (YouTube, unlisted): [DEMO VIDEO LINK]
-- Presentation (7 slides, PDF): [GITHUB REPOSITORY LINK]/blob/main/docs/presentation.pdf
+- Presentation (7 slides, PDF): https://github.com/console-log-life/ABVIIITM-Gwalior-Apeksha-Jain-hackathon/blob/main/docs/presentation.pdf

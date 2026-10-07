@@ -7,13 +7,13 @@ individual submission.
 > Decision-support prototype, **not investment advice**. Stress results come from a *simplified, illustrative
 > hackathon stress model; it is not a production or regulatory risk model.*
 
-## Candidate Name: [CANDIDATE NAME]
+## Candidate Name: Apeksha Jain
 
-## College Email ID: [COLLEGE EMAIL]
+## College Email ID: imt_2023016@iiitm.ac.in
 
-## College / Campus: [COLLEGE]
+## College / Campus: ABV-IIITM Gwalior (Atal Bihari Vajpayee Indian Institute of Information Technology and Management, Gwalior)
 
-## Demo Video Link: [YOUTUBE UNLISTED LINK]
+## Demo Video Link: [DEMO VIDEO LINK]
 
 ## Project Overview
 
@@ -73,8 +73,8 @@ Requirements: Python **3.11**, git, ~3 GB of disk for the models, 8 GB RAM recom
 **Windows (PowerShell):**
 
 ```powershell
-git clone <repository-url> risk-signal-engine
-cd risk-signal-engine
+git clone https://github.com/console-log-life/ABVIIITM-Gwalior-Apeksha-Jain-hackathon.git
+cd ABVIIITM-Gwalior-Apeksha-Jain-hackathon
 powershell -ExecutionPolicy Bypass -File tasks.ps1 setup         # venv, pinned packages, FinBERT + spaCy into ./models
 powershell -ExecutionPolicy Bypass -File tasks.ps1 test          # 270 fast tests (3 need requirements-dev.txt) + 5 FinBERT tests
 powershell -ExecutionPolicy Bypass -File tasks.ps1 demo-offline  # API :8000 + dashboard :8501, no network needed
@@ -83,8 +83,8 @@ powershell -ExecutionPolicy Bypass -File tasks.ps1 demo-offline  # API :8000 + d
 **Linux / macOS (bash):**
 
 ```bash
-git clone <repository-url> risk-signal-engine
-cd risk-signal-engine
+git clone https://github.com/console-log-life/ABVIIITM-Gwalior-Apeksha-Jain-hackathon.git
+cd ABVIIITM-Gwalior-Apeksha-Jain-hackathon
 make setup           # python3.11 venv, pinned packages, FinBERT + spaCy into ./models
 make test            # 270 fast tests (3 need requirements-dev.txt) + 5 FinBERT tests
 make demo-offline    # API :8000 + dashboard :8501, no network needed
@@ -121,7 +121,7 @@ avoided: neither was measured.
 
 ## Presentation link
 
-[docs/presentation.pdf](docs/presentation.pdf) (7 slides; source: `docs/presentation/Risk_Signal_Engine.pptx`).
+[docs/presentation.pdf](docs/presentation.pdf) (7 slides; on GitHub: <https://github.com/console-log-life/ABVIIITM-Gwalior-Apeksha-Jain-hackathon/blob/main/docs/presentation.pdf>; source: `docs/presentation/Risk_Signal_Engine.pptx`).
 
 ---
 
