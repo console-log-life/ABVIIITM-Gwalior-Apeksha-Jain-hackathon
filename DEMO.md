@@ -58,6 +58,8 @@ risk model.
 ## Backup plan
 
 `tasks.ps1 demo-offline` needs no network. `docs/screenshots/1366x768/` and `1920x1080/` hold every page at projector
-sizes. A **silent backup recording** of this flow is in `docs/demo/demo_walkthrough.webm` (captions on screen; caption
-times in `docs/demo/demo_walkthrough_captions.json`; re-record with `tasks.ps1 video`). A narrated recording still has
-to be made by a person.
+sizes. A **silent backup recording** is in `docs/demo/demo_walkthrough.webm` (captions on screen; caption times in
+`docs/demo/demo_walkthrough_captions.json`). It still shows the PREVIOUS flow (scenario story, watchlist and
+explainability, 3:04): the recorder (`scripts/record_demo_video.py`) is already updated for the new flow, but
+re-recording needs ~2 GB of free RAM; run `tasks.ps1 video` with other applications closed. A narrated recording still
+has to be made by a person.

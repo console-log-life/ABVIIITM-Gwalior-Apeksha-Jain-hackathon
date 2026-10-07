@@ -178,6 +178,8 @@ def main() -> int:
         wait_http(f"{API}/health", 180)
         wait_api(lambda: httpx.get(f"{API}/health", timeout=5).json()["model"].get("backend") != "loading",
                  "model warm-up", 180)
+        wait_api(lambda: httpx.get(f"{API}/history", timeout=5).json()["status"].get("state") in ("ready", "error"),
+                 "REAL history", 1200)
         wait_http(f"{UI}/_stcore/health", 120)
         httpx.post(f"{API}/demo/reset", timeout=30)
         with sync_playwright() as p:
@@ -218,18 +220,18 @@ def main() -> int:
                       "links", 11)
 
             httpx.post(f"{API}/demo/start", json={"mode": "SCENARIO", "step_seconds": STEP_S}, timeout=30)
-            wait_api(lambda: n_synthetic() >= 1, "story step 1", 120)
+            wait_api(lambda: n_synthetic() >= 1, "story step 1", 600)
             rec.scene("signals", "Scenario demo (SYNTHETIC, labelled everywhere): a scripted story for the stress "
                       "climax", 6, expect="NLP Risk Signals")
-            wait_api(lambda: n_synthetic() >= 2 and n_runs() >= 1, "step 2 and its issuer stress run")
+            wait_api(lambda: n_synthetic() >= 2 and n_runs() >= 1, "step 2 and its issuer stress run", 600)
             rec.scene("stress", "Moody's downgrade + SEBI probe at Tata Motors (held), impact 8.7 → issuer-only "
                       "stress 0.41% GREEN", 9, expect="Idiosyncratic credit event")
             rec.scene("watchlist", "Watchlist: Tata Motors WATCH-NEGATIVE; its peers Ford and Tesla flagged by "
                       "propagation (⇄)", 10, expect="WATCH-NEGATIVE")
-            wait_api(lambda: n_synthetic() >= 3 and n_runs() >= 2, "step 3 and its systemic stress run", 120)
+            wait_api(lambda: n_synthetic() >= 3 and n_runs() >= 2, "step 3 and its systemic stress run", 600)
             rec.scene("stress", "Invasion headline from a news wire (market-wide, impact 7.0) → geopolitical "
                       "moderate, 1.32% AMBER", 8, expect="Geopolitical shock (moderate)")
-            wait_api(lambda: n_synthetic() >= 4 and n_runs() >= 3, "step 4 and the severe run", 120)
+            wait_api(lambda: n_synthetic() >= 4 and n_runs() >= 3, "step 4 and the severe run", 600)
             rec.scene("stress", "A second independent source corroborates: severe, 2.45% RED, above the 2% risk "
                       "appetite", 10, expect="Geopolitical shock (severe)")
             rec.scene(None, "Waterfall, top-10 positions (hedges green) and sector × asset heatmap", 8,

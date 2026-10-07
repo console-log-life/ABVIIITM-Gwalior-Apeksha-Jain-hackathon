@@ -2,9 +2,9 @@
 
 > Git history was rewritten on 2026-10-05 (task 2). Commit hashes quoted in older entries below are the pre-rewrite hashes; use `git log --oneline` for current ones.
 
-**Current task:** UPGRADE — Task C (risk propagation)
-**Last commit:** 3f1c51d
-**Next step:** C → E → F; T4 when trained_models.zip arrives
+**Current task:** UPGRADE — waiting: trained_models.zip (T4-T6); video re-record when RAM allows
+**Last commit:** 424921c
+**Next step:** user: run Kaggle notebook; tasks.ps1 video with browsers closed; create GitHub repo
 
 Mode: AUTONOMOUS OVERNIGHT (user instruction 2026-10-03): self-gates instead of stops; commit `M<n>: …` after
 each milestone; run `scripts/capture_cache.py` at the start of each milestone; spec = BUILD_PROMPT.md
@@ -167,6 +167,13 @@ Rules: no AI attribution in commits; no history rewrite; keep .tmp/backup/pre-re
 - D (`3f1c51d`): what-if builder on the Stress page (6 sliders, start from any systemic scenario, compare with the
   selected triggered run); POST /portfolio/what-if never saves a run. Starting from geopolitical_severe reproduces the
   triggered 2.45% exactly. 7 tests (monotonic in spreads/PD/rates/equity, endpoint saves nothing).
+
+### Upgrade · Tasks C, E, F (DONE except the video re-record) — full report: docs/UPGRADE_REPORT.md
+- C `bd74aae` propagation (16 curated links, decay, MONITOR by propagation, graph page); E `dac4a3d` credit brief
+  (HTML + PDF, every held issuer tested); F `13a11a7`, `424921c` + final commit: new 5-minute flow (REAL first, scenario
+  climax, what-if, brief), docs, deck slides 5/6, README, DoSelect 1,088 words 19/19.
+- Tests 259 fast + 4 model, coverage 90%. Preflight GO (RAM warning). Demo run twice: 0.41/1.32/2.45 unchanged.
+- NOT done: video re-record (laptop < 1 GB free RAM; API did not start). T4–T6 wait for trained_models.zip.
 
 ## Capture log (CACHED_REAL growth)
 

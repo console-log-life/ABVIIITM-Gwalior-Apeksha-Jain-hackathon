@@ -140,11 +140,15 @@ def main() -> int:
 
         def poll() -> None:
             for sig in reversed(httpx.get(f"{api}/signals", params={"limit": 50}, timeout=10).json()):
+                if sig.get("origin") == "real":  # the loaded REAL history is not part of this session's story
+                    continue
                 if sig["signal_id"] not in seen_sig:
                     seen_sig.add(sig["signal_id"])
                     print(f"      SIGNAL [{sig['provenance']}] {sig['impact_score']:>4} {sig['risk_level']:<8} "
                           f"{sig['company'][:22]:<22} {sig['event_type']:<14} {sig['text_excerpt'][:60]}")
             for run in reversed(httpx.get(f"{api}/stress-runs", timeout=10).json()["runs"]):
+                if run["run_id"].startswith("real-"):
+                    continue
                 if run["run_id"] not in seen_runs:
                     seen_runs.add(run["run_id"])
                     print(f"      STRESS {run['scenario']:<26} {run.get('scope_issuer_id') or 'MARKET':<14} "

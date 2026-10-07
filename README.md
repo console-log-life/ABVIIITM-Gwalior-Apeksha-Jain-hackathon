@@ -232,8 +232,8 @@ powershell -ExecutionPolicy Bypass -File tasks.ps1 test-fast  # without model-de
 powershell -ExecutionPolicy Bypass -File tasks.ps1 drill      # offline / outage drill against the real API
 ```
 
-- **Test suite:** 200 tests (196 fast + 4 FinBERT model tests, run in a separate process; pytest, no network in
-  unit tests). Coverage on the fast suite is 88% (`--cov=risk_engine --cov=portfolio --cov=app`). It includes
+- **Test suite:** 263 tests (259 fast + 4 FinBERT model tests, run in a separate process; pytest, no network in
+  unit tests). Coverage on the fast suite is 90% (`--cov=risk_engine --cov=portfolio --cov=app`). It includes
   regression tests for the real headlines that misfired, and the watchlist rules and endpoint.
 - **Failure drill:** `scripts/failure_drill.py` passed 7/7 checks with every outbound HTTP request blocked.
 

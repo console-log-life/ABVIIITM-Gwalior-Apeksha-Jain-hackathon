@@ -21,7 +21,7 @@
 
 | Dimension | Score | Why not higher |
 |---|---:|---|
-| Technical quality | 78 | Clean modular code, 200 tests, 88% coverage (fast suite), drills. Single process; in-process bus; SQLite |
+| Technical quality | 78 | Clean modular code, 263 tests, 90% coverage (fast suite), drills. Single process; in-process bus; SQLite |
 | NLP | 62 | FinBERT + rules + resolver work, but there's no fine-tuning, keyword false positives, headline-only input, and the evaluation is PRELIMINARY with same-author bias |
 | Financial reasoning | 66 | Correct sign conventions, hedges, triggers, HHI, RAG; but illustrative shocks, no correlations or FX translation, synthetic book |
 | Business relevance | 74 | Clear triage-to-portfolio story with an audit trail; no user validation |

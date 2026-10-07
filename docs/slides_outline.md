@@ -79,7 +79,7 @@ Motors: $41m held directly, $23m more via curated peer links to Ford and Tesla; 
   event accuracy 0.81; entity accuracy 0.898.
 - **False-trigger fixes, replayed on 911 locally captured real documents:** stress runs 84 → 50; triggered by social posts 11 → 0.
 - **Latency on a CPU laptop** (n = 200): median 204.7 ms, p95 1085.2 ms per document.
-- **Reliability:** 200 automated tests; offline/outage drill 7/7.
+- **Reliability:** 263 automated tests; offline/outage drill 7/7.
 - **Dashboard:** 12 sections plus "analyse your own headline" and an Early Warning Watchlist (Tata Motors WATCH-NEGATIVE after step 2).
 - **Impact:** faster triage, prioritisation by materiality, instant portfolio view. A decision-support tool, not
   investment advice.
