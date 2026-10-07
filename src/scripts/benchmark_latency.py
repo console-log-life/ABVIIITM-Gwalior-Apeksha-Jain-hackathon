@@ -106,7 +106,7 @@ def main() -> int:
         encoding="utf-8")
     print(f"n={res['n_documents']}  median {p['median']} ms  p95 {p['p95']} ms  mean {p['mean']} ms  "
           f"batched {res['batched_ms_per_document']} ms/doc  (model load {res['model_load_s']} s)")
-    print(f"wrote {OUT_JSON.relative_to(ROOT)}, {OUT_MD.relative_to(ROOT)}")
+    print(f"wrote {out_json}, {out_md}")
     return 0
 
 

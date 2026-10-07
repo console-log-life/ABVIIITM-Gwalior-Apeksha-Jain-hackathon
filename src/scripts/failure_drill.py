@@ -48,6 +48,8 @@ def main() -> int:
     env = {**os.environ, "HF_HUB_OFFLINE": "1", "TRANSFORMERS_OFFLINE": "1", "HTTP_PROXY": DEAD_PROXY,
            "HTTPS_PROXY": DEAD_PROXY, "ALL_PROXY": DEAD_PROXY, "NO_PROXY": "127.0.0.1,localhost",
            "APP_MODE": "SCENARIO", "DB_PATH": str(tmp / "drill.db"), "REPLAY_LIMIT": "10", "REPLAY_DELAY_S": "0",
+           # hermetic: without the REAL history, REPLAY has new documents to process (no dedup against history)
+           "REAL_HISTORY_AUTOLOAD": "false",
            "API_BASE_URL": API, "PYTHONIOENCODING": "utf-8"}
     results: list[tuple[str, bool, str]] = []
 
@@ -69,10 +71,15 @@ def main() -> int:
         client.post("/demo/reset")
         client.post("/demo/start", json={"mode": "SCENARIO", "step_seconds": 0})
         wait_status(lambda: not client.get("/demo/status").json().get("running"), 120)
-        sigs = client.get("/signals").json()
-        runs = client.get("/stress-runs").json()["runs"]
-        check("SCENARIO story runs offline", len(sigs) == 4 and len(runs) == 3,
-              f"{len(sigs)} signals, {len(runs)} stress runs")
+        # count only what the story produced
+        sigs = [x for x in client.get("/signals", params={"limit": 500}).json() if x["origin"] == "scenario"]
+        ids = {x["signal_id"] for x in sigs}
+        runs = [r for r in client.get("/stress-runs", params={"limit": 500}).json()["runs"]
+                if r["trigger_signal_id"] in ids]
+        synthetic = sum(x["provenance"] == "SYNTHETIC" for x in sigs)
+        check("SCENARIO story runs offline", synthetic == 4 and [r["rag"] for r in runs][::-1] ==
+              ["GREEN", "AMBER", "RED"], f"{len(sigs)} story signals ({synthetic} SYNTHETIC), "
+              f"{len(runs)} stress runs {[r['rag'] for r in runs][::-1]}")
 
         client.post("/mode", json={"mode": "LIVE"})
         h = wait_status(lambda: (s := client.get("/health").json()["sources"]) and
@@ -87,8 +94,10 @@ def main() -> int:
 
         client.post("/mode", json={"mode": "REPLAY"})
         wait_status(lambda: not client.get("/demo/status").json().get("running"), 180)
-        cached = client.get("/signals", params={"provenance": "CACHED_REAL"}).json()
-        check("REPLAY of cached real data works offline", len(cached) > 0, f"{len(cached)} CACHED_REAL signals")
+        rows = client.get("/signals", params={"provenance": "CACHED_REAL", "limit": 500}).json()
+        replayed = [x for x in rows if x["origin"] == "replay"]
+        check("REPLAY of cached real data works offline", len(replayed) > 0,
+              f"{len(replayed)} CACHED_REAL signals from REPLAY")
 
         dash = subprocess.run([sys.executable, str(ROOT / "src" / "scripts" / "check_dashboard.py")], cwd=ROOT,
                               env={**env, "HTTP_PROXY": "", "HTTPS_PROXY": "", "ALL_PROXY": ""},
