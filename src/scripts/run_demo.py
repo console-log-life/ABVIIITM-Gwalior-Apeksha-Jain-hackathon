@@ -124,7 +124,8 @@ def main() -> int:
             print(f"      REAL history not available: {st.get('error') or st}")
 
         if not (args.play_story or args.exit_after_story):
-            print("[4/5] ready on REAL data. 5-minute flow (docs/DEMO.md): Home + time machine → Watchlist → Explainability "
+            print("[4/5] ready on REAL data. 5-minute flow (docs/DEMO.md): Home + time machine → Watchlist → "
+                  "Explainability "
                   "→ Risk Propagation → sidebar ▶ Scenario demo (SYNTHETIC) → What-if → Credit brief")
             print(f"      * {STRESS_DISCLAIMER}")
             print(f"      Dashboard: http://127.0.0.1:{args.ui_port}   API docs: {api}/docs")
