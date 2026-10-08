@@ -8,10 +8,11 @@ step's signal or stress run exists, switches page through the sidebar (no full r
 finished rendering and the scene's expected text is on screen. Only then is the caption shown and the dwell counted.
 Every page is opened once, unrecorded, before recording starts, so the video does not open on Streamlit's first-run
 loading skeleton.
-Each caption's start/end time in the video is written to docs/demo/demo_walkthrough_captions.json so captions can be
-checked against frames.
+Each caption's start/end time in the video is written to .tmp/demo_video/demo_walkthrough_captions.json so captions
+can be checked against frames.
 
-Output: docs/demo/demo_walkthrough.webm (~3-4 min). A narrated recording should still be made by a human.
+Output: .tmp/demo_video/demo_walkthrough.webm (~3-4 min, not committed). The submitted, narrated video is
+docs/demo/demo_video.mp4.
 
 Usage:  python src/scripts/record_demo_video.py        (requires requirements-dev.txt: playwright)
 """
@@ -36,7 +37,7 @@ ROOT = Path(__file__).resolve().parents[2]
 os.environ.setdefault("PLAYWRIGHT_BROWSERS_PATH", str(ROOT / ".tmp" / "ms-playwright"))
 from playwright.sync_api import Page, sync_playwright  # noqa: E402
 
-OUT_DIR = ROOT / "docs" / "demo"
+OUT_DIR = ROOT / ".tmp" / "demo_video"
 OUT = OUT_DIR / "demo_walkthrough.webm"
 CAPTION_LOG = OUT_DIR / "demo_walkthrough_captions.json"
 API, UI = "http://127.0.0.1:8000", "http://127.0.0.1:8501"

@@ -13,7 +13,9 @@ individual submission.
 
 ## College / Campus: ABV-IIITM Gwalior (Atal Bihari Vajpayee Indian Institute of Information Technology and Management, Gwalior)
 
-## Demo Video Link: [DEMO VIDEO LINK]
+## Demo Video Link: https://github.com/console-log-life/ABVIIITM-Gwalior-Apeksha-Jain-hackathon/blob/main/docs/demo/demo_video.mp4
+
+Direct download: https://github.com/console-log-life/ABVIIITM-Gwalior-Apeksha-Jain-hackathon/raw/main/docs/demo/demo_video.mp4
 
 ## Project Overview
 
