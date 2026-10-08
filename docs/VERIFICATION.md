@@ -96,7 +96,6 @@ either written to a temporary location or compared with the committed file and r
 | `crop_screenshots.py` | regenerate the deck crops | PASS: byte-identical |
 | `build_presentation.py` | rebuild the 7-slide deck | PASS: every slide part identical (only zip timestamps differ) |
 | `render_slides.ps1` | PowerPoint COM, to a temporary folder | PASS: 7 previews + PDF |
-| `build_submission.py` | checks + HTML | PASS: 22/22 checks; "NOT READY TO SUBMIT: 6 placeholders" (expected until the links are filled) |
 | `screenshot_dashboard.py --size 800x600` | against the running demo | PASS (output deleted) |
 | `check_dashboard.py` | against the running demo | PASS: 9/9 pages |
 | `failure_drill.py` | network blocked, models offline | FAIL → fixed → PASS: 7/7 |
@@ -108,7 +107,7 @@ either written to a temporary location or compared with the committed file and r
 | `python -m risk_engine.ingestion.scheduler --once` (`tasks.ps1 ingest-once`) | real sources | FAIL → fixed → PASS: Reddit 25, Mastodon 140 fetched; GDELT/StockTwits backoff |
 | `python -m portfolio.generate_portfolio` (`tasks.ps1 portfolio`) | | FAIL → fixed → PASS: identical to the committed CSV (seed 42) |
 
-Other `tasks.ps1` targets run: `lint`, `submission`, `real-history`, `preflight`: PASS.
+Other `tasks.ps1` targets run: `lint`, `real-history`, `preflight`: PASS.
 
 ## 5. Demo end to end
 
@@ -155,7 +154,7 @@ deck renderer's default paths, and white space around the architecture image.
 - `record_demo_video.py` (it failed for lack of RAM before this pass) completed this time: 16 scenes, raw capture
   9:03 because the recorder waits for each story step on the live API; the idle waits were cut out afterwards
   (about 4:19 kept, scenes unchanged) and `docs/DEMO.md` now describes the current flow. It is a silent backup; the
-  narrated video for the submission still has to be recorded by a person (`docs/demo_script.md`, version a).
+  narrated video for the submission still has to be recorded by a person.
 
 - The zero-shot comparison was not re-run (`evaluate.py --no-zero-shot`) to stay within the laptop's RAM; its
   committed numbers come from the earlier full run.
@@ -173,4 +172,3 @@ deck renderer's default paths, and white space around the architecture image.
 | demo RAM (`src/scripts/measure_demo_ram.py`) | PASS with 0.79 GB free at start: ready in 32 s, peak 0.88 GB (API + dashboard), story GREEN → AMBER → RED, clean logs ([verification/demo_ram.md](verification/demo_ram.md)) |
 | deck | 7 slides in the official order, 0 text runs under 18 pt, every slide inspected, speaker notes 658 words (~4.7 min) |
 | **fresh clone from GitHub** (`git clone https://github.com/console-log-life/ABVIIITM-Gwalior-Apeksha-Jain-hackathon.git`, commit `7ac56de`), README Quickstart exactly | `tasks.ps1 setup`: exit 0 in 25.1 min, all models ready offline · `tasks.ps1 test`: PASS, 267 fast passed + label-review module skipped (needs `requirements-dev.txt`), coverage 93%, FinBERT 5 passed · offline demo: ready in 53 s (REAL history built from the 50-headline sample), 9/9 pages HTTP 200, story 0.41% GREEN → 1.32% AMBER → 2.45% RED, no log errors, peak 0.91 GB with 0.61 GB free at start |
-| `tasks.ps1 submission` | 22/22 checks; only `[DEMO VIDEO LINK]` remains (README and DoSelect answer) |

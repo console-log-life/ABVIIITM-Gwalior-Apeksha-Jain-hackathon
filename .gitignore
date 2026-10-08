@@ -45,3 +45,11 @@ data/real_history.db*
 
 # AI working notes (kept locally, not published)
 .local_notes/
+
+# personal prep (speaking scripts, Q&A, submission answer): kept locally only
+docs/demo_script.md
+docs/JURY_CHEATSHEET.md
+docs/judge_qa.md
+docs/slides_outline.md
+docs/submission/
+src/scripts/build_submission.py

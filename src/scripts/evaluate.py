@@ -1,7 +1,7 @@
 """Evaluate sentiment, event classification and entity resolution against data/eval/labelled_headlines.csv.
 
 Writes docs/evaluation.md (human-readable, with n for every number), data/eval/eval_results.json (machine-readable,
-used by src/scripts/build_submission.py) and data/eval/predictions.csv (model outputs, kept separate from gold labels).
+used by src/scripts/build_presentation.py) and data/eval/predictions.csv (model outputs, separate from gold labels).
 
 Gold labels whose label_status is 'draft_agent' were drafted by an AI assistant and are NOT human-reviewed; all
 metrics are then reported as PRELIMINARY.

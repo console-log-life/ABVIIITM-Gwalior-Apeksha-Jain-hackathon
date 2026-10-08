@@ -2,7 +2,7 @@
 param([Parameter(Mandatory = $true)][ValidateSet(
         "setup", "install", "models", "probe", "test", "test-fast", "lint", "capture", "replay", "ingest-once",
         "api", "dashboard", "demo", "demo-offline", "drill", "check-dashboard", "screenshots", "portfolio",
-        "evaluate", "benchmark", "submission", "test-model", "preflight", "label-review", "import-labels", "deck", "video", "real-history")]
+        "evaluate", "benchmark", "test-model", "preflight", "label-review", "import-labels", "deck", "video", "real-history")]
     [string]$Target)
 
 $ErrorActionPreference = "Stop"
@@ -53,6 +53,5 @@ switch ($Target) {
     "portfolio" { & $py -m portfolio.generate_portfolio }
     "evaluate" { & $py src/scripts/evaluate.py }
     "benchmark" { & $py src/scripts/benchmark_latency.py }
-    "submission" { & $py src/scripts/build_submission.py }
 }
 exit $LASTEXITCODE

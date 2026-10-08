@@ -10,7 +10,7 @@ endif
 # packages live in src/ (python -m risk_engine..., portfolio...)
 export PYTHONPATH := src
 
-.PHONY: setup venv install models probe test test-fast lint capture replay ingest-once api dashboard demo demo-offline drill check-dashboard screenshots portfolio evaluate benchmark submission test-model preflight label-review import-labels
+.PHONY: setup venv install models probe test test-fast lint capture replay ingest-once api dashboard demo demo-offline drill check-dashboard screenshots portfolio evaluate benchmark test-model preflight label-review import-labels
 
 setup: venv install models
 
@@ -81,8 +81,6 @@ evaluate:
 benchmark:
 	"$(PY)" src/scripts/benchmark_latency.py
 
-submission:
-	"$(PY)" src/scripts/build_submission.py
 
 label-review:
 	"$(PY)" src/scripts/build_label_review.py
